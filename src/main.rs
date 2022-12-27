@@ -24,6 +24,7 @@ fn main() {
     
     .add_startup_system(spawn_basic_scene)
     .add_startup_system(spawn_camera)
+    .add_startup_system(load_assets)
     
     .add_system(tower_shooting)
     .add_system(bullet_despawn)
@@ -61,9 +62,6 @@ fn spawn_basic_scene(
     transform: Transform::from_translation(Vec3::new(-200., 0., 0.)),
     ..default()
   })
-    .insert(Tower {
-      shooting_timer: Timer::from_seconds(1., TimerMode::Repeating)
-    })
     .insert(Name::new("Circle"));
   
   commands.spawn(MaterialMesh2dBundle {
@@ -72,6 +70,9 @@ fn spawn_basic_scene(
     transform: Transform::from_translation(Vec3::new(100., 0., 10.)),
     ..default()
   })
+    .insert(Tower {
+      shooting_timer: Timer::from_seconds(1., TimerMode::Repeating)
+    })
     .insert(Name::new("Circle 2"));
 }
 
@@ -81,8 +82,7 @@ fn spawn_camera(mut commands: Commands) {
 
 fn tower_shooting(
   mut commands: Commands,
-  mut meshes: ResMut<Assets<Mesh>>,
-  mut materials: ResMut<Assets<ColorMaterial>>,
+  assets: Res<GameAssets>,
   mut towers: Query<&mut Tower>,
   time: Res<Time>
 ) {
@@ -92,17 +92,32 @@ fn tower_shooting(
     if tower.shooting_timer.finished() {
       let spawn_transform =
         Transform::from_translation(Vec3::new(0., 0., 0.));
-  
-      commands.spawn(MaterialMesh2dBundle {
-        mesh: meshes.add(shape::Circle::new(10.).into()).into(),
-        material: materials.add(ColorMaterial::from(Color::RED)),
+      
+      commands.spawn(SpriteBundle {
+        texture: assets.bullet.clone(),
         transform: spawn_transform,
+        sprite: Sprite {
+          flip_x: true,
+          custom_size: Some(Vec2::new(25., 25.)),
+            ..default()
+        },
         ..default()
       })
         .insert(Bullet {
           lifetime: Timer::from_seconds(0.5, TimerMode::Once)
         })
         .insert(Name::new("Bullet"));
+      
+      // commands.spawn(MaterialMesh2dBundle {
+      //   mesh: meshes.add(shape::Circle::new(10.).into()).into(),
+      //   material: materials.add(ColorMaterial::from(Color::RED)),
+      //   transform: spawn_transform,
+      //   ..default()
+      // })
+      //   .insert(Bullet {
+      //     lifetime: Timer::from_seconds(0.5, TimerMode::Once)
+      //   })
+      //   .insert(Name::new("Bullet"));
     }
   }
 }
@@ -120,4 +135,15 @@ fn bullet_despawn(
       commands.entity(entity).despawn_recursive()
     }
   }
+}
+
+#[derive(Resource)]
+pub struct GameAssets {
+  bullet: Handle<Image>
+}
+
+fn load_assets(mut commands: Commands, assets_server: Res<AssetServer>) {
+  commands.insert_resource(GameAssets {
+    bullet: assets_server.load("bullet.png"),
+  })
 }
