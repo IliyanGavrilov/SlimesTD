@@ -4,17 +4,47 @@ use bevy_editor_pls::*;
 
 pub const CLEAR: Color = Color::rgb(0.1, 0.1, 0.1);
 
+#[derive(Resource)]
+pub struct Base {
+  health: i32
+}
+
 //#[derive(Component)] // Debugging
 #[derive(Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct Tower {
-  shooting_timer: Timer
+  position: (f32, f32),
+  damage: i32,
+  attack_speed: Timer,
+  range: i32,
+  price: i32,
+  sell_price: i32
+}
+
+#[derive(Reflect, Component, Default)]
+#[reflect(Component)]
+pub struct Enemy {
+  health: i32,
+  speed: f32
 }
 
 #[derive(Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct Bullet {
-  lifetime: Timer
+  direction: Vec2,
+  speed: f32,
+  lifetime: Timer // temp
+}
+
+#[derive(Resource)]
+pub struct GameAssets {
+  bullet: Handle<Image>
+}
+
+fn load_assets(mut commands: Commands, assets_server: Res<AssetServer>) {
+  commands.insert_resource(GameAssets {
+    bullet: assets_server.load("bullet.png"),
+  })
 }
 
 fn main() {
@@ -34,18 +64,18 @@ fn main() {
     .add_plugins(DefaultPlugins.set(WindowPlugin {
       window: WindowDescriptor {
         title: "Tower Defence".to_string(),
-        
         ..default()
       },
       ..default()
     }))
-  
+    
     // Debugging
     .add_plugin(EditorPlugin)
     .add_plugin(bevy::diagnostic::LogDiagnosticsPlugin::default())
     .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin::default())
     .add_plugin(bevy::diagnostic::EntityCountDiagnosticsPlugin)
     .register_type::<Tower>()
+    .register_type::<Enemy>()
     .register_type::<Bullet>()
     .run();
 }
@@ -55,15 +85,24 @@ fn spawn_basic_scene(
   mut meshes: ResMut<Assets<Mesh>>,
   mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-  // Circle
+  commands.insert_resource(Base {
+    health: 100
+  });
+  
+  // Enemy
   commands.spawn(MaterialMesh2dBundle {
     mesh: meshes.add(shape::Circle::new(50.).into()).into(),
     material: materials.add(ColorMaterial::from(Color::CYAN)),
     transform: Transform::from_translation(Vec3::new(-200., 0., 0.)),
     ..default()
   })
-    .insert(Name::new("Circle"));
+    .insert(Enemy {
+      health: 5,
+      speed: 0.5
+    })
+    .insert(Name::new("Enemy"));
   
+  // Tower
   commands.spawn(MaterialMesh2dBundle {
     mesh: meshes.add(shape::Circle::new(50.).into()).into(),
     material: materials.add(ColorMaterial::from(Color::RED)),
@@ -71,10 +110,21 @@ fn spawn_basic_scene(
     ..default()
   })
     .insert(Tower {
-      shooting_timer: Timer::from_seconds(1., TimerMode::Repeating)
+      position: (100., 0.),
+      damage: 1,
+      attack_speed: Timer::from_seconds(1., TimerMode::Repeating),
+      range: 10,
+      price: 100,
+      sell_price: (100/3) as i32
     })
-    .insert(Name::new("Circle 2"));
+    .insert(Name::new("Tower"));
 }
+
+// fn move_enemy(mut enemies: Query<&Enemy, &mut Transform>, time: Res<Time>) {
+//    for (target, mut transform) in &mut enemies {
+//      transform.translation.y += target.speed * time.delta_seconds();
+//    }
+// }
 
 fn spawn_camera(mut commands: Commands) {
   commands.spawn(Camera2dBundle::default());
@@ -87,9 +137,9 @@ fn tower_shooting(
   time: Res<Time>
 ) {
   for mut tower in &mut towers {
-    tower.shooting_timer.tick(time.delta());
+    tower.attack_speed.tick(time.delta());
     // If the attack cooldown finished, spawn bullet
-    if tower.shooting_timer.finished() {
+    if tower.attack_speed.finished() {
       let spawn_transform =
         Transform::from_translation(Vec3::new(0., 0., 0.));
       
@@ -104,20 +154,11 @@ fn tower_shooting(
         ..default()
       })
         .insert(Bullet {
+          direction: Vec2::new(25., 25.),
+          speed: 2.5,
           lifetime: Timer::from_seconds(0.5, TimerMode::Once)
         })
         .insert(Name::new("Bullet"));
-      
-      // commands.spawn(MaterialMesh2dBundle {
-      //   mesh: meshes.add(shape::Circle::new(10.).into()).into(),
-      //   material: materials.add(ColorMaterial::from(Color::RED)),
-      //   transform: spawn_transform,
-      //   ..default()
-      // })
-      //   .insert(Bullet {
-      //     lifetime: Timer::from_seconds(0.5, TimerMode::Once)
-      //   })
-      //   .insert(Name::new("Bullet"));
     }
   }
 }
@@ -135,15 +176,4 @@ fn bullet_despawn(
       commands.entity(entity).despawn_recursive()
     }
   }
-}
-
-#[derive(Resource)]
-pub struct GameAssets {
-  bullet: Handle<Image>
-}
-
-fn load_assets(mut commands: Commands, assets_server: Res<AssetServer>) {
-  commands.insert_resource(GameAssets {
-    bullet: assets_server.load("bullet.png"),
-  })
 }
