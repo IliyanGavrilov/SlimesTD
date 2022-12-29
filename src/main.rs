@@ -106,7 +106,7 @@ fn spawn_basic_scene(
   commands.spawn(MaterialMesh2dBundle {
     mesh: meshes.add(shape::Circle::new(50.).into()).into(),
     material: materials.add(ColorMaterial::from(Color::RED)),
-    transform: Transform::from_translation(Vec3::new(100., 0., 10.)),
+    transform: Transform::from_translation(Vec3::new(100., 0., 0.)),
     ..default()
   })
     .insert(Tower {
