@@ -1,6 +1,12 @@
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::utils::FloatOrd;
+
+mod target;
+use target::Target::*;
+
 // Debugging
 use bevy_editor_pls::*;
+use crate::target::Target;
 
 pub const CLEAR: Color = Color::rgb(0.1, 0.1, 0.1);
 
@@ -18,7 +24,8 @@ pub struct Tower {
   attack_speed: Timer,
   range: i32,
   price: i32,
-  sell_price: i32
+  sell_price: i32,
+  target: Target
 }
 
 #[derive(Reflect, Component, Default)]
@@ -115,7 +122,8 @@ fn spawn_basic_scene(
       attack_speed: Timer::from_seconds(1., TimerMode::Repeating),
       range: 10,
       price: 100,
-      sell_price: (100/3) as i32
+      sell_price: (100/3) as i32,
+      target: FIRST
     })
     .insert(Name::new("Tower"));
 }
@@ -130,22 +138,41 @@ fn spawn_camera(mut commands: Commands) {
   commands.spawn(Camera2dBundle::default());
 }
 
+// fn tower_shooting(
+//   mut commands: Commands,
+//   assets: Res<GameAssets>, // Bullet assets
+//   mut towers: Query<(Entity, &mut Tower, &GlobalTransform)>,
+//   enemies: Query<&GlobalTransform, With<Enemy>>, // Gets all entities with the Enemy component
+//   time: Res<Time>
+// ) {
+//   for (tower_ent, mut tower, transform) in &mut towers {
+//     tower.attack_speed.tick(time.delta());
+//
+//     // If the attack cooldown finished, spawn bullet
+//     if tower.attack_speed.just_finished() {
+//       let bullet_spawn_pos = transform.translation(); //+ bullet_offset;
+//
+//     }
+// }
+
+
 fn tower_shooting(
   mut commands: Commands,
-  assets: Res<GameAssets>,
+  assets: Res<GameAssets>, // Bullet assets
   mut towers: Query<&mut Tower>,
+  enemies: Query<&GlobalTransform, With<Enemy>>, // Gets all entities with the Enemy component
   time: Res<Time>
 ) {
   for mut tower in &mut towers {
     tower.attack_speed.tick(time.delta());
     // If the attack cooldown finished, spawn bullet
     if tower.attack_speed.finished() {
-      let spawn_transform =
+      let bullet_spawn_pos =
         Transform::from_translation(Vec3::new(0., 0., 0.));
-      
+
       commands.spawn(SpriteBundle {
         texture: assets.bullet.clone(),
-        transform: spawn_transform,
+        transform: bullet_spawn_pos,
         sprite: Sprite {
           flip_x: true,
           custom_size: Some(Vec2::new(25., 25.)),
