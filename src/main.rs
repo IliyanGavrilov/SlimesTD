@@ -1,16 +1,16 @@
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
-use bevy::utils::FloatOrd;
 
 mod target;
-use target::Target::*;
+use crate::target::*;
 
 // Debugging
 use bevy_editor_pls::*;
-use crate::target::Target;
+//use crate::target::Target;
 
 pub const CLEAR: Color = Color::rgb(0.1, 0.1, 0.1);
 
-#[derive(Resource)]
+#[derive(Reflect, Component, Default)]
+#[reflect(Component)]
 pub struct Base {
   health: i32
 }
@@ -19,13 +19,13 @@ pub struct Base {
 #[derive(Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct Tower {
-  position: (f32, f32),
+  bullet_spawn_offset: Vec3,
   damage: i32,
   attack_speed: Timer,
   range: i32,
   price: i32,
   sell_price: i32,
-  target: Target
+  target: TargettingPriority
 }
 
 #[derive(Reflect, Component, Default)]
@@ -38,7 +38,7 @@ pub struct Enemy {
 #[derive(Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct Bullet {
-  direction: Vec2,
+  direction: Vec3,
   speed: f32,
   lifetime: Timer // temp
 }
@@ -64,7 +64,9 @@ fn main() {
     .add_startup_system(load_assets)
     
     .add_system(tower_shooting)
-    .add_system(bullet_despawn)
+    .add_system(move_enemies)
+    .add_system(move_bullets)
+    .add_system(despawn_bullets)
     
     // Add basic game functionality - window, game tick, renderer,
     // asset loading, UI system, input, startup systems, etc.
@@ -81,6 +83,7 @@ fn main() {
     .add_plugin(bevy::diagnostic::LogDiagnosticsPlugin::default())
     .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin::default())
     .add_plugin(bevy::diagnostic::EntityCountDiagnosticsPlugin)
+    .register_type::<Base>()
     .register_type::<Tower>()
     .register_type::<Enemy>()
     .register_type::<Bullet>()
@@ -92,105 +95,117 @@ fn spawn_basic_scene(
   mut meshes: ResMut<Assets<Mesh>>,
   mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-  commands.insert_resource(Base {
-    health: 100
-  });
-  
   // Enemy
   commands.spawn(MaterialMesh2dBundle {
-    mesh: meshes.add(shape::Circle::new(50.).into()).into(),
-    material: materials.add(ColorMaterial::from(Color::CYAN)),
+    mesh: meshes.add(shape::Circle::new(15.).into()).into(),
+    material: materials.add(ColorMaterial::from(Color::RED)),
     transform: Transform::from_translation(Vec3::new(-200., 0., 0.)),
     ..default()
   })
     .insert(Enemy {
       health: 5,
-      speed: 0.5
+      speed: 5.
     })
     .insert(Name::new("Enemy"));
   
+  // Enemy 2
+  commands.spawn(MaterialMesh2dBundle {
+    mesh: meshes.add(shape::Circle::new(15.).into()).into(),
+    material: materials.add(ColorMaterial::from(Color::RED)),
+    transform: Transform::from_translation(Vec3::new(-200., -100., 0.)),
+    ..default()
+  })
+    .insert(Enemy {
+      health: 5,
+      speed: 5.
+    })
+    .insert(Name::new("Enemy 2"));
+  
   // Tower
   commands.spawn(MaterialMesh2dBundle {
-    mesh: meshes.add(shape::Circle::new(50.).into()).into(),
-    material: materials.add(ColorMaterial::from(Color::RED)),
+    mesh: meshes.add(shape::Circle::new(25.).into()).into(),
+    material: materials.add(ColorMaterial::from(Color::CYAN)),
     transform: Transform::from_translation(Vec3::new(100., 0., 0.)),
     ..default()
   })
     .insert(Tower {
-      position: (100., 0.),
+      bullet_spawn_offset: Vec3::new(15., 0., 0.),
       damage: 1,
       attack_speed: Timer::from_seconds(1., TimerMode::Repeating),
       range: 10,
       price: 100,
       sell_price: (100/3) as i32,
-      target: FIRST
+      target: TargettingPriority::CLOSE
+      //..default()
     })
     .insert(Name::new("Tower"));
 }
-
-// fn move_enemy(mut enemies: Query<&Enemy, &mut Transform>, time: Res<Time>) {
-//    for (target, mut transform) in &mut enemies {
-//      transform.translation.y += target.speed * time.delta_seconds();
-//    }
-// }
 
 fn spawn_camera(mut commands: Commands) {
   commands.spawn(Camera2dBundle::default());
 }
 
-// fn tower_shooting(
-//   mut commands: Commands,
-//   assets: Res<GameAssets>, // Bullet assets
-//   mut towers: Query<(Entity, &mut Tower, &GlobalTransform)>,
-//   enemies: Query<&GlobalTransform, With<Enemy>>, // Gets all entities with the Enemy component
-//   time: Res<Time>
-// ) {
-//   for (tower_ent, mut tower, transform) in &mut towers {
-//     tower.attack_speed.tick(time.delta());
-//
-//     // If the attack cooldown finished, spawn bullet
-//     if tower.attack_speed.just_finished() {
-//       let bullet_spawn_pos = transform.translation(); //+ bullet_offset;
-//
-//     }
-// }
+fn move_enemies(mut enemies: Query<(&Enemy, &mut Transform)>, time: Res<Time>) {
+  for (enemy, mut transform) in &mut enemies {
+    transform.translation.y += enemy.speed * time.delta_seconds();
+  }
+}
 
+fn move_bullets(mut bullets: Query<(&Bullet, &mut Transform)>, time: Res<Time>) {
+  for (bullet, mut transform) in &mut bullets {
+    transform.translation += bullet.direction.normalize() * bullet.speed * time.delta_seconds();
+  }
+}
 
 fn tower_shooting(
   mut commands: Commands,
   assets: Res<GameAssets>, // Bullet assets
-  mut towers: Query<&mut Tower>,
-  enemies: Query<&GlobalTransform, With<Enemy>>, // Gets all entities with the Enemy component
-  time: Res<Time>
+  mut towers: Query<(Entity, &mut Tower, &GlobalTransform)>,
+  enemies: Query<&GlobalTransform, With<Enemy>>, // Gets all entities With the Enemy component
+  time: Res<Time>,
 ) {
-  for mut tower in &mut towers {
+  for (tower_entity, mut tower, transform) in &mut towers {
     tower.attack_speed.tick(time.delta());
+  
+    let bullet_spawn_pos = transform.translation() + tower.bullet_spawn_offset;
+    
     // If the attack cooldown finished, spawn bullet
     if tower.attack_speed.finished() {
-      let bullet_spawn_pos =
-        Transform::from_translation(Vec3::new(0., 0., 0.));
-
-      commands.spawn(SpriteBundle {
-        texture: assets.bullet.clone(),
-        transform: bullet_spawn_pos,
-        sprite: Sprite {
-          flip_x: true,
-          custom_size: Some(Vec2::new(25., 25.)),
+      let direction = match &tower.target {
+        TargettingPriority::FIRST => first_enemy_direction(&enemies, bullet_spawn_pos),
+        TargettingPriority::LAST => last_enemy_direction(&enemies, bullet_spawn_pos),
+        TargettingPriority::CLOSE => closest_enemy_direction(&enemies, bullet_spawn_pos),
+        TargettingPriority::STRONGEST => strongest_enemy_direction(&enemies, bullet_spawn_pos),
+        TargettingPriority::WEAKEST => weakest_enemy_direction(&enemies, bullet_spawn_pos)
+      };
+      
+      // If there is an enemy in the tower's range!!! (if direction != None), then shoot bullet
+      if let Some(direction) = direction {
+        // Make bullet a child of tower
+        commands.entity(tower_entity).with_children(|commands| {
+          commands.spawn(SpriteBundle {
+            texture: assets.bullet.clone(),
+            transform: Transform::from_translation(tower.bullet_spawn_offset),
+            sprite: Sprite {
+              flip_x: true,
+              custom_size: Some(Vec2::new(25., 25.)),
+                ..default()
+            },
             ..default()
-        },
-        ..default()
-      })
-        .insert(Bullet {
-          direction: Vec2::new(25., 25.),
-          speed: 2.5,
-          lifetime: Timer::from_seconds(0.5, TimerMode::Once)
-        })
-        .insert(Name::new("Bullet"));
+          })
+            .insert(Bullet {
+              direction,
+              speed: 500.,
+              lifetime: Timer::from_seconds(100., TimerMode::Once)
+            })
+            .insert(Name::new("Bullet"));
+        });
+      }
     }
   }
 }
 
-fn bullet_despawn(
+fn despawn_bullets(
   mut commands: Commands,
   mut bullets: Query<(Entity, &mut Bullet)>,
   time: Res<Time>
