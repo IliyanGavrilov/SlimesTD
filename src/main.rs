@@ -25,7 +25,7 @@ pub struct Tower {
   range: i32,
   price: i32,
   sell_price: i32,
-  target: TargettingPriority
+  target: TargetingPriority
 }
 
 #[derive(Reflect, Component, Default)]
@@ -67,6 +67,7 @@ fn main() {
     .add_system(move_enemies)
     .add_system(move_bullets)
     .add_system(despawn_bullets)
+    .add_system(enemy_killed)
     
     // Add basic game functionality - window, game tick, renderer,
     // asset loading, UI system, input, startup systems, etc.
@@ -135,7 +136,7 @@ fn spawn_basic_scene(
       range: 10,
       price: 100,
       sell_price: (100/3) as i32,
-      target: TargettingPriority::CLOSE
+      target: TargetingPriority::CLOSE
       //..default()
     })
     .insert(Name::new("Tower"));
@@ -172,23 +173,28 @@ fn tower_shooting(
     // If the attack cooldown finished, spawn bullet
     if tower.attack_speed.finished() {
       let direction = match &tower.target {
-        TargettingPriority::FIRST => first_enemy_direction(&enemies, bullet_spawn_pos),
-        TargettingPriority::LAST => last_enemy_direction(&enemies, bullet_spawn_pos),
-        TargettingPriority::CLOSE => closest_enemy_direction(&enemies, bullet_spawn_pos),
-        TargettingPriority::STRONGEST => strongest_enemy_direction(&enemies, bullet_spawn_pos),
-        TargettingPriority::WEAKEST => weakest_enemy_direction(&enemies, bullet_spawn_pos)
+        TargetingPriority::FIRST => first_enemy_direction(&enemies, bullet_spawn_pos),
+        TargetingPriority::LAST => last_enemy_direction(&enemies, bullet_spawn_pos),
+        TargetingPriority::CLOSE => closest_enemy_direction(&enemies, bullet_spawn_pos),
+        TargetingPriority::STRONGEST => strongest_enemy_direction(&enemies, bullet_spawn_pos),
+        TargetingPriority::WEAKEST => weakest_enemy_direction(&enemies, bullet_spawn_pos)
       };
       
       // If there is an enemy in the tower's range!!! (if direction != None), then shoot bullet
       if let Some(direction) = direction {
         // Make bullet a child of tower
+        let mut angle = direction.angle_between(tower.bullet_spawn_offset);
+        if transform.translation().y > direction.y {
+          angle = -angle;
+        }
+        let bullet_transform = Transform::from_translation(tower.bullet_spawn_offset);
+        
         commands.entity(tower_entity).with_children(|commands| {
           commands.spawn(SpriteBundle {
             texture: assets.bullet.clone(),
-            transform: Transform::from_translation(tower.bullet_spawn_offset),
+            transform: bullet_transform.with_rotation(Quat::from_rotation_z(angle)),
             sprite: Sprite {
-              flip_x: true,
-              custom_size: Some(Vec2::new(25., 25.)),
+              custom_size: Some(Vec2::new(50., 50.)),
                 ..default()
             },
             ..default()
@@ -219,3 +225,27 @@ fn despawn_bullets(
     }
   }
 }
+
+fn enemy_killed(mut commands: Commands, enemies: Query<(Entity, &mut Enemy)>) {
+  for (entity, enemy) in &enemies {
+    if enemy.health <= 0 {
+      commands.entity(entity).despawn_recursive();
+    }
+  }
+}
+
+// fn bullet_enemy_collision(
+//   mut commands: Commands,
+//   bullets: Query<(Entity, &GlobalTransform), With<Bullet>>,
+//   mut targets: Query<(&mut Enemy, &Transform)>
+// ) {
+//   for (bullet, bullet_transform) in &bullets {
+//     for (mut Enemy, enemy_transform) in &mut targets {
+//       if Vec3::distance(bullet_transform.translation(), target_transform.translation) < 15. {
+//         commands.entity(bullet).despawn_recursive();
+//         health.value -= 1;
+//         break;
+//       }
+//     }
+//   }
+// }

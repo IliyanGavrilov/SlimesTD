@@ -20,3 +20,5 @@ bevy-inspector-egui = "0.15.0"
 bevy_asset_loader = "0.14.1"
 bevy_ecs_tilemap = "0.9.0"
 bevy_editor_pls = {git = "https://github.com/PhaestusFox/bevy_editor_pls"}
+
+libm = "0.2.6"
