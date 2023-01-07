@@ -68,6 +68,7 @@ fn main() {
     .add_system(move_bullets)
     .add_system(despawn_bullets)
     .add_system(enemy_killed)
+    .add_system(bullet_enemy_collision)
     
     // Add basic game functionality - window, game tick, renderer,
     // asset loading, UI system, input, startup systems, etc.
@@ -182,13 +183,14 @@ fn tower_shooting(
       
       // If there is an enemy in the tower's range!!! (if direction != None), then shoot bullet
       if let Some(direction) = direction {
-        // Make bullet a child of tower
+        // Rotate bullet, based on enemy location
         let mut angle = direction.angle_between(tower.bullet_spawn_offset);
-        if transform.translation().y > direction.y {
+        if transform.translation().y > direction.y { // flip angle if enemy is below tower
           angle = -angle;
         }
         let bullet_transform = Transform::from_translation(tower.bullet_spawn_offset);
-        
+  
+        // Make bullet a child of tower
         commands.entity(tower_entity).with_children(|commands| {
           commands.spawn(SpriteBundle {
             texture: assets.bullet.clone(),
@@ -201,8 +203,8 @@ fn tower_shooting(
           })
             .insert(Bullet {
               direction,
-              speed: 500.,
-              lifetime: Timer::from_seconds(100., TimerMode::Once)
+              speed: 750.,
+              lifetime: Timer::from_seconds(10., TimerMode::Once)
             })
             .insert(Name::new("Bullet"));
         });
@@ -234,18 +236,18 @@ fn enemy_killed(mut commands: Commands, enemies: Query<(Entity, &mut Enemy)>) {
   }
 }
 
-// fn bullet_enemy_collision(
-//   mut commands: Commands,
-//   bullets: Query<(Entity, &GlobalTransform), With<Bullet>>,
-//   mut targets: Query<(&mut Enemy, &Transform)>
-// ) {
-//   for (bullet, bullet_transform) in &bullets {
-//     for (mut Enemy, enemy_transform) in &mut targets {
-//       if Vec3::distance(bullet_transform.translation(), target_transform.translation) < 15. {
-//         commands.entity(bullet).despawn_recursive();
-//         health.value -= 1;
-//         break;
-//       }
-//     }
-//   }
-// }
+fn bullet_enemy_collision(
+  mut commands: Commands,
+  bullets: Query<(Entity, &GlobalTransform), With<Bullet>>,
+  mut enemies: Query<(&mut Enemy, &Transform)>
+) {
+  for (bullet, bullet_transform) in &bullets {
+    for (mut enemy, enemy_transform) in &mut enemies {
+      if Vec3::distance(bullet_transform.translation(), enemy_transform.translation) < 20. {
+        commands.entity(bullet).despawn_recursive();
+        enemy.health -= 1;
+        break;
+      }
+    }
+  }
+}
