@@ -1,11 +1,14 @@
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
-mod target;
-use crate::target::*;
+mod tower;
+mod enemy;
+mod bullet;
+
+mod targeting_priority;
+pub use targeting_priority::*;
 
 // Debugging
 use bevy_editor_pls::*;
-//use crate::target::Target;
 
 pub const CLEAR: Color = Color::rgb(0.1, 0.1, 0.1);
 
@@ -40,6 +43,7 @@ pub struct Enemy {
 pub struct Bullet {
   direction: Vec3,
   speed: f32,
+  damage: i32,
   lifetime: Timer // temp
 }
 
@@ -204,7 +208,8 @@ fn tower_shooting(
             .insert(Bullet {
               direction,
               speed: 750.,
-              lifetime: Timer::from_seconds(10., TimerMode::Once)
+              damage: tower.damage,
+              lifetime: Timer::from_seconds(5., TimerMode::Once)
             })
             .insert(Name::new("Bullet"));
         });
@@ -238,14 +243,14 @@ fn enemy_killed(mut commands: Commands, enemies: Query<(Entity, &mut Enemy)>) {
 
 fn bullet_enemy_collision(
   mut commands: Commands,
-  bullets: Query<(Entity, &GlobalTransform), With<Bullet>>,
+  bullets: Query<(Entity, &Bullet, &GlobalTransform)>,
   mut enemies: Query<(&mut Enemy, &Transform)>
 ) {
-  for (bullet, bullet_transform) in &bullets {
+  for (bullet_entity, bullet, bullet_transform) in &bullets {
     for (mut enemy, enemy_transform) in &mut enemies {
       if Vec3::distance(bullet_transform.translation(), enemy_transform.translation) < 20. {
-        commands.entity(bullet).despawn_recursive();
-        enemy.health -= 1;
+        commands.entity(bullet_entity).despawn_recursive();
+        enemy.health -= bullet.damage;
         break;
       }
     }
