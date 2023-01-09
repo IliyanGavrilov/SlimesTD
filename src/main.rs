@@ -1,22 +1,16 @@
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
-
-// Debugging
+// !!!Debugging
 use bevy_editor_pls::*;
-//use bevy_inspector_egui::WorldInspectorPlugin;
 
 mod base;
-mod tower;
-mod enemy;
-mod bullet;
-mod targeting_priority;
-
-// mod startup_setup;
-// mod asset_loading;
-
 pub use base::*;
-pub use enemy::*;
+mod tower;
 pub use tower::*;
+mod enemy;
+pub use enemy::*;
+mod bullet;
 pub use bullet::*;
+mod targeting_priority;
 
 // Background of window. The colour of the screen on each refresh
 pub const CLEAR: Color = Color::rgb(0.1, 0.1, 0.1);
@@ -44,16 +38,11 @@ fn main() {
       ..default()
     }))
     
-    // Debugging
-    .add_plugin(EditorPlugin)
-    // .add_plugin(WorldInspectorPlugin)
+    // !!!Debugging
+    .add_plugin(EditorPlugin) // Similar to WorldInspectorPlugin
     .add_plugin(bevy::diagnostic::LogDiagnosticsPlugin::default())
     .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin::default())
     .add_plugin(bevy::diagnostic::EntityCountDiagnosticsPlugin)
-    // .register_type::<Base>()
-    // .register_type::<Tower>()
-    // .register_type::<Enemy>()
-    // .register_type::<Bullet>()
     .run();
 }
 
