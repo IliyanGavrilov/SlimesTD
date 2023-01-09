@@ -2,7 +2,7 @@ use bevy::utils::FloatOrd;
 
 // Debugging
 use bevy::prelude::*;
-use crate::Enemy;
+pub use crate::enemy::*;
 
 #[derive(Reflect, Component, Default)]
 pub enum TargetingPriority {
