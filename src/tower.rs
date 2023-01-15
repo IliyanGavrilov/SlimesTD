@@ -3,6 +3,7 @@ use bevy::prelude::*;
 pub use crate::targeting_priority::*;
 pub use crate::GameAssets;
 pub use crate::bullet::Bullet;
+pub use crate::movement::Movement;
 
 pub struct TowerPlugin;
 
@@ -63,16 +64,18 @@ fn tower_shooting(
             texture: assets.bullet.clone(),
             transform: bullet_transform.with_rotation(Quat::from_rotation_z(angle)),
             sprite: Sprite {
-              custom_size: Some(Vec2::new(50., 50.)),
+              custom_size: Some(Vec2::new(40., 22.)),
               ..default()
             },
             ..default()
           })
             .insert(Bullet {
-              direction,
-              speed: 750.,
               damage: tower.damage,
               lifetime: Timer::from_seconds(5., TimerMode::Once)
+            })
+            .insert(Movement {
+              direction,
+              speed: 750.,
             })
             .insert(Name::new("Bullet"));
         });

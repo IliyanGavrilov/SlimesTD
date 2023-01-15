@@ -3,11 +3,12 @@ use bevy::prelude::*;
 pub struct BulletPlugin;
 
 pub use crate::enemy::*;
+// pub use crate::movement::*;
 
 impl Plugin for BulletPlugin {
   fn build(&self, app: &mut App) {
     app.register_type::<Bullet>()
-       .add_system(move_bullets)
+       // .add_system(move_bullets)
        .add_system(despawn_bullets)
        .add_system(bullet_enemy_collision);
   }
@@ -17,17 +18,15 @@ impl Plugin for BulletPlugin {
 #[derive(Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct Bullet {
-  pub direction: Vec3,
-  pub speed: f32,
   pub damage: i32,
   pub lifetime: Timer // !!! fix?
 }
 
-fn move_bullets(mut bullets: Query<(&Bullet, &mut Transform)>, time: Res<Time>) {
-  for (bullet, mut transform) in &mut bullets {
-    transform.translation += bullet.direction.normalize() * bullet.speed * time.delta_seconds();
-  }
-}
+// fn move_bullets(mut bullets: Query<(&Movement, &mut Transform), With<Bullet>>, time: Res<Time>) {
+//   for (bullet, mut transform) in &mut bullets {
+//     transform.translation += bullet.direction.normalize() * bullet.speed * time.delta_seconds();
+//   }
+// }
 
 fn despawn_bullets(
   mut commands: Commands,
