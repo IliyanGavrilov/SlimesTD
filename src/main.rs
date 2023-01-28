@@ -17,6 +17,29 @@ mod targeting_priority;
 // Background of window. The colour of the screen on each refresh
 pub const CLEAR: Color = Color::rgb(0.1, 0.1, 0.1);
 
+// Creating a UI menu on the whole screen
+// fn generate_ui(mut commands: Commands) {
+//   commands
+//     .spawn(NodeBundle {
+//       style: Style {
+//         size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+//         justify_content: JustifyContent::Center,
+//         ..default()
+//       },
+//       ..default()
+//     })
+//     .insert(TowerUIRoot) // Marker component
+//     .with_children(|commands| { // Make the buttons children of the menu
+//       for i in 0..3 {
+//         commands.spawn(ButtonBundle {
+//           style: Style {
+//
+//           }
+//         })
+//       }
+//     });
+// }
+
 fn main() {
   App::new()
     // Background of window. Set colour of screen on each refresh
@@ -34,13 +57,17 @@ fn main() {
     
     // Add basic game functionality - window, game tick, renderer,
     // asset loading, UI system, input, startup systems, etc.
-    .add_plugins(DefaultPlugins.set(WindowPlugin {
+    .add_plugins(DefaultPlugins
+      .set(ImagePlugin::default_nearest()) // Prevent blurry sprites
+      .set(WindowPlugin {
       window: WindowDescriptor {
-        title: "Tower Defence".to_string(),
+        title: "Wizards vs Slimes Tower Defence".to_string(),
         ..default()
       },
       ..default()
     }))
+    
+    //.add_system(generate_ui)
     
     // !!!Debugging
     .add_plugin(EditorPlugin) // Similar to WorldInspectorPlugin
@@ -59,7 +86,7 @@ pub struct GameAssets {
 
 fn load_assets(mut commands: Commands, assets_server: Res<AssetServer>) {
   commands.insert_resource(GameAssets {
-    tower: assets_server.load("tower.png"),
+    tower: assets_server.load("wizard_fire.png"),
     enemy: assets_server.load("enemy.png"),
     bullet: assets_server.load("fireball.png")
   })
@@ -112,7 +139,6 @@ fn spawn_basic_scene(
     texture: assets.tower.clone(),
     transform: Transform::from_translation(Vec3::new(100., 0., 0.)),
     sprite: Sprite {
-      custom_size: Some(Vec2::new(50., 50.)),
       ..default()
     },
     ..default()

@@ -27,6 +27,10 @@ pub struct Tower {
   pub target: TargetingPriority
 }
 
+// Marker component to despawn buttons in UI
+#[derive(Component)]
+pub struct TowerUIRoot;
+
 fn tower_shooting(
   mut commands: Commands,
   assets: Res<GameAssets>, // Bullet assets
