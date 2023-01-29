@@ -44,7 +44,7 @@ fn tower_shooting(
     let bullet_spawn_pos = transform.translation() + tower.bullet_spawn_offset;
     
     // If the attack cooldown finished, spawn bullet
-    if tower.attack_speed.finished() {
+    if tower.attack_speed.just_finished() {
       let direction = match &tower.target {
         TargetingPriority::FIRST => first_enemy_direction(&enemies, bullet_spawn_pos),
         TargetingPriority::LAST => last_enemy_direction(&enemies, bullet_spawn_pos),
@@ -79,7 +79,7 @@ fn tower_shooting(
             })
             .insert(Movement {
               direction,
-              speed: 750.,
+              speed: 1500.,
             })
             .insert(Name::new("Bullet"));
         });

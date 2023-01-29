@@ -49,6 +49,7 @@ fn main() {
     .add_startup_system(spawn_camera)
     // Load assets before the startup stage, so we can use them in spawn_basic_scene()
     .add_startup_system_to_stage(StartupStage::PreStartup, load_assets)
+    .add_system(animate_enemy_sprite)
     
     .add_plugin(TowerPlugin)
     .add_plugin(EnemyPlugin)
@@ -80,16 +81,70 @@ fn main() {
 #[derive(Resource)]
 pub struct GameAssets {
   pub tower: Handle<Image>,
-  pub enemy: Handle<Image>,
+  pub enemy: Handle<TextureAtlas>,
   pub bullet: Handle<Image>
 }
 
-fn load_assets(mut commands: Commands, assets_server: Res<AssetServer>) {
+#[derive(Component, Deref, DerefMut)]
+pub struct AnimationTimer(Timer);
+
+#[derive(Component)]
+pub struct AnimationIndices {
+  first: usize,
+  last: usize
+}
+
+fn load_assets(
+  mut commands: Commands,
+  assets_server: Res<AssetServer>,
+  mut texture_atlases: ResMut<Assets<TextureAtlas>>
+) {
   commands.insert_resource(GameAssets {
     tower: assets_server.load("wizard_fire.png"),
-    enemy: assets_server.load("enemy.png"),
+    enemy: texture_atlases.add(
+      TextureAtlas::from_grid(assets_server.load("slime_jump.png"),
+                             Vec2::new(50., 90.),
+                             10, 8,
+                             Some(Vec2::new(5., 5.)), None)),
     bullet: assets_server.load("fireball.png")
   })
+}
+
+fn animate_enemy_sprite(
+  time: Res<Time>,
+  mut query: Query<(
+    &AnimationIndices,
+    &mut AnimationTimer,
+    &mut TextureAtlasSprite,
+    &GlobalTransform,
+    &Movement
+  )>
+) {
+  for (indices,
+      mut timer,
+      mut sprite,
+      transform,
+      movement) in &mut query {
+    // Change direction based on where enemy is heading
+    if transform.translation().x > movement.direction.x {
+      sprite.flip_x = true;
+    }
+    else {
+      sprite.flip_x = false;
+    }
+    
+    // Animate sprite
+    timer.tick(time.delta());
+    
+    if timer.just_finished() {
+      if sprite.index == indices.last {
+        sprite.index = indices.first;
+      }
+      else {
+        sprite.index += 1;
+      }
+    }
+  }
 }
 
 fn spawn_basic_scene(
@@ -97,40 +152,38 @@ fn spawn_basic_scene(
   assets: Res<GameAssets> // Tower and enemy assets
 ) {
   // Enemy
-  commands.spawn(SpriteBundle {
-    texture: assets.enemy.clone(),
+  commands.spawn(SpriteSheetBundle {
+    texture_atlas: assets.enemy.clone(),
     transform: Transform::from_translation(Vec3::new(-200., 0., 0.)),
-    sprite: Sprite {
-      custom_size: Some(Vec2::new(50., 50.)),
-      ..default()
-    },
     ..default()
   })
+    .insert(AnimationIndices {first: 0, last: 9})
+    // Animate slime jumping
+    .insert(AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)))
     .insert(Enemy {
       health: 5,
     })
     .insert(Movement {
-      direction: Vec3::new(-200., 999999., 0.),
-      speed: 5.
+      direction: Vec3::new(-200., 9999999., 0.),
+      speed: 15.
     })
     .insert(Name::new("Enemy")); // !!! Debug
   
   // Enemy 2
-  commands.spawn(SpriteBundle {
-    texture: assets.enemy.clone(),
+  commands.spawn(SpriteSheetBundle {
+    texture_atlas: assets.enemy.clone(),
     transform: Transform::from_translation(Vec3::new(-200., -100., 0.)),
-    sprite: Sprite {
-      custom_size: Some(Vec2::new(50., 50.)),
-      ..default()
-    },
     ..default()
   })
+    .insert(AnimationIndices {first: 10, last: 19})
+    // Animate slime jumping
+    .insert(AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)))
     .insert(Enemy {
       health: 5,
     })
     .insert(Movement {
       direction: Vec3::new(-200., 999999., 0.),
-      speed: 5.
+      speed: 15.
     })
     .insert(Name::new("Enemy 2")); // !!! Debug
   
