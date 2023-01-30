@@ -1,10 +1,11 @@
 use bevy::utils::FloatOrd;
+use bevy_inspector_egui::Inspectable;
 
 // Debugging
 use bevy::prelude::*;
 pub use crate::enemy::*;
 
-#[derive(Reflect, Component, Default)]
+#[derive(Inspectable, Reflect, Component, Default)]
 pub enum TargetingPriority {
   #[default]
   FIRST,

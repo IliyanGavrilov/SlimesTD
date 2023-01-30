@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+use strum_macros::EnumIter;
+use  bevy_inspector_egui::Inspectable;
 
 pub use crate::targeting_priority::*;
 pub use crate::GameAssets;
@@ -27,6 +29,30 @@ pub struct Tower {
   pub target: TargetingPriority
 }
 
+#[derive(EnumIter, Inspectable, Component, Clone, Copy, Debug, PartialEq)]
+pub enum TowerType {
+  Nature,
+  Fire,
+  Ice,
+  Dark,
+  Mage,
+  Archmage
+}
+
+impl TowerType {
+  pub fn path(&self) -> &str {
+    match self {
+      TowerType::Nature => "tower_buttons/wizard_nature_button.png",
+      TowerType::Fire => "tower_buttons/wizard_fire_button.png",
+      TowerType::Ice => "tower_buttons/wizard_ice_button.png",
+      TowerType::Dark => "tower_buttons/wizard_dark_button.png",
+      TowerType::Mage => "tower_buttons/wizard_mage_button.png",
+      TowerType::Archmage => "tower_buttons/wizard_archmage_button.png",
+      
+    }
+  }
+}
+
 // Marker component to despawn buttons in UI
 #[derive(Component)]
 pub struct TowerUIRoot;
@@ -34,11 +60,11 @@ pub struct TowerUIRoot;
 fn tower_shooting(
   mut commands: Commands,
   assets: Res<GameAssets>, // Bullet assets
-  mut towers: Query<(Entity, &mut Tower, &GlobalTransform)>,
+  mut towers: Query<(Entity, &mut Tower, &mut Transform, &GlobalTransform)>,
   enemies: Query<&GlobalTransform, With<Enemy>>, // Gets all entities With the Enemy component
   time: Res<Time>,
 ) {
-  for (tower_entity, mut tower, transform) in &mut towers {
+  for (tower_entity, mut tower, mut tower_transform, transform) in &mut towers {
     tower.attack_speed.tick(time.delta());
     
     let bullet_spawn_pos = transform.translation() + tower.bullet_spawn_offset;
@@ -60,13 +86,21 @@ fn tower_shooting(
         if transform.translation().y > direction.y { // flip angle if enemy is below tower
           angle = -angle;
         }
+  
         let bullet_transform = Transform::from_translation(tower.bullet_spawn_offset);
+        
+        // Rotate tower to face enemy it is attacking, based on enemy's location
+        tower_transform.rotation = Quat::from_rotation_z(angle);
+        //tower_transform.rotate(Quat::from_rotation_z(angle));
+        //tower_transform.rotate_local(Quat::from_rotation_z(angle));
+        //tower_transform.rotate_local_z(angle);
+        
         
         // Make bullet a child of tower
         commands.entity(tower_entity).with_children(|commands| {
           commands.spawn(SpriteBundle {
             texture: assets.bullet.clone(),
-            transform: bullet_transform.with_rotation(Quat::from_rotation_z(angle)),
+            transform: bullet_transform,//.with_rotation(Quat::from_rotation_z(angle)),
             sprite: Sprite {
               custom_size: Some(Vec2::new(40., 22.)),
               ..default()
@@ -75,10 +109,10 @@ fn tower_shooting(
           })
             .insert(Bullet {
               damage: tower.damage,
-              lifetime: Timer::from_seconds(5., TimerMode::Once)
+              lifetime: Timer::from_seconds(2., TimerMode::Once)
             })
             .insert(Movement {
-              direction,
+              direction: Vec3::new(0.00000001,0.,0.),
               speed: 1500.,
             })
             .insert(Name::new("Bullet"));
