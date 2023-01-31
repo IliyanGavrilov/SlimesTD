@@ -1,6 +1,7 @@
 use bevy::prelude::*;
-use strum_macros::EnumIter;
 use  bevy_inspector_egui::Inspectable;
+use strum_macros::{EnumIter, Display};
+use strum::IntoEnumIterator;
 
 pub use crate::targeting_priority::*;
 pub use crate::GameAssets;
@@ -12,7 +13,8 @@ pub struct TowerPlugin;
 impl Plugin for TowerPlugin {
   fn build(&self, app: &mut App) {
     app.register_type::<Tower>()
-       .add_system(tower_shooting);
+       .add_system(tower_shooting)
+       .add_system(tower_button_clicked);
   }
 }
 
@@ -29,7 +31,7 @@ pub struct Tower {
   pub target: TargetingPriority
 }
 
-#[derive(EnumIter, Inspectable, Component, Clone, Copy, Debug, PartialEq)]
+#[derive(EnumIter, Inspectable, Component, Display, Clone, Copy, Debug, PartialEq)]
 pub enum TowerType {
   Nature,
   Fire,
@@ -52,10 +54,6 @@ impl TowerType {
     }
   }
 }
-
-// Marker component to despawn buttons in UI
-#[derive(Component)]
-pub struct TowerUIRoot;
 
 fn tower_shooting(
   mut commands: Commands,
@@ -81,8 +79,8 @@ fn tower_shooting(
       
       // If there is an enemy in the tower's range!!! (if direction != None), then shoot bullet
       if let Some(direction) = direction {
-        // Rotate bullet, based on enemy location
-        let mut angle = direction.angle_between(tower.bullet_spawn_offset);
+        // Calculate angle between tower and enemy
+        let mut angle = direction.angle_between(transform.translation());
         if transform.translation().y > direction.y { // flip angle if enemy is below tower
           angle = -angle;
         }
@@ -91,16 +89,12 @@ fn tower_shooting(
         
         // Rotate tower to face enemy it is attacking, based on enemy's location
         tower_transform.rotation = Quat::from_rotation_z(angle);
-        //tower_transform.rotate(Quat::from_rotation_z(angle));
-        //tower_transform.rotate_local(Quat::from_rotation_z(angle));
-        //tower_transform.rotate_local_z(angle);
-        
         
         // Make bullet a child of tower
         commands.entity(tower_entity).with_children(|commands| {
           commands.spawn(SpriteBundle {
             texture: assets.bullet.clone(),
-            transform: bullet_transform,//.with_rotation(Quat::from_rotation_z(angle)),
+            transform: bullet_transform,
             sprite: Sprite {
               custom_size: Some(Vec2::new(40., 22.)),
               ..default()
@@ -121,3 +115,45 @@ fn tower_shooting(
     }
   }
 }
+
+// Marker component to despawn buttons in UI
+#[derive(Component)]
+pub struct TowerUIRoot;
+
+fn tower_button_clicked(interaction: Query<(&Interaction, &TowerType), Changed<Interaction>>) {
+  for (interaction, tower_type) in &interaction {
+    if matches!(interaction, Interaction::Clicked) {
+      info!("Spawning: {tower_type} wizard");
+    }
+  }
+}
+
+// // Creating a UI menu on the whole screen with buttons
+// fn generate_ui(mut commands: Commands, assets_server: Res<AssetServer>) {
+//   commands
+//     .spawn(NodeBundle {
+//       style: Style {
+//         size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+//         justify_content: JustifyContent::Center,
+//         ..default()
+//       },
+//       ..default()
+//     })
+//     .insert(TowerUIRoot) // Marker component
+//     .with_children(|commands| { // Make the buttons children of the menu
+//       for i in TowerType::iter() {
+//         commands
+//           .spawn(ButtonBundle {
+//             style: Style {
+//               size: Size::new(Val::Percent(10.0), Val::Percent(10.0)),
+//               align_self: AlignSelf::FlexEnd, // Bottom of screen
+//               margin: UiRect::all(Val::Percent(2.0)),
+//               ..default()
+//             },
+//             image: assets_server.load(i.path()).clone().into(),
+//             ..default()
+//           })
+//           .insert(i);
+//       }
+//     });
+// }

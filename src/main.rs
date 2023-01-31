@@ -3,8 +3,6 @@ use bevy::window::PresentMode;
 // !!!Debugging
 use bevy_editor_pls::*;
 
-use strum::IntoEnumIterator;
-
 mod base;
 pub use base::*;
 mod tower;
@@ -20,7 +18,9 @@ mod targeting_priority;
 // Background of window. The colour of the screen on each refresh
 pub const CLEAR: Color = Color::rgb(0.1, 0.1, 0.1);
 
-// Creating a UI menu on the whole screen
+use strum::IntoEnumIterator;
+
+// Creating a UI menu on the whole screen with buttons
 fn generate_ui(mut commands: Commands, assets_server: Res<AssetServer>) {
   commands
     .spawn(NodeBundle {
@@ -36,15 +36,15 @@ fn generate_ui(mut commands: Commands, assets_server: Res<AssetServer>) {
       for i in TowerType::iter() {
         commands
           .spawn(ButtonBundle {
-          style: Style {
-            size: Size::new(Val::Percent(10.0), Val::Percent(10.0)),
-            align_self: AlignSelf::FlexEnd, // Bottom of screen
-            margin: UiRect::all(Val::Percent(2.0)),
+            style: Style {
+              size: Size::new(Val::Percent(10.0), Val::Percent(10.0)),
+              align_self: AlignSelf::FlexEnd, // Bottom of screen
+              margin: UiRect::all(Val::Percent(2.0)),
+              ..default()
+            },
+            image: assets_server.load(i.path()).clone().into(),
             ..default()
-          },
-          image: assets_server.load(i.path()).clone().into(),
-          ..default()
-        })
+          })
           .insert(i);
       }
     });
@@ -66,7 +66,7 @@ fn main() {
     // Load assets before the startup stage, so we can use them in spawn_basic_scene()
     .add_startup_system_to_stage(StartupStage::PreStartup, load_assets)
     .add_system(animate_enemy_sprite)
-  
+    
     .add_startup_system(generate_ui)
     
     .add_plugin(TowerPlugin)
