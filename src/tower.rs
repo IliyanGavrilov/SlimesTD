@@ -1,12 +1,7 @@
 use bevy::prelude::*;
-use  bevy_inspector_egui::Inspectable;
-use strum_macros::{EnumIter, Display};
 use strum::IntoEnumIterator;
 
-pub use crate::targeting_priority::*;
-pub use crate::GameAssets;
-pub use crate::bullet::Bullet;
-pub use crate::movement::Movement;
+pub use crate::{Bullet, Movement, tower_type::TowerType, GameAssets, targeting_priority::*};
 
 pub struct TowerPlugin;
 
@@ -15,7 +10,7 @@ impl Plugin for TowerPlugin {
     app.register_type::<Tower>()
        .add_startup_system(generate_ui)
        .add_system(tower_shooting)
-       .add_system(tower_button_clicked);
+       .add_system(tower_button_interaction);
   }
 }
 
@@ -53,198 +48,32 @@ impl Tower {
   }
 }
 
-#[derive(EnumIter, Inspectable, Component, Display, Clone, Copy, Debug, PartialEq)]
-pub enum TowerType {
-  Nature,
-  Fire,
-  Ice,
-  Dark,
-  Mage,
-  Archmage
+pub(crate) fn spawn_tower(
+  commands: &mut Commands,
+  assets: &GameAssets,
+  position: Vec3,
+  tower_type: TowerType,
+) {
+  let (tower, tower_asset) = tower_type.get_tower(assets);
+  // Tower
+  commands.spawn(SpriteBundle {
+    texture: tower_asset,
+    transform: Transform::from_translation(position),
+    ..default()
+  })
+    .insert(tower_type)
+    .insert(tower)
+    .insert(Name::new(format!("{tower_type}_ Tower"))); // !!! Debug
 }
-
-impl TowerType {
-  pub fn get_tower(&self, assets: &GameAssets) -> (Tower, Handle<Image>) {
-    match self {
-      TowerType::Nature => (
-        Tower::new(
-          Vec3::new(20., 0., 0.),
-          1,
-          Timer::from_seconds(1., TimerMode::Repeating),
-          10,
-          100
-        ),
-        assets.wizard_nature.clone()
-      ),
-      TowerType::Fire => (
-        Tower::new(
-          Vec3::new(20., 0., 0.),
-          1,
-          Timer::from_seconds(1., TimerMode::Repeating),
-          10,
-          100
-        ),
-        assets.wizard_fire.clone()
-      ),
-      TowerType::Ice => (
-        Tower::new(
-          Vec3::new(20., 0., 0.),
-          1,
-          Timer::from_seconds(1., TimerMode::Repeating),
-          10,
-          100
-        ),
-        assets.wizard_ice.clone()
-      ),
-      TowerType::Dark => (
-        Tower::new(
-          Vec3::new(20., 0., 0.),
-          1,
-          Timer::from_seconds(1., TimerMode::Repeating),
-          10,
-          100
-        ),
-        assets.wizard_dark.clone()
-      ),
-      TowerType::Mage => (
-        Tower::new(
-          Vec3::new(20., 0., 0.),
-          1,
-          Timer::from_seconds(1., TimerMode::Repeating),
-          10,
-          100
-        ),
-        assets.wizard_mage.clone()
-      ),
-      TowerType::Archmage => (
-        Tower::new(
-          Vec3::new(20., 0., 0.),
-          1,
-          Timer::from_seconds(1., TimerMode::Repeating),
-          10,
-          100
-        ),
-        assets.wizard_archmage.clone()
-      )
-    }
-  }
-  
-  pub fn get_bullet(&self, damage: i32, assets: &GameAssets) -> (Bullet, Movement, Handle<Image>) {
-    match self {
-      TowerType::Nature => (
-        Bullet {
-          damage,
-          lifetime: Timer::from_seconds(2., TimerMode::Once),
-        },
-        Movement {
-          direction: Vec3::new(0.00000001,0.,0.),
-          speed: 1500.
-        },
-        assets.wizard_nature_bullet.clone()
-      ),
-      TowerType::Fire => (
-        Bullet {
-          damage,
-          lifetime: Timer::from_seconds(2., TimerMode::Once),
-        },
-        Movement {
-          direction: Vec3::new(0.00000001,0.,0.),
-          speed: 1500.
-        },
-        assets.wizard_fire_bullet.clone()
-      ),
-      TowerType::Ice => (
-        Bullet {
-          damage,
-          lifetime: Timer::from_seconds(2., TimerMode::Once),
-        },
-        Movement {
-          direction: Vec3::new(0.00000001,0.,0.),
-          speed: 1500.
-        },
-        assets.wizard_ice_bullet.clone()
-      ),
-      TowerType::Dark => (
-        Bullet {
-          damage,
-          lifetime: Timer::from_seconds(2., TimerMode::Once),
-        },
-        Movement {
-          direction: Vec3::new(0.00000001,0.,0.),
-          speed: 1500.
-        },
-        assets.wizard_dark_bullet.clone()
-      ),
-      TowerType::Mage => (
-        Bullet {
-          damage,
-          lifetime: Timer::from_seconds(2., TimerMode::Once),
-        },
-        Movement {
-          direction: Vec3::new(0.00000001,0.,0.),
-          speed: 1500.
-        },
-        assets.wizard_mage_bullet.clone()
-      ),
-      TowerType::Archmage => (
-        Bullet {
-          damage,
-          lifetime: Timer::from_seconds(2., TimerMode::Once),
-        },
-        Movement {
-          direction: Vec3::new(0.00000001,0.,0.),
-          speed: 1500.
-        },
-        assets.wizard_archmage_bullet.clone()
-      )
-    }
-  }
-  
-  pub fn path(&self) -> &str {
-    match self {
-      TowerType::Nature => "tower_buttons/wizard_nature_button.png",
-      TowerType::Fire => "tower_buttons/wizard_fire_button.png",
-      TowerType::Ice => "tower_buttons/wizard_ice_button.png",
-      TowerType::Dark => "tower_buttons/wizard_dark_button.png",
-      TowerType::Mage => "tower_buttons/wizard_mage_button.png",
-      TowerType::Archmage => "tower_buttons/wizard_archmage_button.png",
-      
-    }
-  }
-}
-
-// fn tower_spawn(
-//   commands: &mut Commands,
-//   assets: &GameAssets,
-//   position: Vec3,
-//   tower_type: TowerType,
-// ) -> Entity {
-//   let (tower_scene, tower) = tower_type.get_tower(assets);
-//   commands
-//     .spawn(SpatialBundle::from_transform(Transform::from_translation(
-//       position,
-//     )))
-//     .insert(Name::new(format!("{:?}_Tower", tower_type)))
-//     .insert(tower_type)
-//     .insert(tower)
-//     .with_children(|commands| {
-//       commands.spawn(SceneBundle {
-//         scene: tower_scene,
-//         transform: Transform::from_xyz(0.0, -0.8, 0.0),
-//         ..Default::default()
-//       });
-//     })
-//     .id()
-// }
 
 fn tower_shooting(
   mut commands: Commands,
   assets: Res<GameAssets>, // Bullet assets
-  mut towers: Query<(Entity, &mut Tower, &mut Transform, &GlobalTransform)>,
+  mut towers: Query<(Entity, &mut Tower, &TowerType, &mut Transform, &GlobalTransform)>,
   enemies: Query<&GlobalTransform, With<Enemy>>, // Gets all entities With the Enemy component
   time: Res<Time>,
 ) {
-  for (tower_entity, mut tower, mut tower_transform, transform) in &mut towers {
+  for (tower_entity, mut tower, tower_type, mut tower_transform, transform) in &mut towers {
     tower.attack_speed.tick(time.delta());
     
     let bullet_spawn_pos = transform.translation() + tower.bullet_spawn_offset;
@@ -302,17 +131,25 @@ fn tower_shooting(
 #[derive(Component)]
 pub struct TowerUIRoot;
 
-fn tower_button_clicked(interaction: Query<(&Interaction, &TowerType), Changed<Interaction>>) {
+fn tower_button_interaction(interaction: Query<(&Interaction, &TowerType), Changed<Interaction>>) {
   for (interaction, tower_type) in &interaction {
     match interaction {
       Interaction::Clicked => {
+        // Change button UI
         //image = assets.wizard_fire_button_press.clone().into();
+        
         info!("Spawning: {tower_type} wizard");
+        
+        // Spawn asset that follows mouse until it is clicked
+        
+        
+        // Upon clicking the mouse, spawn the selected tower on the map
+        
       }
-      Interaction::Hovered => {
+      Interaction::Hovered => { // Change button UI
         //image = assets.wizard_fire_button_hover.clone().into();
       }
-      Interaction::None => {
+      Interaction::None => { // Change button UI
         //image = assets.wizard_fire_button.clone().into();
       }
     }
@@ -348,33 +185,3 @@ fn generate_ui(mut commands: Commands, assets_server: Res<AssetServer>) {
       }
     });
 }
-
-// // Creating a UI menu on the whole screen with buttons
-// fn generate_ui(mut commands: Commands, assets_server: Res<AssetServer>) {
-//   commands
-//     .spawn(NodeBundle {
-//       style: Style {
-//         size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-//         justify_content: JustifyContent::Center,
-//         ..default()
-//       },
-//       ..default()
-//     })
-//     .insert(TowerUIRoot) // Marker component
-//     .with_children(|commands| { // Make the buttons children of the menu
-//       for i in TowerType::iter() {
-//         commands
-//           .spawn(ButtonBundle {
-//             style: Style {
-//               size: Size::new(Val::Percent(10.0), Val::Percent(10.0)),
-//               align_self: AlignSelf::FlexEnd, // Bottom of screen
-//               margin: UiRect::all(Val::Percent(2.0)),
-//               ..default()
-//             },
-//             image: assets_server.load(i.path()).clone().into(),
-//             ..default()
-//           })
-//           .insert(i);
-//       }
-//     });
-// }

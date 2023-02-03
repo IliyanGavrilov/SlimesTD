@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::{AnimationIndices, AnimationTimer, Enemy, GameAssets, Movement, TargetingPriority, Tower};
+use crate::{AnimationIndices, AnimationTimer, Enemy, GameAssets, Movement, tower::spawn_tower, TowerType};
 
 pub struct SpawnScenePlugin;
 
@@ -52,25 +52,7 @@ fn spawn_basic_scene(
     .insert(Name::new("Enemy 2")); // !!! Debug
   
   // Tower
-  commands.spawn(SpriteBundle {
-    texture: assets.tower.clone(),
-    transform: Transform::from_translation(Vec3::new(100., 0., 0.)),
-    sprite: Sprite {
-      ..default()
-    },
-    ..default()
-  })
-    .insert(Tower {
-      bullet_spawn_offset: Vec3::new(15., 0., 0.),
-      damage: 1,
-      attack_speed: Timer::from_seconds(1., TimerMode::Repeating),
-      range: 10,
-      price: 100,
-      sell_price: (100/3) as i32,
-      target: TargetingPriority::CLOSE
-      //..default()
-    })
-    .insert(Name::new("Tower")); // !!! Debug
+  spawn_tower(&mut commands, &assets, Vec3::new(100., 0., 0.), TowerType::Fire);
 }
 
 fn spawn_camera(mut commands: Commands) {
