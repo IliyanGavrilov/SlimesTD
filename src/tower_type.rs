@@ -186,15 +186,14 @@ impl TowerType {
     }
   }
   
-  pub fn path(&self) -> &str {
+  pub fn path(&self, assets: &GameAssets) -> Handle<Image> {
     match self {
-      TowerType::Nature => "tower_buttons/wizard_nature_button.png",
-      TowerType::Fire => "tower_buttons/wizard_fire_button.png",
-      TowerType::Ice => "tower_buttons/wizard_ice_button.png",
-      TowerType::Dark => "tower_buttons/wizard_dark_button.png",
-      TowerType::Mage => "tower_buttons/wizard_mage_button.png",
-      TowerType::Archmage => "tower_buttons/wizard_archmage_button.png",
-      
+      TowerType::Nature => assets.wizard_nature_button.clone(),
+      TowerType::Fire => assets.wizard_fire_button.clone(),
+      TowerType::Ice => assets.wizard_ice_button.clone(),
+      TowerType::Dark => assets.wizard_dark_button.clone(),
+      TowerType::Mage => assets.wizard_mage_button.clone(),
+      TowerType::Archmage => assets.wizard_archmage_button.clone()
     }
   }
 }

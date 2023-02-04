@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::TowerType;
+use crate::{GameAssets, TowerType};
 use strum::IntoEnumIterator;
 
 pub struct TowerButtonPlugin;
@@ -7,7 +7,7 @@ pub struct TowerButtonPlugin;
 impl Plugin for TowerButtonPlugin {
   fn build(&self, app: &mut App) {
     app.add_startup_system(generate_ui)
-      .add_system(tower_button_interaction);
+       .add_system(tower_button_interaction);
   }
 }
 
@@ -41,7 +41,7 @@ fn tower_button_interaction(interaction: Query<(&Interaction, &TowerType), Chang
 }
 
 // Creating a UI menu on the whole screen with buttons
-fn generate_ui(mut commands: Commands, assets_server: Res<AssetServer>) {
+fn generate_ui(mut commands: Commands, assets: Res<GameAssets>) {
   commands
     .spawn(NodeBundle {
       style: Style {
@@ -62,7 +62,7 @@ fn generate_ui(mut commands: Commands, assets_server: Res<AssetServer>) {
               margin: UiRect::all(Val::Percent(2.0)),
               ..default()
             },
-            image: assets_server.load(i.path()).clone().into(),
+            image: i.path(&assets).into(),
             ..default()
           })
           .insert(i);
