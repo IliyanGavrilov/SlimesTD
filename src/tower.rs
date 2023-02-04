@@ -78,48 +78,61 @@ fn tower_shooting(
     tower_type,
     mut tower_transform,
     transform) in &mut towers {
-    // tower.attack_speed.tick(time.delta());
+    if enemy_in_range(&tower, &tower_transform, &enemies) {
+      let bullet_spawn_pos = transform.translation() + tower.bullet_spawn_offset;
     
-    let bullet_spawn_pos = transform.translation() + tower.bullet_spawn_offset;
+      let direction = match &tower.target {
+        FIRST => first_enemy_direction(&enemies, bullet_spawn_pos),
+        LAST => last_enemy_direction(&enemies, bullet_spawn_pos),
+        CLOSE => closest_enemy_direction(&enemies, bullet_spawn_pos),
+        STRONGEST => strongest_enemy_direction(&enemies, bullet_spawn_pos),
+        WEAKEST => weakest_enemy_direction(&enemies, bullet_spawn_pos)
+      };
     
-    // If the attack cooldown finished, spawn bullet
-    //if tower.attack_speed.just_finished() {
-    let direction = match &tower.target {
-      FIRST => first_enemy_direction(&enemies, bullet_spawn_pos),
-      LAST => last_enemy_direction(&enemies, bullet_spawn_pos),
-      CLOSE => closest_enemy_direction(&enemies, bullet_spawn_pos),
-      STRONGEST => strongest_enemy_direction(&enemies, bullet_spawn_pos),
-      WEAKEST => weakest_enemy_direction(&enemies, bullet_spawn_pos)
-    };
-    
-    // If there is an enemy in the tower's range!!! (if direction != None), then shoot bullet
-    if let Some(direction) = direction {
-      if tower.attack_speed.just_finished() || tower.first_enemy_appeared {
-        tower.first_enemy_appeared = false;
+      // If there is an enemy in the tower's range!!! (if direction != None), then shoot bullet
+      if let Some(direction) = direction {
+        // If the attack cooldown finished OR if there was no enemy spawned before, spawn bullet
+        if tower.attack_speed.just_finished() || tower.first_enemy_appeared {
+          tower.first_enemy_appeared = false;
         
-        // Calculate angle between tower and enemy
-        let mut angle = direction.angle_between(transform.translation());
-        if transform.translation().y > direction.y { // flip angle if enemy is below tower
-          angle = -angle;
+          // Calculate angle between tower and enemy
+          let mut angle = direction.angle_between(transform.translation());
+          if transform.translation().y > direction.y { // flip angle if enemy is below tower
+            angle = -angle;
+          }
+        
+          // Rotate tower to face enemy it is attacking, based on enemy's location
+          tower_transform.rotation = Quat::from_rotation_z(angle);
+        
+          // Make bullet a child of tower
+          commands.entity(tower_entity).with_children(|commands| {
+            commands.spawn(tower_type.get_bullet(
+              tower.damage,
+              &assets,
+              Transform::from_translation(tower.bullet_spawn_offset)));
+          });
         }
-  
-        // Rotate tower to face enemy it is attacking, based on enemy's location
-        tower_transform.rotation = Quat::from_rotation_z(angle);
-  
-        // Make bullet a child of tower
-        commands.entity(tower_entity).with_children(|commands| {
-          commands.spawn(tower_type.get_bullet(
-            tower.damage,
-            &assets,
-            Transform::from_translation(tower.bullet_spawn_offset)));
-        });
+      
+        tower.attack_speed.tick(time.delta());
       }
-  
-      tower.attack_speed.tick(time.delta());
-    }
-    else {
+    } else {
       tower.attack_speed.reset();
       tower.first_enemy_appeared = true;
     }
   }
+}
+
+fn enemy_in_range(
+  tower: &Mut<Tower>,
+  tower_transform: &Mut<Transform>,
+  enemies: &Query<&GlobalTransform, With<Enemy>>
+) -> bool {
+  for enemy_transform in enemies {
+    if Vec3::distance(tower_transform.translation,
+                      enemy_transform.translation()) <= tower.range as f32 {
+      return true
+    }
+  }
+  
+  return false
 }

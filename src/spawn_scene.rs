@@ -10,29 +10,40 @@ impl Plugin for SpawnScenePlugin {
   }
 }
 
+use bevy::sprite::MaterialMesh2dBundle;
+
 fn spawn_basic_scene(
   mut commands: Commands,
+  mut meshes: ResMut<Assets<Mesh>>,
+  mut materials: ResMut<Assets<ColorMaterial>>,
   assets: Res<GameAssets> // Tower and enemy assets
 ) {
   // Enemy
   spawn_enemy(&mut commands,
-              EnemyType::Green,
+              EnemyType::Red,
                 &assets,
-              Vec3::new(-200., 0., 0.),
-              Vec3::new(-200., 9999999., 0.));
+              Vec3::new(0., 0., 0.),
+              Vec3::new(0., 9999999., 0.));
   
   // Enemy 2
   spawn_enemy(&mut commands,
-              EnemyType::Yellow,
+              EnemyType::Purple,
               &assets,
-              Vec3::new(-200., -100., 0.),
-              Vec3::new(-200., 9999999., 0.));
+              Vec3::new(0., -100., 0.),
+              Vec3::new(0., 9999999., 0.));
   
   // Tower
   spawn_tower(&mut commands,
               TowerType::Fire,
               &assets,
               Vec3::new(100., 0., 0.));
+  
+  commands.spawn(MaterialMesh2dBundle {
+    mesh: meshes.add(shape::Circle::new(125.).into()).into(),
+    material: materials.add(ColorMaterial::from(Color::CYAN)),
+    transform: Transform::from_translation(Vec3::new(100., 0., -0.)),
+    ..default()
+  });
 }
 
 fn spawn_camera(mut commands: Commands) {
