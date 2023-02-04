@@ -11,6 +11,31 @@ impl Plugin for TowerPlugin {
   }
 }
 
+#[derive(Bundle)]
+pub struct TowerBundle {
+  pub tower_type: TowerType,
+  pub tower: Tower,
+  pub sprite: SpriteBundle,
+  pub name: Name
+}
+
+impl Default for TowerBundle {
+  fn default() -> Self {
+    TowerBundle {
+      tower_type: TowerType::Nature,
+      tower: Tower::new(
+        Vec3::new(20., 0., 0.),
+        1,
+        Timer::from_seconds(1., TimerMode::Repeating),
+        10,
+        100
+      ),
+      sprite: Default::default(),
+      name: Name::new("NatureTower")
+    }
+  }
+}
+
 //#[derive(Component)] // !!!Debugging
 #[derive(Reflect, Component, Default)]
 #[reflect(Component)]
@@ -51,16 +76,7 @@ pub fn spawn_tower(
   assets: &GameAssets,
   position: Vec3
 ) {
-  let (tower, tower_asset) = tower_type.get_tower(assets);
-  // Tower
-  commands.spawn(SpriteBundle {
-    texture: tower_asset,
-    transform: Transform::from_translation(position),
-    ..default()
-  })
-    .insert(tower_type)
-    .insert(tower)
-    .insert(Name::new(format!("{tower_type}Tower"))); // !!! Debug
+  commands.spawn(tower_type.get_tower(assets, position));
 }
 
 fn tower_shooting(
