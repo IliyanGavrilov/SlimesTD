@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::{AnimationIndices, AnimationTimer, Enemy, GameAssets, Movement, tower::spawn_tower, TowerType};
+use crate::{enemy::spawn_enemy, EnemyType, GameAssets, tower::spawn_tower, TowerType};
 
 pub struct SpawnScenePlugin;
 
@@ -15,44 +15,24 @@ fn spawn_basic_scene(
   assets: Res<GameAssets> // Tower and enemy assets
 ) {
   // Enemy
-  commands.spawn(SpriteSheetBundle {
-    texture_atlas: assets.enemy.clone(),
-    transform: Transform::from_translation(Vec3::new(-200., 0., 0.)),
-    ..default()
-  })
-    .insert(AnimationIndices {first: 0, last: 9})
-    // Animate slime jumping
-    .insert(AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)))
-    .insert(Enemy {
-      health: 5,
-    })
-    .insert(Movement {
-      direction: Vec3::new(-200., 9999999., 0.),
-      speed: 15.
-    })
-    .insert(Name::new("Enemy")); // !!! Debug
+  spawn_enemy(&mut commands,
+              EnemyType::Green,
+                &assets,
+              Vec3::new(-200., 0., 0.),
+              Vec3::new(-200., 9999999., 0.));
   
   // Enemy 2
-  commands.spawn(SpriteSheetBundle {
-    texture_atlas: assets.enemy.clone(),
-    transform: Transform::from_translation(Vec3::new(-200., -100., 0.)),
-    sprite: TextureAtlasSprite::new(10),
-    ..default()
-  })
-    .insert(AnimationIndices {first: 10, last: 19})
-    // Animate slime jumping
-    .insert(AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)))
-    .insert(Enemy {
-      health: 5,
-    })
-    .insert(Movement {
-      direction: Vec3::new(-200., 999999., 0.),
-      speed: 15.
-    })
-    .insert(Name::new("Enemy 2")); // !!! Debug
+  spawn_enemy(&mut commands,
+              EnemyType::Yellow,
+              &assets,
+              Vec3::new(-200., -100., 0.),
+              Vec3::new(-200., 9999999., 0.));
   
   // Tower
-  spawn_tower(&mut commands, &assets, Vec3::new(100., 0., 0.), TowerType::Fire);
+  spawn_tower(&mut commands,
+              TowerType::Fire,
+              &assets,
+              Vec3::new(100., 0., 0.));
 }
 
 fn spawn_camera(mut commands: Commands) {

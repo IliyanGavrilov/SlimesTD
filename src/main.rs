@@ -13,6 +13,8 @@ pub use base::*;
 mod tower;
 pub use tower::*;
 mod tower_type;
+mod tower_button;
+pub use tower_button::*;
 mod enemy;
 pub use enemy::*;
 mod enemy_type;
@@ -22,9 +24,6 @@ mod movement;
 pub use movement::*;
 mod targeting_priority;
 
-// Background of window. The colour of the screen on each refresh
-pub const CLEAR: Color = Color::rgb(0.1, 0.1, 0.1);
-
 // Temp!!!
 fn load(time: Res<Time>) {
   Timer::from_seconds(5., TimerMode::Once).tick(time.delta());
@@ -33,7 +32,7 @@ fn load(time: Res<Time>) {
 fn main() {
   App::new()
     // Background of window. Set colour of screen on each refresh
-    .insert_resource(ClearColor(CLEAR))
+    .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
   
     .add_startup_system_to_stage(StartupStage::PreStartup, load)
     
@@ -41,6 +40,7 @@ fn main() {
     .add_plugin(SettingsPlugin)
     .add_plugin(AssetPlugin)
     .add_plugin(TowerPlugin)
+    .add_plugin(TowerButtonPlugin)
     .add_plugin(EnemyPlugin)
     .add_plugin(BulletPlugin)
     .add_plugin(MovementPlugin)

@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use strum::IntoEnumIterator;
 
 pub use crate::{Bullet, Movement, tower_type::TowerType, GameAssets, targeting_priority::*};
 
@@ -8,9 +7,7 @@ pub struct TowerPlugin;
 impl Plugin for TowerPlugin {
   fn build(&self, app: &mut App) {
     app.register_type::<Tower>()
-       .add_startup_system(generate_ui)
-       .add_system(tower_shooting)
-       .add_system(tower_button_interaction);
+       .add_system(tower_shooting);
   }
 }
 
@@ -48,11 +45,11 @@ impl Tower {
   }
 }
 
-pub(crate) fn spawn_tower(
+pub fn spawn_tower(
   commands: &mut Commands,
-  assets: &GameAssets,
-  position: Vec3,
   tower_type: TowerType,
+  assets: &GameAssets,
+  position: Vec3
 ) {
   let (tower, tower_asset) = tower_type.get_tower(assets);
   // Tower
@@ -63,7 +60,7 @@ pub(crate) fn spawn_tower(
   })
     .insert(tower_type)
     .insert(tower)
-    .insert(Name::new(format!("{tower_type}_ Tower"))); // !!! Debug
+    .insert(Name::new(format!("{tower_type}_Tower"))); // !!! Debug
 }
 
 fn tower_shooting(
@@ -101,87 +98,24 @@ fn tower_shooting(
         // Rotate tower to face enemy it is attacking, based on enemy's location
         tower_transform.rotation = Quat::from_rotation_z(angle);
         
+        let (bullet, bullet_movement, bullet_asset) = tower_type.get_bullet(tower.damage, &assets);
+        
         // Make bullet a child of tower
         commands.entity(tower_entity).with_children(|commands| {
           commands.spawn(SpriteBundle {
-            texture: assets.bullet.clone(),
+            texture: bullet_asset,
             transform: bullet_transform,
-            sprite: Sprite {
+            sprite: Sprite { // !!! Temp
               custom_size: Some(Vec2::new(40., 22.)),
               ..default()
             },
             ..default()
           })
-            .insert(Bullet {
-              damage: tower.damage,
-              lifetime: Timer::from_seconds(2., TimerMode::Once)
-            })
-            .insert(Movement {
-              direction: Vec3::new(0.00000001,0.,0.),
-              speed: 1500.,
-            })
+            .insert(bullet)
+            .insert(bullet_movement)
             .insert(Name::new("Bullet"));
         });
       }
     }
   }
-}
-
-// Marker component to despawn buttons in UI
-#[derive(Component)]
-pub struct TowerUIRoot;
-
-fn tower_button_interaction(interaction: Query<(&Interaction, &TowerType), Changed<Interaction>>) {
-  for (interaction, tower_type) in &interaction {
-    match interaction {
-      Interaction::Clicked => {
-        // Change button UI
-        //image = assets.wizard_fire_button_press.clone().into();
-        
-        info!("Spawning: {tower_type} wizard");
-        
-        // Spawn asset that follows mouse until it is clicked
-        
-        
-        // Upon clicking the mouse, spawn the selected tower on the map
-        
-      }
-      Interaction::Hovered => { // Change button UI
-        //image = assets.wizard_fire_button_hover.clone().into();
-      }
-      Interaction::None => { // Change button UI
-        //image = assets.wizard_fire_button.clone().into();
-      }
-    }
-  }
-}
-
-// Creating a UI menu on the whole screen with buttons
-fn generate_ui(mut commands: Commands, assets_server: Res<AssetServer>) {
-  commands
-    .spawn(NodeBundle {
-      style: Style {
-        size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-        justify_content: JustifyContent::Center,
-        ..default()
-      },
-      ..default()
-    })
-    .insert(TowerUIRoot) // Marker component
-    .with_children(|commands| { // Make the buttons children of the menu
-      for i in TowerType::iter() {
-        commands
-          .spawn(ButtonBundle {
-            style: Style {
-              size: Size::new(Val::Percent(15.0 * 9.0 / 16.0), Val::Percent(10.0)),
-              align_self: AlignSelf::FlexEnd, // Bottom of screen
-              margin: UiRect::all(Val::Percent(2.0)),
-              ..default()
-            },
-            image: assets_server.load(i.path()).clone().into(),
-            ..default()
-          })
-          .insert(i);
-      }
-    });
 }

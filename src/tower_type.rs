@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::{Bullet, GameAssets, Movement, Tower};
 use strum_macros::{EnumIter, Display};
-use  bevy_inspector_egui::Inspectable;
+use bevy_inspector_egui::Inspectable;
 
 #[derive(EnumIter, Inspectable, Component, Display, Clone, Copy, Debug, PartialEq)]
 pub enum TowerType {
