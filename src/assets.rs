@@ -22,7 +22,6 @@ pub struct GameAssets {
   pub wizard_dark: Handle<Image>,
   pub wizard_mage: Handle<Image>,
   pub wizard_archmage: Handle<Image>,
-  pub tower: Handle<Image>,
   // Tower buttons:
   pub wizard_nature_button: Handle<Image>,
   pub wizard_fire_button: Handle<Image>,
@@ -42,8 +41,7 @@ pub struct GameAssets {
   pub wizard_ice_bullet: Handle<Image>,
   pub wizard_dark_bullet: Handle<Image>,
   pub wizard_mage_bullet: Handle<Image>,
-  pub wizard_archmage_bullet: Handle<Image>,
-  pub bullet: Handle<Image>
+  pub wizard_archmage_bullet: Handle<Image>
 }
 
 fn load_assets(
@@ -59,7 +57,6 @@ fn load_assets(
     wizard_dark: assets_server.load("towers/wizard_dark.png"),
     wizard_mage: assets_server.load("towers/wizard_mage.png"),
     wizard_archmage: assets_server.load("towers/wizard_archmage.png"),
-    tower: assets_server.load("towers/wizard_fire.png"),
     // Tower buttons
     wizard_nature_button: assets_server.load("tower_buttons/wizard_nature_button.png"),
     wizard_fire_button: assets_server.load("tower_buttons/wizard_fire_button.png"),
@@ -83,8 +80,7 @@ fn load_assets(
     wizard_ice_bullet: assets_server.load("tower_bullets/wizard_ice_bullet.png"),
     wizard_dark_bullet: assets_server.load("tower_bullets/wizard_dark_bullet.png"),
     wizard_mage_bullet: assets_server.load("tower_bullets/wizard_mage_bullet.png"),
-    wizard_archmage_bullet: assets_server.load("tower_bullets/wizard_archmage_bullet.png"),
-    bullet: assets_server.load("fireball.png")
+    wizard_archmage_bullet: assets_server.load("tower_bullets/wizard_archmage_bullet.png")
   })
 }
 

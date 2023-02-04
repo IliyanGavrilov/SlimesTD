@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::{Bullet, GameAssets, Movement, Tower, TowerBundle};
+use crate::{Bullet, BulletBundle, GameAssets, Movement, Tower, TowerBundle};
 use strum_macros::{EnumIter, Display};
 use bevy_inspector_egui::Inspectable;
 
@@ -111,78 +111,108 @@ impl TowerType {
           ..default()
         },
         name: Name::new("ArchmageTower")
-      },
+      }
     }
   }
   
-  pub fn get_bullet(&self, damage: i32, assets: &GameAssets) -> (Bullet, Movement, Handle<Image>) {
+  pub fn get_bullet(&self, damage: i32, assets: &GameAssets, position: Transform) -> BulletBundle {
     match self {
-      TowerType::Nature => (
-        Bullet {
+      TowerType::Nature => BulletBundle {
+          bullet: Bullet {
+            damage,
+            lifetime: Timer::from_seconds(2., TimerMode::Once),
+          },
+          movement: Movement {
+            direction: Vec3::new(0.00000001,0.,0.),
+            speed: 1500.
+          },
+          sprite: SpriteBundle {
+            texture: assets.wizard_nature_bullet.clone(),
+            transform: position,
+            ..default()
+          },
+          name: Name::new("Bullet")
+      },
+      TowerType::Fire => BulletBundle {
+        bullet: Bullet {
           damage,
           lifetime: Timer::from_seconds(2., TimerMode::Once),
         },
-        Movement {
+        movement: Movement {
           direction: Vec3::new(0.00000001,0.,0.),
           speed: 1500.
         },
-        assets.wizard_nature_bullet.clone()
-      ),
-      TowerType::Fire => (
-        Bullet {
+        sprite: SpriteBundle {
+          texture: assets.wizard_fire_bullet.clone(),
+          transform: position,
+          ..default()
+        },
+        name: Name::new("Bullet")
+      },
+      TowerType::Ice => BulletBundle {
+        bullet: Bullet {
           damage,
           lifetime: Timer::from_seconds(2., TimerMode::Once),
         },
-        Movement {
+        movement: Movement {
           direction: Vec3::new(0.00000001,0.,0.),
           speed: 1500.
         },
-        assets.wizard_fire_bullet.clone()
-      ),
-      TowerType::Ice => (
-        Bullet {
+        sprite: SpriteBundle {
+          texture: assets.wizard_ice_bullet.clone(),
+          transform: position,
+          ..default()
+        },
+        name: Name::new("Bullet")
+      },
+      TowerType::Dark => BulletBundle {
+        bullet: Bullet {
           damage,
           lifetime: Timer::from_seconds(2., TimerMode::Once),
         },
-        Movement {
+        movement: Movement {
           direction: Vec3::new(0.00000001,0.,0.),
           speed: 1500.
         },
-        assets.wizard_ice_bullet.clone()
-      ),
-      TowerType::Dark => (
-        Bullet {
+        sprite: SpriteBundle {
+          texture: assets.wizard_dark_bullet.clone(),
+          transform: position,
+          ..default()
+        },
+        name: Name::new("Bullet")
+      },
+      TowerType::Mage => BulletBundle {
+        bullet: Bullet {
           damage,
           lifetime: Timer::from_seconds(2., TimerMode::Once),
         },
-        Movement {
+        movement: Movement {
           direction: Vec3::new(0.00000001,0.,0.),
           speed: 1500.
         },
-        assets.wizard_dark_bullet.clone()
-      ),
-      TowerType::Mage => (
-        Bullet {
+        sprite: SpriteBundle {
+          texture: assets.wizard_mage_bullet.clone(),
+          transform: position,
+          ..default()
+        },
+        name: Name::new("Bullet")
+      },
+      TowerType::Archmage => BulletBundle {
+        bullet: Bullet {
           damage,
           lifetime: Timer::from_seconds(2., TimerMode::Once),
         },
-        Movement {
+        movement: Movement {
           direction: Vec3::new(0.00000001,0.,0.),
           speed: 1500.
         },
-        assets.wizard_mage_bullet.clone()
-      ),
-      TowerType::Archmage => (
-        Bullet {
-          damage,
-          lifetime: Timer::from_seconds(2., TimerMode::Once),
+        sprite: SpriteBundle {
+          texture: assets.wizard_archmage_bullet.clone(),
+          transform: position,
+          ..default()
         },
-        Movement {
-          direction: Vec3::new(0.00000001,0.,0.),
-          speed: 1500.
-        },
-        assets.wizard_archmage_bullet.clone()
-      )
+        name: Name::new("Bullet")
+      }
     }
   }
   
