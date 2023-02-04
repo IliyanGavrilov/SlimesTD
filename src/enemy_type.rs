@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 use strum_macros::{Display};
-use crate::{AnimationIndices, AnimationTimer, Enemy, Movement};
+use crate::{AnimationIndices, Enemy, EnemyBundle, GameAssets, Movement};
 
 #[derive(Inspectable, Component, Display, Clone, Copy, Debug, PartialEq)]
 pub enum EnemyType {
@@ -16,80 +16,116 @@ pub enum EnemyType {
 }
 
 impl EnemyType {
-  pub fn get_enemy(&self, direction: Vec3) -> (Enemy, Movement, AnimationIndices, AnimationTimer) {
+  pub fn get_enemy(&self, assets: &GameAssets, position: Vec3, direction: Vec3) -> EnemyBundle {
     match self {
-      EnemyType::Green => (
-        Enemy::new(1),
-        Movement {
-          direction,
-          speed: 15.
+      EnemyType::Green => EnemyBundle {
+        movement: Movement { direction, speed: 15. },
+        sprite_sheet_bundle: SpriteSheetBundle {
+          texture_atlas: assets.enemy.clone(),
+          transform: Transform::from_translation(position),
+          sprite: TextureAtlasSprite::new(0),
+          ..default()
         },
-        AnimationIndices {first: 0, last: 9},
-        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
-      ),
-      EnemyType::Yellow => (
-        Enemy::new(2),
-        Movement {
-          direction,
-          speed: 15.
+        ..default()
+      },
+      EnemyType::Yellow => EnemyBundle {
+        enemy_type: EnemyType::Yellow,
+        enemy: Enemy::new(2),
+        movement: Movement { direction, speed: 15. },
+        animation_indices: AnimationIndices {first: 10, last: 19},
+        sprite_sheet_bundle: SpriteSheetBundle {
+          texture_atlas: assets.enemy.clone(),
+          transform: Transform::from_translation(position),
+          sprite: TextureAtlasSprite::new(10),
+          ..default()
         },
-        AnimationIndices {first: 10, last: 19},
-        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
-      ),
-      EnemyType::Pink => (
-        Enemy::new(3),
-        Movement {
-          direction,
-          speed: 15.
+        name: Name::new("YellowEnemy"),
+        ..default()
+      },
+      EnemyType::Pink => EnemyBundle {
+        enemy_type: EnemyType::Pink,
+        enemy: Enemy::new(3),
+        movement: Movement { direction, speed: 15. },
+        animation_indices: AnimationIndices {first: 20, last: 29},
+        sprite_sheet_bundle: SpriteSheetBundle {
+          texture_atlas: assets.enemy.clone(),
+          transform: Transform::from_translation(position),
+          sprite: TextureAtlasSprite::new(20),
+          ..default()
         },
-        AnimationIndices {first: 20, last: 29},
-        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
-      ),
-      EnemyType::White => (
-        Enemy::new(4),
-        Movement {
-          direction,
-          speed: 15.
+        name: Name::new("PinkEnemy"),
+        ..default()
+      },
+      EnemyType::White => EnemyBundle {
+        enemy_type: EnemyType::White,
+        enemy: Enemy::new(4),
+        movement: Movement { direction, speed: 15. },
+        animation_indices: AnimationIndices {first: 30, last: 39},
+        sprite_sheet_bundle: SpriteSheetBundle {
+          texture_atlas: assets.enemy.clone(),
+          transform: Transform::from_translation(position),
+          sprite: TextureAtlasSprite::new(30),
+          ..default()
         },
-        AnimationIndices {first: 30, last: 39},
-        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
-      ),
-      EnemyType::Blue => (
-        Enemy::new(5),
-        Movement {
-          direction,
-          speed: 15.
+        name: Name::new("WhiteEnemy"),
+        ..default()
+      },
+      EnemyType::Blue => EnemyBundle {
+        enemy_type: EnemyType::Blue,
+        enemy: Enemy::new(5),
+        movement: Movement { direction, speed: 15. },
+        animation_indices: AnimationIndices {first: 40, last: 49},
+        sprite_sheet_bundle: SpriteSheetBundle {
+          texture_atlas: assets.enemy.clone(),
+          transform: Transform::from_translation(position),
+          sprite: TextureAtlasSprite::new(40),
+          ..default()
         },
-        AnimationIndices {first: 40, last: 49},
-        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
-      ),
-      EnemyType::Orange => (
-        Enemy::new(6),
-        Movement {
-          direction,
-          speed: 15.
+        name: Name::new("BlueEnemy"),
+        ..default()
+      },
+      EnemyType::Orange => EnemyBundle {
+        enemy_type: EnemyType::Orange,
+        enemy: Enemy::new(6),
+        movement: Movement { direction, speed: 15. },
+        animation_indices: AnimationIndices {first: 50, last: 59},
+        sprite_sheet_bundle: SpriteSheetBundle {
+          texture_atlas: assets.enemy.clone(),
+          transform: Transform::from_translation(position),
+          sprite: TextureAtlasSprite::new(50),
+          ..default()
         },
-        AnimationIndices {first: 50, last: 59},
-        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
-      ),
-      EnemyType::Purple => (
-        Enemy::new(7),
-        Movement {
-          direction,
-          speed: 15.
+        name: Name::new("OrangeEnemy"),
+        ..default()
+      },
+      EnemyType::Purple => EnemyBundle {
+        enemy_type: EnemyType::Purple,
+        enemy: Enemy::new(7),
+        movement: Movement { direction, speed: 15. },
+        animation_indices: AnimationIndices {first: 60, last: 69},
+        sprite_sheet_bundle: SpriteSheetBundle {
+          texture_atlas: assets.enemy.clone(),
+          transform: Transform::from_translation(position),
+          sprite: TextureAtlasSprite::new(60),
+          ..default()
         },
-        AnimationIndices {first: 60, last: 69},
-        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
-      ),
-      EnemyType::Red => (
-        Enemy::new(8),
-        Movement {
-          direction,
-          speed: 15.
+        name: Name::new("PurpleEnemy"),
+        ..default()
+      },
+      EnemyType::Red => EnemyBundle {
+        enemy_type: EnemyType::Green,
+        enemy: Enemy::new(8),
+        movement: Movement { direction, speed: 15. },
+        animation_indices: AnimationIndices {first: 70, last: 79},
+        sprite_sheet_bundle: SpriteSheetBundle {
+          texture_atlas: assets.enemy.clone(),
+          transform: Transform::from_translation(position),
+          sprite: TextureAtlasSprite::new(70),
+          ..default()
         },
-        AnimationIndices {first: 70, last: 79},
-        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
-      )
+        name: Name::new("RedEnemy"),
+        ..default()
+      }
     }
   }
 }

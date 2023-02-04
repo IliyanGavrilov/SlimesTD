@@ -60,7 +60,7 @@ pub fn spawn_tower(
   })
     .insert(tower_type)
     .insert(tower)
-    .insert(Name::new(format!("{tower_type}_Tower"))); // !!! Debug
+    .insert(Name::new(format!("{tower_type}Tower"))); // !!! Debug
 }
 
 fn tower_shooting(

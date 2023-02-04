@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 pub use crate::{GameAssets, Movement, enemy_type::EnemyType};
+use crate::{AnimationIndices, AnimationTimer};
 
 pub struct EnemyPlugin;
 
@@ -10,20 +11,30 @@ impl Plugin for EnemyPlugin {
   }
 }
 
-// #[derive(Bundle)]
-// pub struct EnemyBundle {
-//   pub enemy: Enemy,
-//   pub movement: Movement,
-//   pub animation_indices: AnimationIndices,
-//
-// }
-//
-// impl Default for EnemyBundle {
-//   fn default() -> Self {
-//     Self {
-//     }
-//   }
-// }
+#[derive(Bundle)]
+pub struct EnemyBundle {
+  pub enemy_type: EnemyType,
+  pub enemy: Enemy,
+  pub movement: Movement,
+  pub animation_indices: AnimationIndices,
+  pub animation_timer: AnimationTimer,
+  pub sprite_sheet_bundle: SpriteSheetBundle,
+  pub name: Name
+}
+
+impl Default for EnemyBundle {
+  fn default() -> Self {
+    EnemyBundle {
+      enemy_type: EnemyType::Green,
+      enemy: Enemy::new(1),
+      movement: Movement { direction: default(), speed: 15. },
+      animation_indices: AnimationIndices {first: 0, last: 9},
+      animation_timer: AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+      sprite_sheet_bundle: SpriteSheetBundle::default(),
+      name: Name::new("GreenEnemy")
+    }
+  }
+}
 
 // !!! Debugging
 #[derive(Reflect, Component, Default)]
@@ -47,25 +58,7 @@ pub fn spawn_enemy(
   position: Vec3,
   direction: Vec3
 ) {
-  // Enemy, Movement, AnimationIndices, AnimationTimer
-  let (enemy,
-       enemy_movement,
-       enemy_animation_indices,
-       enemy_animation_timer) = enemy_type.get_enemy(direction);
-  // Tower
-  commands.spawn(SpriteSheetBundle {
-    texture_atlas: assets.enemy.clone(),
-    transform: Transform::from_translation(position),
-    sprite: TextureAtlasSprite::new(enemy_animation_indices.first),
-    ..default()
-  }
-  )
-    .insert(enemy_type)
-    .insert(enemy)
-    .insert(enemy_movement)
-    .insert(enemy_animation_indices)
-    .insert(enemy_animation_timer)
-    .insert(Name::new(format!("{enemy_type}_Enemy"))); // !!! Debug
+  commands.spawn(enemy_type.get_enemy(assets, position, direction));
 }
 
 fn despawn_enemy_on_death(mut commands: Commands, enemies: Query<(Entity, &mut Enemy)>) {
