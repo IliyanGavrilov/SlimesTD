@@ -38,12 +38,14 @@ fn spawn_basic_scene(
               &assets,
               Vec3::new(100., 0., 0.));
   
+  // Tower range
   commands.spawn(MaterialMesh2dBundle {
     mesh: meshes.add(shape::Circle::new(125.).into()).into(),
-    material: materials.add(ColorMaterial::from(Color::CYAN)),
-    transform: Transform::from_translation(Vec3::new(100., 0., -0.)),
+    material: materials.add(ColorMaterial::from(
+      Color::rgba_u8(0, 0, 0, 85))),
+    transform: Transform::from_translation(Vec3::new(100., 0., -0.0000000001)),
     ..default()
-  });
+  }).insert(Name::new("TowerRangeCircle"));
 }
 
 fn spawn_camera(mut commands: Commands) {
