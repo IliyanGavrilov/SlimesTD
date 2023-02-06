@@ -22,17 +22,27 @@ pub struct GameAssets {
   pub wizard_dark: Handle<Image>,
   pub wizard_mage: Handle<Image>,
   pub wizard_archmage: Handle<Image>,
-  // Tower buttons:
+  // Tower buttons
   pub wizard_nature_button: Handle<Image>,
   pub wizard_fire_button: Handle<Image>,
   pub wizard_ice_button: Handle<Image>,
   pub wizard_dark_button: Handle<Image>,
   pub wizard_mage_button: Handle<Image>,
   pub wizard_archmage_button: Handle<Image>,
-  // Tower hovered buttons:
+  // Tower buttons hovered
+  pub wizard_nature_button_hover: Handle<Image>,
   pub wizard_fire_button_hover: Handle<Image>,
-  // Tower pressed buttons:
+  pub wizard_ice_button_hover: Handle<Image>,
+  pub wizard_dark_button_hover: Handle<Image>,
+  pub wizard_mage_button_hover: Handle<Image>,
+  pub wizard_archmage_button_hover: Handle<Image>,
+  // Tower buttons pressed
+  pub wizard_nature_button_press: Handle<Image>,
   pub wizard_fire_button_press: Handle<Image>,
+  pub wizard_ice_button_press: Handle<Image>,
+  pub wizard_dark_button_press: Handle<Image>,
+  pub wizard_mage_button_press: Handle<Image>,
+  pub wizard_archmage_button_press: Handle<Image>,
   // Enemies
   pub enemy: Handle<TextureAtlas>, // !!!! Rename
   // Tower bullets
@@ -65,9 +75,19 @@ fn load_assets(
     wizard_mage_button: assets_server.load("tower_buttons/wizard_mage_button.png"),
     wizard_archmage_button: assets_server.load("tower_buttons/wizard_archmage_button.png"),
     // Tower buttons hovered
+    wizard_nature_button_hover: assets_server.load("tower_buttons/wizard_nature_button_hover.png"),
     wizard_fire_button_hover: assets_server.load("tower_buttons/wizard_fire_button_hover.png"),
+    wizard_ice_button_hover: assets_server.load("tower_buttons/wizard_ice_button_hover.png"),
+    wizard_dark_button_hover: assets_server.load("tower_buttons/wizard_dark_button_hover.png"),
+    wizard_mage_button_hover: assets_server.load("tower_buttons/wizard_mage_button_hover.png"),
+    wizard_archmage_button_hover: assets_server.load("tower_buttons/wizard_archmage_button_hover.png"),
     // Tower buttons pressed
+    wizard_nature_button_press: assets_server.load("tower_buttons/wizard_nature_button_press.png"),
     wizard_fire_button_press: assets_server.load("tower_buttons/wizard_fire_button_press.png"),
+    wizard_ice_button_press: assets_server.load("tower_buttons/wizard_ice_button_press.png"),
+    wizard_dark_button_press: assets_server.load("tower_buttons/wizard_dark_button_press.png"),
+    wizard_mage_button_press: assets_server.load("tower_buttons/wizard_mage_button_press.png"),
+    wizard_archmage_button_press: assets_server.load("tower_buttons/wizard_archmage_button_press.png"),
     // Enemies
     enemy: texture_atlases.add(
       TextureAtlas::from_grid(assets_server.load("slime_jump.png"),

@@ -216,14 +216,36 @@ impl TowerType {
     }
   }
   
-  pub fn path(&self, assets: &GameAssets) -> Handle<Image> {
-    match self {
-      TowerType::Nature => assets.wizard_nature_button.clone(),
-      TowerType::Fire => assets.wizard_fire_button.clone(),
-      TowerType::Ice => assets.wizard_ice_button.clone(),
-      TowerType::Dark => assets.wizard_dark_button.clone(),
-      TowerType::Mage => assets.wizard_mage_button.clone(),
-      TowerType::Archmage => assets.wizard_archmage_button.clone()
+  pub fn get_button_asset(&self, assets: &GameAssets, button_type: &str) -> Handle<Image> {
+    if button_type == "normal" {
+      match self {
+        TowerType::Nature => assets.wizard_nature_button.clone(),
+        TowerType::Fire => assets.wizard_fire_button.clone(),
+        TowerType::Ice => assets.wizard_ice_button.clone(),
+        TowerType::Dark => assets.wizard_dark_button.clone(),
+        TowerType::Mage => assets.wizard_mage_button.clone(),
+        TowerType::Archmage => assets.wizard_archmage_button.clone()
+      }
+    }
+    else if button_type == "hover" {
+      match self {
+        TowerType::Nature => assets.wizard_nature_button_hover.clone(),
+        TowerType::Fire => assets.wizard_fire_button_hover.clone(),
+        TowerType::Ice => assets.wizard_ice_button_hover.clone(),
+        TowerType::Dark => assets.wizard_dark_button_hover.clone(),
+        TowerType::Mage => assets.wizard_mage_button_hover.clone(),
+        TowerType::Archmage => assets.wizard_archmage_button_hover.clone()
+      }
+    }
+    else { // button_type = "press"
+      match self {
+        TowerType::Nature => assets.wizard_nature_button_press.clone(),
+        TowerType::Fire => assets.wizard_fire_button_press.clone(),
+        TowerType::Ice => assets.wizard_ice_button_press.clone(),
+        TowerType::Dark => assets.wizard_dark_button_press.clone(),
+        TowerType::Mage => assets.wizard_mage_button_press.clone(),
+        TowerType::Archmage => assets.wizard_archmage_button_press.clone()
+      }
     }
   }
 }
