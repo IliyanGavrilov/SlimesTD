@@ -22,7 +22,7 @@ impl TowerType {
             Vec3::new(20., 0., 0.),
             1,
             Timer::from_seconds(1., TimerMode::Repeating),
-            125,
+            self.get_range(),
             100
           ),
           sprite: SpriteBundle {
@@ -38,7 +38,7 @@ impl TowerType {
           Vec3::new(20., 0., 0.),
           1,
           Timer::from_seconds(1., TimerMode::Repeating),
-          125,
+          self.get_range(),
           100
         ),
         sprite: SpriteBundle {
@@ -54,7 +54,7 @@ impl TowerType {
           Vec3::new(20., 0., 0.),
           1,
           Timer::from_seconds(1., TimerMode::Repeating),
-          125,
+          self.get_range(),
           100
         ),
         sprite: SpriteBundle {
@@ -70,7 +70,7 @@ impl TowerType {
           Vec3::new(20., 0., 0.),
           1,
           Timer::from_seconds(1., TimerMode::Repeating),
-          125,
+          self.get_range(),
           100
         ),
         sprite: SpriteBundle {
@@ -86,7 +86,7 @@ impl TowerType {
           Vec3::new(20., 0., 0.),
           1,
           Timer::from_seconds(1., TimerMode::Repeating),
-          125,
+          self.get_range(),
           100
         ),
         sprite: SpriteBundle {
@@ -102,7 +102,7 @@ impl TowerType {
           Vec3::new(20., 0., 0.),
           1,
           Timer::from_seconds(1., TimerMode::Repeating),
-          125,
+          self.get_range(),
           100
         ),
         sprite: SpriteBundle {
@@ -213,6 +213,17 @@ impl TowerType {
         },
         name: Name::new("Bullet")
       }
+    }
+  }
+  
+  pub fn get_range(&self) -> i32 {
+    match self {
+      TowerType::Nature => 125,
+      TowerType::Fire => 125,
+      TowerType::Ice => 125,
+      TowerType::Dark => 125,
+      TowerType::Mage => 125,
+      TowerType::Archmage => 125
     }
   }
 }

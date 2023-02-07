@@ -10,12 +10,8 @@ impl Plugin for SpawnScenePlugin {
   }
 }
 
-use bevy::sprite::MaterialMesh2dBundle;
-
 fn spawn_basic_scene(
   mut commands: Commands,
-  mut meshes: ResMut<Assets<Mesh>>,
-  mut materials: ResMut<Assets<ColorMaterial>>,
   assets: Res<GameAssets> // Tower and enemy assets
 ) {
   // Enemy
@@ -39,13 +35,6 @@ fn spawn_basic_scene(
               Vec3::new(100., 0., 0.));
   
   // Tower range
-  commands.spawn(MaterialMesh2dBundle {
-    mesh: meshes.add(shape::Circle::new(125.).into()).into(),
-    material: materials.add(ColorMaterial::from(
-      Color::rgba_u8(0, 0, 0, 85))),
-    transform: Transform::from_translation(Vec3::new(100., 0., 0.)),
-    ..default()
-  }).insert(Name::new("TowerRangeCircle"));
   
   // Tower range when trying to place on path/invalid tile
   // commands.spawn(MaterialMesh2dBundle {

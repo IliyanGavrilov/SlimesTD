@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use crate::{GameAssets, MainCamera, spawn_tower, TowerType};
 use strum::IntoEnumIterator;
+use bevy::sprite::MaterialMesh2dBundle;
 
 pub struct TowerButtonPlugin;
 
@@ -55,6 +56,7 @@ fn place_tower(
   let window = windows.get_primary().unwrap();
   let (camera, camera_transform) = camera_query.single();
   for (entity, mut transform, tower_type) in query.iter_mut() {
+    // Sprite follows mouse until tower is placed or discarded
     if let Some(position) = window.cursor_position() {
       transform.translation =
         window_to_world_pos(window, position, camera, camera_transform);
@@ -71,7 +73,8 @@ fn place_tower(
                                         camera,
                                         camera_transform));
       }
-    } else if mouse.just_pressed(MouseButton::Right) || window.cursor_position().is_none() {
+    } // Discard tower
+    else if mouse.just_pressed(MouseButton::Right) || window.cursor_position().is_none() {
       commands.entity(entity).despawn_recursive();
     }
   }
@@ -83,7 +86,9 @@ fn tower_button_interaction(
   interaction: Query<(&Interaction, &TowerType), (Changed<Interaction>, With<Button>)>,
   mut images: Query<&mut UiImage>,
   windows: Res<Windows>,
-  camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>
+  camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+  mut meshes: ResMut<Assets<Mesh>>,
+  mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
   let window = windows.get_primary().unwrap();
   let (camera, camera_transform) = camera_query.single();
@@ -105,6 +110,13 @@ fn tower_button_interaction(
               window_to_world_pos(window, position, camera, camera_transform)),
             ..default()
           })
+            .insert(MaterialMesh2dBundle {
+              mesh: meshes.add(shape::Circle::new(tower_type.get_range() as f32).into()).into(),
+              material: materials.add(ColorMaterial::from(
+                Color::rgba_u8(0, 0, 0, 85))),
+              transform: Transform::from_translation(Vec3::new(100., 0., 0.)),
+              ..default()
+            })
             .insert(SpriteFollower)
             .insert(*tower_type);
         }
