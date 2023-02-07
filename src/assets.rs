@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::Movement;
+use crate::{Movement, TowerType};
 
 pub struct AssetPlugin;
 
@@ -52,6 +52,51 @@ pub struct GameAssets {
   pub wizard_dark_bullet: Handle<Image>,
   pub wizard_mage_bullet: Handle<Image>,
   pub wizard_archmage_bullet: Handle<Image>
+}
+impl GameAssets {
+  pub fn get_tower_asset(&self, tower_type: TowerType) -> Handle<Image> {
+    match tower_type {
+      TowerType::Nature => self.wizard_nature.clone(),
+      TowerType::Fire => self.wizard_fire.clone(),
+      TowerType::Ice => self.wizard_ice.clone(),
+      TowerType::Dark => self.wizard_dark.clone(),
+      TowerType::Mage => self.wizard_mage.clone(),
+      TowerType::Archmage => self.wizard_archmage.clone()
+    }
+  }
+  
+  pub fn get_button_asset(&self, tower_type: TowerType) -> Handle<Image> {
+    match tower_type {
+      TowerType::Nature => self.wizard_nature_button.clone(),
+      TowerType::Fire => self.wizard_fire_button.clone(),
+      TowerType::Ice => self.wizard_ice_button.clone(),
+      TowerType::Dark => self.wizard_dark_button.clone(),
+      TowerType::Mage => self.wizard_mage_button.clone(),
+      TowerType::Archmage => self.wizard_archmage_button.clone()
+    }
+  }
+  
+  pub fn get_button_hovered_asset(&self, tower_type: TowerType) -> Handle<Image> {
+    match tower_type {
+      TowerType::Nature => self.wizard_nature_button_hover.clone(),
+      TowerType::Fire => self.wizard_fire_button_hover.clone(),
+      TowerType::Ice => self.wizard_ice_button_hover.clone(),
+      TowerType::Dark => self.wizard_dark_button_hover.clone(),
+      TowerType::Mage => self.wizard_mage_button_hover.clone(),
+      TowerType::Archmage => self.wizard_archmage_button_hover.clone()
+    }
+  }
+  
+  pub fn get_button_pressed_asset(&self, tower_type: TowerType) -> Handle<Image> {
+    match tower_type {
+      TowerType::Nature => self.wizard_nature_button_press.clone(),
+      TowerType::Fire => self.wizard_fire_button_press.clone(),
+      TowerType::Ice => self.wizard_ice_button_press.clone(),
+      TowerType::Dark => self.wizard_dark_button_press.clone(),
+      TowerType::Mage => self.wizard_mage_button_press.clone(),
+      TowerType::Archmage => self.wizard_archmage_button_press.clone()
+    }
+  }
 }
 
 fn load_assets(

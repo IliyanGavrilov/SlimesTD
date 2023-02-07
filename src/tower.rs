@@ -97,7 +97,7 @@ fn tower_shooting(
         
           // Calculate angle between tower and enemy
           let mut angle = direction.angle_between(tower.bullet_spawn_offset);
-          if transform.translation().y > direction.y { // flip angle if enemy is below tower
+          if tower.bullet_spawn_offset.y > direction.y { // flip angle if enemy is below tower
             angle = -angle;
           }
           
