@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::{GameAssets, MainCamera, spawn_tower, TowerType};
+use crate::{GameAssets, MainCamera, spawn_tower, Tower, TowerType};
 use strum::IntoEnumIterator;
 use bevy::sprite::MaterialMesh2dBundle;
 
@@ -84,7 +84,7 @@ fn tower_button_interaction(
   mut commands: Commands,
   assets: Res<GameAssets>,
   interaction: Query<(&Interaction, &TowerType), (Changed<Interaction>, With<Button>)>,
-  mut images: Query<&mut UiImage>,
+  mut images: Query<(&mut UiImage, &TowerType)>,
   windows: Res<Windows>,
   camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
   mut meshes: ResMut<Assets<Mesh>>,
@@ -97,8 +97,10 @@ fn tower_button_interaction(
       Interaction::Clicked => {
         info!("Spawning: {tower_type} wizard");
         // Change button UI!!!
-        for mut image in images.iter_mut() {
-          image.0 = assets.get_button_pressed_asset(*tower_type);
+        for (mut image, button_tower_type) in images.iter_mut() {
+          if button_tower_type == tower_type {
+            image.0 = assets.get_button_pressed_asset(*tower_type);
+          }
         }
         
         // Spawn component that alerts the place_tower() system that a button has been pressed
@@ -122,16 +124,20 @@ fn tower_button_interaction(
         }
       }
       Interaction::Hovered => {
-        // Change button UI!!!
-        for mut image in images.iter_mut() {
-          image.0 = assets.get_button_hovered_asset(*tower_type);
+        // Change button UI
+        for (mut image, button_tower_type) in images.iter_mut() {
+          if button_tower_type == tower_type {
+            image.0 = assets.get_button_hovered_asset(*tower_type);
+          }
         }
       }
       Interaction::None => { // Change button UI
-        // Change button UI!!!
-        // for mut image in images.iter_mut() {
-        //   image.0 = assets.get_button_asset(*tower_type);
-        // }
+        // Change button UI
+        for (mut image, button_tower_type) in images.iter_mut() {
+          if button_tower_type == tower_type {
+            image.0 = assets.get_button_asset(*tower_type);
+          }
+        }
       }
     }
   }
