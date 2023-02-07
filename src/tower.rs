@@ -96,11 +96,11 @@ fn tower_shooting(
           tower.first_enemy_appeared = false;
         
           // Calculate angle between tower and enemy
-          let mut angle = direction.angle_between(transform.translation());
+          let mut angle = direction.angle_between(tower.bullet_spawn_offset);
           if transform.translation().y > direction.y { // flip angle if enemy is below tower
             angle = -angle;
           }
-        
+          
           // Rotate tower to face enemy it is attacking, based on enemy's location
           tower_transform.rotation = Quat::from_rotation_z(angle);
         

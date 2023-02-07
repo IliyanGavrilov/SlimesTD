@@ -29,6 +29,9 @@ fn tower_button_interaction(
     //let mut image = images.get_mut(children[1]).unwrap();
     match interaction {
       Interaction::Clicked => {
+        for mut image in images.iter_mut() {
+          image.0 = tower_type.get_button_asset(&assets, "press");
+        }
         // Change button UI
         //image = assets.wizard_fire_button_press.clone().into();
     
@@ -73,6 +76,7 @@ fn tower_button_interaction(
         // }
       }
       Interaction::Hovered => { // Change button UI
+        //button_image = tower_type.get_button_asset(&assets, "hover").into();
         for mut image in images.iter_mut() {
           image.0 = tower_type.get_button_asset(&assets, "hover");
         }
@@ -81,6 +85,9 @@ fn tower_button_interaction(
       }
       Interaction::None => { // Change button UI
         //image = assets.wizard_fire_button.clone().into();
+        for mut image in images.iter_mut() {
+          image.0 = tower_type.get_button_asset(&assets, "normal");
+        }
       }
     }
   }
