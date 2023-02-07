@@ -57,6 +57,10 @@ fn spawn_basic_scene(
   // }).insert(Name::new("TowerRangeCircle"));
 }
 
+// Main camera marker component
+#[derive(Component)]
+pub struct MainCamera;
+
 fn spawn_camera(mut commands: Commands) {
-  commands.spawn(Camera2dBundle::default());
+  commands.spawn((Camera2dBundle::default(), MainCamera));
 }

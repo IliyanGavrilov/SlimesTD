@@ -22,7 +22,7 @@ impl TowerType {
             Vec3::new(20., 0., 0.),
             1,
             Timer::from_seconds(1., TimerMode::Repeating),
-            10,
+            125,
             100
           ),
           sprite: SpriteBundle {
@@ -54,7 +54,7 @@ impl TowerType {
           Vec3::new(20., 0., 0.),
           1,
           Timer::from_seconds(1., TimerMode::Repeating),
-          10,
+          125,
           100
         ),
         sprite: SpriteBundle {
@@ -70,7 +70,7 @@ impl TowerType {
           Vec3::new(20., 0., 0.),
           1,
           Timer::from_seconds(1., TimerMode::Repeating),
-          10,
+          125,
           100
         ),
         sprite: SpriteBundle {
@@ -86,7 +86,7 @@ impl TowerType {
           Vec3::new(20., 0., 0.),
           1,
           Timer::from_seconds(1., TimerMode::Repeating),
-          10,
+          125,
           100
         ),
         sprite: SpriteBundle {
@@ -102,7 +102,7 @@ impl TowerType {
           Vec3::new(20., 0., 0.),
           1,
           Timer::from_seconds(1., TimerMode::Repeating),
-          10,
+          125,
           100
         ),
         sprite: SpriteBundle {
