@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::{GameAssets, MainCamera, spawn_tower, TowerType};
+use crate::{GameAssets, GameState, MainCamera, spawn_tower, TowerType};
 use strum::IntoEnumIterator;
 use bevy::sprite::MaterialMesh2dBundle;
 
@@ -7,9 +7,12 @@ pub struct TowerButtonPlugin;
 
 impl Plugin for TowerButtonPlugin {
   fn build(&self, app: &mut App) {
-    app.add_startup_system(generate_ui)
-       .add_system(tower_button_interaction)
-       .add_system(place_tower);
+    app
+      .add_system_set(SystemSet::on_enter(GameState::Gameplay)
+        .with_system(generate_ui))
+      .add_system_set(SystemSet::on_update(GameState::Gameplay)
+        .with_system(tower_button_interaction)
+        .with_system(place_tower));
   }
 }
 
@@ -194,7 +197,7 @@ fn generate_ui(mut commands: Commands, assets: Res<GameAssets>) {
   commands
     .spawn(NodeBundle {
       style: Style {
-        size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+        size: Size::new(Val::Percent(100.), Val::Percent(100.)),
         justify_content: JustifyContent::Center,
         ..default()
       },
@@ -208,7 +211,7 @@ fn generate_ui(mut commands: Commands, assets: Res<GameAssets>) {
             style: Style {
               size: Size::new(Val::Px(80.), Val::Px(80.)),
               align_self: AlignSelf::FlexEnd, // Bottom of screen
-              margin: UiRect::all(Val::Percent(2.0)),
+              margin: UiRect::all(Val::Percent(2.)),
               ..default()
             },
             image: assets.get_button_asset(i).into(),

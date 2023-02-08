@@ -1,12 +1,14 @@
 use bevy::prelude::*;
-use crate::{enemy::spawn_enemy, EnemyType, GameAssets, tower::spawn_tower, TowerType};
+use crate::{enemy::spawn_enemy, EnemyType, GameAssets, GameState, tower::spawn_tower, TowerType};
 
 pub struct SpawnScenePlugin;
 
 impl Plugin for SpawnScenePlugin {
   fn build(&self, app: &mut App) {
-    app.add_startup_system(spawn_basic_scene)
-       .add_startup_system(spawn_camera);
+    app
+      .add_system_set(SystemSet::on_enter(GameState::Gameplay)
+        .with_system(spawn_basic_scene))
+      .add_startup_system(spawn_camera);
   }
 }
 

@@ -2,6 +2,10 @@ use bevy::prelude::*;
 // !!!Debugging
 use bevy_editor_pls::*;
 
+mod game_state;
+pub use game_state::*;
+mod main_menu;
+pub use main_menu::*;
 mod spawn_scene;
 pub use spawn_scene::*;
 mod settings;
@@ -36,6 +40,10 @@ fn main() {
   
     .add_startup_system_to_stage(StartupStage::PreStartup, load)
     
+    // Game State
+    .add_state(GameState::MainMenu)
+    
+    .add_plugin(MainMenuPlugin)
     .add_plugin(SpawnScenePlugin)
     .add_plugin(SettingsPlugin)
     .add_plugin(AssetPlugin)

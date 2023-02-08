@@ -1,14 +1,15 @@
 use bevy::prelude::*;
+pub use crate::enemy::*;
+use crate::GameState;
 
 pub struct BulletPlugin;
-
-pub use crate::enemy::*;
 
 impl Plugin for BulletPlugin {
   fn build(&self, app: &mut App) {
     app.register_type::<Bullet>()
-       .add_system(despawn_bullets)
-       .add_system(bullet_enemy_collision);
+      .add_system_set(SystemSet::on_update(GameState::Gameplay)
+        .with_system(despawn_bullets)
+        .with_system(bullet_enemy_collision));
   }
 }
 

@@ -1,12 +1,13 @@
 use bevy::prelude::*;
+use crate::GameState;
 
 pub struct MovementPlugin;
 
 impl Plugin for MovementPlugin {
   fn build(&self, app: &mut App) {
     app.register_type::<Movement>()
-      // .add_system(move_enemies)
-      .add_system(basic_movement);
+      .add_system_set(SystemSet::on_update(GameState::Gameplay)
+        .with_system(basic_movement));
   }
 }
 

@@ -1,13 +1,14 @@
 use bevy::prelude::*;
 pub use crate::{GameAssets, Movement, enemy_type::EnemyType};
-use crate::{AnimationIndices, AnimationTimer};
+use crate::{AnimationIndices, AnimationTimer, GameState};
 
 pub struct EnemyPlugin;
 
 impl Plugin for EnemyPlugin {
   fn build(&self, app: &mut App) {
     app.register_type::<Enemy>()
-       .add_system(despawn_enemy_on_death);
+      .add_system_set(SystemSet::on_update(GameState::Gameplay)
+        .with_system(despawn_enemy_on_death));
   }
 }
 

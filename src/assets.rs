@@ -15,6 +15,9 @@ impl Plugin for AssetPlugin {
 
 #[derive(Resource)]
 pub struct GameAssets {
+  // Main menu buttons - Start Game & Exit
+  pub start_button: Handle<Image>,
+  pub exit_button: Handle<Image>,
   // Towers
   pub wizard_nature: Handle<Image>,
   pub wizard_fire: Handle<Image>,
@@ -105,6 +108,9 @@ fn load_assets(
   mut texture_atlases: ResMut<Assets<TextureAtlas>>
 ) {
   commands.insert_resource(GameAssets {
+    //
+    start_button: assets_server.load("start_menu/start_button.png"),
+    exit_button: assets_server.load("start_menu/exit_button.png"),
     // Towers
     wizard_nature: assets_server.load("towers/wizard_nature.png"),
     wizard_fire: assets_server.load("towers/wizard_fire.png"),
