@@ -120,7 +120,7 @@ impl TowerType {
       TowerType::Nature => BulletBundle {
           bullet: Bullet {
             damage,
-            lifetime: Timer::from_seconds(2., TimerMode::Once),
+            lifetime: Timer::from_seconds(1.25, TimerMode::Once),
           },
           movement: Movement {
             direction: Vec3::new(0.00000001,0.,0.),
@@ -136,7 +136,7 @@ impl TowerType {
       TowerType::Fire => BulletBundle {
         bullet: Bullet {
           damage,
-          lifetime: Timer::from_seconds(2., TimerMode::Once),
+          lifetime: Timer::from_seconds(1.25, TimerMode::Once),
         },
         movement: Movement {
           direction: Vec3::new(0.00000001,0.,0.),
@@ -152,7 +152,7 @@ impl TowerType {
       TowerType::Ice => BulletBundle {
         bullet: Bullet {
           damage,
-          lifetime: Timer::from_seconds(2., TimerMode::Once),
+          lifetime: Timer::from_seconds(1.25, TimerMode::Once),
         },
         movement: Movement {
           direction: Vec3::new(0.00000001,0.,0.),
@@ -168,7 +168,7 @@ impl TowerType {
       TowerType::Dark => BulletBundle {
         bullet: Bullet {
           damage,
-          lifetime: Timer::from_seconds(2., TimerMode::Once),
+          lifetime: Timer::from_seconds(1.25, TimerMode::Once),
         },
         movement: Movement {
           direction: Vec3::new(0.00000001,0.,0.),
@@ -184,7 +184,7 @@ impl TowerType {
       TowerType::Mage => BulletBundle {
         bullet: Bullet {
           damage,
-          lifetime: Timer::from_seconds(2., TimerMode::Once),
+          lifetime: Timer::from_seconds(1.25, TimerMode::Once),
         },
         movement: Movement {
           direction: Vec3::new(0.00000001,0.,0.),
@@ -200,7 +200,7 @@ impl TowerType {
       TowerType::Archmage => BulletBundle {
         bullet: Bullet {
           damage,
-          lifetime: Timer::from_seconds(2., TimerMode::Once),
+          lifetime: Timer::from_seconds(1.25, TimerMode::Once),
         },
         movement: Movement {
           direction: Vec3::new(0.00000001,0.,0.),

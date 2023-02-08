@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::{GameAssets, MainCamera, spawn_tower, Tower, TowerType};
+use crate::{GameAssets, MainCamera, spawn_tower, TowerType};
 use strum::IntoEnumIterator;
 use bevy::sprite::MaterialMesh2dBundle;
 
@@ -80,6 +80,36 @@ fn place_tower(
   }
 }
 
+fn spawn_sprite_follower(
+  commands: &mut Commands,
+  window: &Window,
+  camera: &Camera,
+  camera_transform: &GlobalTransform,
+  meshes: &mut ResMut<Assets<Mesh>>,
+  materials: &mut ResMut<Assets<ColorMaterial>>,
+  tower_type: &TowerType,
+  assets: &Res<GameAssets>
+) {
+  // Spawn component that alerts the place_tower() system that a button has been pressed
+  // and it starts moving a sprite with the cursor until the tower is placed
+  if let Some(position) = window.cursor_position() {
+    commands.spawn(SpriteBundle {
+      texture: assets.get_tower_asset(*tower_type),
+      transform: Transform::from_translation(
+        window_to_world_pos(window, position, camera, camera_transform)),
+      ..default()
+    })
+      .insert(MaterialMesh2dBundle {
+        mesh: meshes.add(shape::Circle::new(tower_type.get_range() as f32).into()).into(),
+        material: materials.add(ColorMaterial::from(
+          Color::rgba_u8(0, 0, 0, 85))),
+        transform: Transform::from_translation(Vec3::new(100., 0., 0.)),
+        ..default()
+      })
+      .insert(SpriteFollower)
+      .insert(*tower_type);
+  }
+}
 fn tower_button_interaction(
   mut commands: Commands,
   assets: Res<GameAssets>,
@@ -89,38 +119,54 @@ fn tower_button_interaction(
   camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
   mut meshes: ResMut<Assets<Mesh>>,
   mut materials: ResMut<Assets<ColorMaterial>>,
+  keys: Res<Input<KeyCode>>,
+  query: Query<&SpriteFollower>
 ) {
   let window = windows.get_primary().unwrap();
   let (camera, camera_transform) = camera_query.single();
+  if query.is_empty() {
+    if keys.just_pressed(KeyCode::Key1) {
+      info!("Spawning: Nature wizard");
+      spawn_sprite_follower(&mut commands, window, camera, camera_transform,
+                            &mut meshes, &mut materials, &TowerType::Nature, &assets);
+    } else if keys.just_pressed(KeyCode::Key2) {
+      info!("Spawning: Fire wizard");
+      spawn_sprite_follower(&mut commands, window, camera, camera_transform,
+                            &mut meshes, &mut materials, &TowerType::Fire, &assets);
+    } else if keys.just_pressed(KeyCode::Key3) {
+      info!("Spawning: Ice wizard");
+      spawn_sprite_follower(&mut commands, window, camera, camera_transform,
+                            &mut meshes, &mut materials, &TowerType::Ice, &assets);
+    } else if keys.just_pressed(KeyCode::Key4) {
+      info!("Spawning: Dark wizard");
+      spawn_sprite_follower(&mut commands, window, camera, camera_transform,
+                            &mut meshes, &mut materials, &TowerType::Dark, &assets);
+    } else if keys.just_pressed(KeyCode::Key5) {
+      info!("Spawning: Mage wizard");
+      spawn_sprite_follower(&mut commands, window, camera, camera_transform,
+                            &mut meshes, &mut materials, &TowerType::Mage, &assets);
+    } else if keys.just_pressed(KeyCode::Key6) {
+      info!("Spawning: Archmage wizard");
+      spawn_sprite_follower(&mut commands, window, camera, camera_transform,
+                            &mut meshes, &mut materials, &TowerType::Archmage, &assets);
+    }
+  }
+  
   for (interaction, tower_type) in &interaction {
     match interaction {
       Interaction::Clicked => {
         info!("Spawning: {tower_type} wizard");
-        // Change button UI!!!
-        for (mut image, button_tower_type) in images.iter_mut() {
-          if button_tower_type == tower_type {
-            image.0 = assets.get_button_pressed_asset(*tower_type);
+        if query.is_empty() {
+          // Change button UI
+          for (mut image, button_tower_type) in images.iter_mut() {
+            if button_tower_type == tower_type {
+              image.0 = assets.get_button_pressed_asset(*tower_type);
+            }
           }
-        }
-        
-        // Spawn component that alerts the place_tower() system that a button has been pressed
-        // and it starts moving a sprite with the cursor until the tower is placed
-        if let Some(position) = window.cursor_position() {
-          commands.spawn(SpriteBundle {
-            texture: assets.get_tower_asset(*tower_type),
-            transform: Transform::from_translation(
-              window_to_world_pos(window, position, camera, camera_transform)),
-            ..default()
-          })
-            .insert(MaterialMesh2dBundle {
-              mesh: meshes.add(shape::Circle::new(tower_type.get_range() as f32).into()).into(),
-              material: materials.add(ColorMaterial::from(
-                Color::rgba_u8(0, 0, 0, 85))),
-              transform: Transform::from_translation(Vec3::new(100., 0., 0.)),
-              ..default()
-            })
-            .insert(SpriteFollower)
-            .insert(*tower_type);
+  
+          // Spawn tower sprite following mouse
+          spawn_sprite_follower(&mut commands, window, camera, camera_transform,
+                                &mut meshes, &mut materials, tower_type, &assets);
         }
       }
       Interaction::Hovered => {
@@ -131,7 +177,7 @@ fn tower_button_interaction(
           }
         }
       }
-      Interaction::None => { // Change button UI
+      Interaction::None => {
         // Change button UI
         for (mut image, button_tower_type) in images.iter_mut() {
           if button_tower_type == tower_type {
