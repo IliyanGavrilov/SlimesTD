@@ -46,6 +46,13 @@ pub struct GameAssets {
   pub wizard_dark_button_press: Handle<Image>,
   pub wizard_mage_button_press: Handle<Image>,
   pub wizard_archmage_button_press: Handle<Image>,
+  // Tower buttons locked
+  pub wizard_nature_button_lock: Handle<Image>,
+  pub wizard_fire_button_lock: Handle<Image>,
+  pub wizard_ice_button_lock: Handle<Image>,
+  pub wizard_dark_button_lock: Handle<Image>,
+  pub wizard_mage_button_lock: Handle<Image>,
+  pub wizard_archmage_button_lock: Handle<Image>,
   // Enemies
   pub enemy: Handle<TextureAtlas>, // !!!! Rename
   // Tower bullets
@@ -100,6 +107,17 @@ impl GameAssets {
       TowerType::Archmage => self.wizard_archmage_button_press.clone()
     }
   }
+  
+  pub fn get_button_locked_asset(&self, tower_type: TowerType) -> Handle<Image> {
+    match tower_type {
+      TowerType::Nature => self.wizard_nature_button_lock.clone(),
+      TowerType::Fire => self.wizard_fire_button_lock.clone(),
+      TowerType::Ice => self.wizard_ice_button_lock.clone(),
+      TowerType::Dark => self.wizard_dark_button_lock.clone(),
+      TowerType::Mage => self.wizard_mage_button_lock.clone(),
+      TowerType::Archmage => self.wizard_archmage_button_lock.clone()
+    }
+  }
 }
 
 fn load_assets(
@@ -139,6 +157,13 @@ fn load_assets(
     wizard_dark_button_press: assets_server.load("tower_buttons/buttons_press/wizard_dark_button_press.png"),
     wizard_mage_button_press: assets_server.load("tower_buttons/buttons_press/wizard_mage_button_press.png"),
     wizard_archmage_button_press: assets_server.load("tower_buttons/buttons_press/wizard_archmage_button_press.png"),
+    // Tower buttons locked
+     wizard_nature_button_lock: assets_server.load("tower_buttons/buttons_lock/wizard_nature_button_lock.png"),
+     wizard_fire_button_lock: assets_server.load("tower_buttons/buttons_lock/wizard_fire_button_lock.png"),
+     wizard_ice_button_lock: assets_server.load("tower_buttons/buttons_lock/wizard_ice_button_lock.png"),
+     wizard_dark_button_lock: assets_server.load("tower_buttons/buttons_lock/wizard_dark_button_lock.png"),
+     wizard_mage_button_lock: assets_server.load("tower_buttons/buttons_lock/wizard_mage_button_lock.png"),
+     wizard_archmage_button_lock: assets_server.load("tower_buttons/buttons_lock/wizard_archmage_button_lock.png"),
     // Enemies
     enemy: texture_atlases.add(
       TextureAtlas::from_grid(assets_server.load("slime_jump.png"),

@@ -2,6 +2,8 @@ use bevy::prelude::*;
 // !!!Debugging
 use bevy_editor_pls::*;
 
+mod player;
+pub use player::*;
 mod game_state;
 pub use game_state::*;
 mod main_menu;
@@ -47,6 +49,7 @@ fn main() {
     .add_plugin(SpawnScenePlugin)
     .add_plugin(SettingsPlugin)
     .add_plugin(AssetPlugin)
+    .add_plugin(PlayerPlugin)
     .add_plugin(TowerPlugin)
     .add_plugin(TowerButtonPlugin)
     .add_plugin(EnemyPlugin)

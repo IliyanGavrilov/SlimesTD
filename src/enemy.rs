@@ -7,10 +7,13 @@ pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
   fn build(&self, app: &mut App) {
     app.register_type::<Enemy>()
+      .add_event::<EnemyDeathEvent>()
       .add_system_set(SystemSet::on_update(GameState::Gameplay)
         .with_system(despawn_enemy_on_death));
   }
 }
+
+pub struct EnemyDeathEvent;
 
 #[derive(Bundle)]
 pub struct EnemyBundle {
@@ -62,9 +65,14 @@ pub fn spawn_enemy(
   commands.spawn(enemy_type.get_enemy(assets, position, direction));
 }
 
-fn despawn_enemy_on_death(mut commands: Commands, enemies: Query<(Entity, &mut Enemy)>) {
+fn despawn_enemy_on_death(
+  mut commands: Commands,
+  enemies: Query<(Entity, &mut Enemy)>,
+  mut death_event_writer: EventWriter<EnemyDeathEvent>
+) {
   for (entity, enemy) in &enemies {
     if enemy.health <= 0 {
+      death_event_writer.send(EnemyDeathEvent);
       commands.entity(entity).despawn_recursive();
     }
   }

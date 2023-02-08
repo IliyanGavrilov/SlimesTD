@@ -23,7 +23,7 @@ impl TowerType {
             1,
             Timer::from_seconds(1., TimerMode::Repeating),
             self.get_range(),
-            100
+            self.get_price()
           ),
           sprite: SpriteBundle {
             texture: assets.wizard_nature.clone(),
@@ -39,7 +39,7 @@ impl TowerType {
           1,
           Timer::from_seconds(1., TimerMode::Repeating),
           self.get_range(),
-          100
+          self.get_price()
         ),
         sprite: SpriteBundle {
           texture: assets.wizard_fire.clone(),
@@ -55,7 +55,7 @@ impl TowerType {
           1,
           Timer::from_seconds(1., TimerMode::Repeating),
           self.get_range(),
-          100
+          self.get_price()
         ),
         sprite: SpriteBundle {
           texture: assets.wizard_ice.clone(),
@@ -71,7 +71,7 @@ impl TowerType {
           1,
           Timer::from_seconds(1., TimerMode::Repeating),
           self.get_range(),
-          100
+          self.get_price()
         ),
         sprite: SpriteBundle {
           texture: assets.wizard_dark.clone(),
@@ -87,7 +87,7 @@ impl TowerType {
           1,
           Timer::from_seconds(1., TimerMode::Repeating),
           self.get_range(),
-          100
+          self.get_price()
         ),
         sprite: SpriteBundle {
           texture: assets.wizard_mage.clone(),
@@ -103,7 +103,7 @@ impl TowerType {
           1,
           Timer::from_seconds(1., TimerMode::Repeating),
           self.get_range(),
-          100
+          self.get_price()
         ),
         sprite: SpriteBundle {
           texture: assets.wizard_archmage.clone(),
@@ -224,6 +224,17 @@ impl TowerType {
       TowerType::Dark => 125,
       TowerType::Mage => 125,
       TowerType::Archmage => 125
+    }
+  }
+  
+  pub fn get_price(&self) -> i32 {
+    match self {
+      TowerType::Nature => 100,
+      TowerType::Fire => 100,
+      TowerType::Ice => 100,
+      TowerType::Dark => 100,
+      TowerType::Mage => 100,
+      TowerType::Archmage => 100
     }
   }
 }
