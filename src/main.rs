@@ -18,7 +18,7 @@ mod base;
 pub use base::*;
 mod tower;
 pub use tower::*;
-
+mod tower_type;
 mod tower_button;
 pub use tower_button::*;
 mod enemy;

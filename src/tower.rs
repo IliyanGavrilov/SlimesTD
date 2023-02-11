@@ -4,8 +4,6 @@ pub use crate::{Bullet, Movement, tower_type::TowerType, GameAssets,
                 targeting_priority::{*, TargetingPriority::*}};
 use crate::GameState;
 
-mod tower_type;
-
 pub struct TowerPlugin;
 
 impl Plugin for TowerPlugin {
