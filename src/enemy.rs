@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::time::Stopwatch;
 pub use crate::{GameAssets, Movement, enemy_type::EnemyType};
 use crate::{AnimationIndices, AnimationTimer, GameState};
 
@@ -10,7 +11,8 @@ impl Plugin for EnemyPlugin {
       .register_type::<Path>()
       .add_event::<EnemyDeathEvent>()
       .add_system_set(SystemSet::on_update(GameState::Gameplay)
-        .with_system(despawn_enemy_on_death));
+        .with_system(despawn_enemy_on_death)
+        .with_system(tick_enemy_time_alive));
   }
 }
 
@@ -25,6 +27,7 @@ pub struct EnemyBundle {
   pub animation_timer: AnimationTimer,
   pub sprite_sheet_bundle: SpriteSheetBundle,
   pub path: Path,
+  pub time_alive: TimeAlive,
   pub name: Name
 }
 
@@ -38,6 +41,7 @@ impl Default for EnemyBundle {
       animation_timer: AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
       sprite_sheet_bundle: SpriteSheetBundle::default(),
       path: Path {index: 0},
+      time_alive: TimeAlive {time_alive: Stopwatch::new()},
       name: Name::new("GreenEnemy")
     }
   }
@@ -56,11 +60,26 @@ pub struct Path {
   pub index: usize
 }
 
+#[derive(Reflect, Component, Default)]
+#[reflect(Component)]
+pub struct TimeAlive {
+  pub time_alive: Stopwatch
+}
+
 impl Enemy {
   pub fn new(health: i32) -> Self {
     Self {
       health
     }
+  }
+}
+
+fn tick_enemy_time_alive(
+  mut enemies: Query<&mut TimeAlive>,
+  time: Res<Time>
+) {
+  for mut enemy in &mut enemies {
+    enemy.time_alive.tick(time.delta());
   }
 }
 

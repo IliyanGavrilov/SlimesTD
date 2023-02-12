@@ -76,6 +76,7 @@ fn damage_base(
   }
   
   if base.health <= 0{
+    base.health = 0;
     info!("GAME OVER");
   }
 }

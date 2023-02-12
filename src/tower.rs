@@ -53,8 +53,7 @@ impl Tower {
       price,
       sell_price: (price/3) as i32,
       first_enemy_appeared: false,
-      target: CLOSE
-      // !!! ..default()
+      ..default()
     }
   }
 }
@@ -72,7 +71,7 @@ fn tower_shooting(
   mut commands: Commands,
   assets: Res<GameAssets>, // Bullet assets
   mut towers: Query<(Entity, &mut Tower, &TowerType, &mut Transform, &GlobalTransform)>,
-  enemies: Query<(&GlobalTransform, &Enemy)>, // Gets all entities With the Enemy component
+  enemies: Query<(&GlobalTransform, &Enemy, &Movement, &TimeAlive)>, // Gets all entities With the Enemy component
   time: Res<Time>,
 ) {
   for (tower_entity,
@@ -138,9 +137,9 @@ fn tower_shooting(
 fn enemy_in_range(
   tower: &Mut<Tower>,
   tower_transform: &Mut<Transform>,
-  enemies: &Query<(&GlobalTransform, &Enemy)>
+  enemies: &Query<(&GlobalTransform, &Enemy, &Movement, &TimeAlive)>
 ) -> bool {
-  for (enemy_transform, _) in enemies {
+  for (enemy_transform, ..) in enemies {
     if Vec3::distance(tower_transform.translation,
                       enemy_transform.translation()) <= tower.range as f32 {
       return true
