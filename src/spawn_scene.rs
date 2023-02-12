@@ -1,11 +1,11 @@
 use bevy::prelude::*;
-use crate::{enemy::spawn_enemy, EnemyType, GameAssets, GameState, tower::spawn_tower, TowerType};
+use crate::{Base, enemy::spawn_enemy, EnemyType, GameAssets, GameState, MapPath, Path, tower::spawn_tower, TowerType};
 
 pub struct SpawnScenePlugin;
 
 impl Plugin for SpawnScenePlugin {
   fn build(&self, app: &mut App) {
-    app
+    app.register_type::<Base>()
       .add_system_set(SystemSet::on_enter(GameState::Gameplay)
         .with_system(spawn_basic_scene))
       .add_startup_system(spawn_camera);
@@ -14,21 +14,25 @@ impl Plugin for SpawnScenePlugin {
 
 fn spawn_basic_scene(
   mut commands: Commands,
-  assets: Res<GameAssets> // Tower and enemy assets
+  assets: Res<GameAssets>, // Tower and enemy assets
+  map: Res<MapPath>
 ) {
+  commands.spawn(Base {health: 100}).insert(Name::new("Base"));
   // Enemy
   spawn_enemy(&mut commands,
               EnemyType::Red,
-                &assets,
+              &assets,
               Vec3::new(0., 0., 0.),
-              Vec3::new(0., 9999999., 0.));
+              map.checkpoints[0],
+              Path {index: 0});
   
   // Enemy 2
   spawn_enemy(&mut commands,
               EnemyType::Purple,
               &assets,
-              Vec3::new(0., -100., 0.),
-              Vec3::new(0., 9999999., 0.));
+              Vec3::new(-50., 0., 0.),
+              map.checkpoints[0],
+              Path {index: 0});
   
   // Tower
   spawn_tower(&mut commands,

@@ -55,7 +55,6 @@ fn exit_button_clicked(
 fn spawn_main_menu(
   mut commands: Commands, assets: Res<GameAssets>, asset_server: Res<AssetServer>
 ) {
-  println!("ASNGUNAOGAOENGNESGNOENSIGNSOIGNISNIEGO");
   let start_button = commands
     .spawn(ButtonBundle {
       style: Style {

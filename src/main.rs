@@ -2,6 +2,8 @@ use bevy::prelude::*;
 // !!!Debugging
 use bevy_editor_pls::*;
 
+mod map;
+pub use map::*;
 mod player;
 pub use player::*;
 mod game_state;
@@ -30,22 +32,16 @@ mod movement;
 pub use movement::*;
 mod targeting_priority;
 
-// Temp!!!
-fn load(time: Res<Time>) {
-  Timer::from_seconds(5., TimerMode::Once).tick(time.delta());
-}
-
 fn main() {
   App::new()
     // Background of window. Set colour of screen on each refresh
     .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
-  
-    .add_startup_system_to_stage(StartupStage::PreStartup, load)
     
     // Game State
     .add_state(GameState::MainMenu)
     
     .add_plugin(MainMenuPlugin)
+    .add_plugin(MapPlugin)
     .add_plugin(SpawnScenePlugin)
     .add_plugin(SettingsPlugin)
     .add_plugin(AssetPlugin)

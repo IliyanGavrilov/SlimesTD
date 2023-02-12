@@ -20,7 +20,7 @@ pub struct Movement {
 }
 
 fn basic_movement(mut entities: Query<(&Movement, &mut Transform)>, time: Res<Time>) {
-  for (entity, mut transform) in &mut entities {
-    transform.translation += entity.direction.normalize() * entity.speed * time.delta_seconds();
+  for (movement, mut transform) in &mut entities {
+    transform.translation += movement.direction.normalize() * movement.speed * time.delta_seconds();
   }
 }

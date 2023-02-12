@@ -7,6 +7,7 @@ pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
   fn build(&self, app: &mut App) {
     app.register_type::<Enemy>()
+      .register_type::<Path>()
       .add_event::<EnemyDeathEvent>()
       .add_system_set(SystemSet::on_update(GameState::Gameplay)
         .with_system(despawn_enemy_on_death));
@@ -23,6 +24,7 @@ pub struct EnemyBundle {
   pub animation_indices: AnimationIndices,
   pub animation_timer: AnimationTimer,
   pub sprite_sheet_bundle: SpriteSheetBundle,
+  pub path: Path,
   pub name: Name
 }
 
@@ -35,6 +37,7 @@ impl Default for EnemyBundle {
       animation_indices: AnimationIndices {first: 0, last: 9},
       animation_timer: AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
       sprite_sheet_bundle: SpriteSheetBundle::default(),
+      path: Path {index: 0},
       name: Name::new("GreenEnemy")
     }
   }
@@ -45,6 +48,12 @@ impl Default for EnemyBundle {
 #[reflect(Component)]
 pub struct Enemy {
   pub health: i32
+}
+
+#[derive(Reflect, Component, Default)]
+#[reflect(Component)]
+pub struct Path {
+  pub index: usize
 }
 
 impl Enemy {
@@ -60,11 +69,13 @@ pub fn spawn_enemy(
   enemy_type: EnemyType,
   assets: &GameAssets,
   position: Vec3,
-  direction: Vec3
+  direction: Vec3,
+  path: Path
 ) {
-  commands.spawn(enemy_type.get_enemy(assets, position, direction));
+  commands.spawn(enemy_type.get_enemy(assets, position, direction, path));
 }
 
+// !!!
 fn despawn_enemy_on_death(
   mut commands: Commands,
   enemies: Query<(Entity, &mut Enemy)>,

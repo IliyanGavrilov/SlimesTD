@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 use strum_macros::{Display};
-use crate::{AnimationIndices, Enemy, EnemyBundle, GameAssets, Movement};
+use crate::{AnimationIndices, Enemy, EnemyBundle, GameAssets, Movement, Path};
 
 #[derive(Inspectable, Component, Display, Clone, Copy, Debug, PartialEq)]
 pub enum EnemyType {
@@ -16,7 +16,7 @@ pub enum EnemyType {
 }
 
 impl EnemyType {
-  pub fn get_enemy(&self, assets: &GameAssets, position: Vec3, direction: Vec3) -> EnemyBundle {
+  pub fn get_enemy(&self, assets: &GameAssets, position: Vec3, direction: Vec3, path: Path) -> EnemyBundle {
     match self {
       EnemyType::Green => EnemyBundle {
         movement: Movement { direction, speed: 15. },
@@ -26,6 +26,7 @@ impl EnemyType {
           sprite: TextureAtlasSprite::new(0),
           ..default()
         },
+        path,
         ..default()
       },
       EnemyType::Yellow => EnemyBundle {
@@ -39,6 +40,7 @@ impl EnemyType {
           sprite: TextureAtlasSprite::new(10),
           ..default()
         },
+        path,
         name: Name::new("YellowEnemy"),
         ..default()
       },
@@ -53,6 +55,7 @@ impl EnemyType {
           sprite: TextureAtlasSprite::new(20),
           ..default()
         },
+        path,
         name: Name::new("PinkEnemy"),
         ..default()
       },
@@ -67,6 +70,7 @@ impl EnemyType {
           sprite: TextureAtlasSprite::new(30),
           ..default()
         },
+        path,
         name: Name::new("WhiteEnemy"),
         ..default()
       },
@@ -81,6 +85,7 @@ impl EnemyType {
           sprite: TextureAtlasSprite::new(40),
           ..default()
         },
+        path,
         name: Name::new("BlueEnemy"),
         ..default()
       },
@@ -95,6 +100,7 @@ impl EnemyType {
           sprite: TextureAtlasSprite::new(50),
           ..default()
         },
+        path,
         name: Name::new("OrangeEnemy"),
         ..default()
       },
@@ -109,6 +115,7 @@ impl EnemyType {
           sprite: TextureAtlasSprite::new(60),
           ..default()
         },
+        path,
         name: Name::new("PurpleEnemy"),
         ..default()
       },
@@ -123,6 +130,7 @@ impl EnemyType {
           sprite: TextureAtlasSprite::new(70),
           ..default()
         },
+        path,
         name: Name::new("RedEnemy"),
         ..default()
       }

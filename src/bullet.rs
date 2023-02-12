@@ -52,7 +52,7 @@ fn bullet_enemy_collision(
   for (bullet_entity, bullet, bullet_transform) in &bullets {
     for (mut enemy, enemy_transform) in &mut enemies {
       if Vec3::distance(bullet_transform.translation(),
-                        enemy_transform.translation) < 25. {
+                        enemy_transform.translation) <= 25. {
         commands.entity(bullet_entity).despawn_recursive();
         enemy.health -= bullet.damage;
         break;
