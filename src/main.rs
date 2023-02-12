@@ -10,6 +10,8 @@ mod game_state;
 pub use game_state::*;
 mod main_menu;
 pub use main_menu::*;
+mod gameplay_ui;
+pub use gameplay_ui::*;
 mod spawn_scene;
 pub use spawn_scene::*;
 mod settings;
@@ -41,6 +43,7 @@ fn main() {
     .add_state(GameState::MainMenu)
     
     .add_plugin(MainMenuPlugin)
+    .add_plugin(GameplayUIPlugin)
     .add_plugin(MapPlugin)
     .add_plugin(SpawnScenePlugin)
     .add_plugin(SettingsPlugin)
