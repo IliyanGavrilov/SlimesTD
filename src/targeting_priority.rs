@@ -18,6 +18,7 @@ pub enum TargetingPriority {
 pub fn first_enemy_direction(
   _enemies: &Query<&GlobalTransform, With<Enemy>>,
   _bullet_spawn_pos: Vec3,
+  _tower_range: i32
 ) -> Option<Vec3> {
   return None;
 }
@@ -25,6 +26,7 @@ pub fn first_enemy_direction(
 pub fn last_enemy_direction(
   _enemies: &Query<&GlobalTransform, With<Enemy>>,
   _bullet_spawn_pos: Vec3,
+  _tower_range: i32
 ) -> Option<Vec3> {
   return None;
 }
@@ -32,10 +34,14 @@ pub fn last_enemy_direction(
 pub fn closest_enemy_direction(
   enemies: &Query<&GlobalTransform, With<Enemy>>,
   bullet_spawn_pos: Vec3,
-  
+  tower_range: i32
 ) -> Option<Vec3> {
   let closest_enemy = enemies
     .iter()
+    .filter(|target_transform| {
+      Vec3::distance(target_transform.translation(),
+                     bullet_spawn_pos) <= tower_range as f32
+    })
     .min_by_key(|enemy_transform| { // Find closest enemy
       FloatOrd(Vec3::distance(enemy_transform.translation(), bullet_spawn_pos))
     });
@@ -49,6 +55,7 @@ pub fn closest_enemy_direction(
 pub fn strongest_enemy_direction(
   _enemies: &Query<&GlobalTransform, With<Enemy>>,
   _bullet_spawn_pos: Vec3,
+  _tower_range: i32
 ) -> Option<Vec3> {
   return None;
 }
@@ -56,6 +63,7 @@ pub fn strongest_enemy_direction(
 pub fn weakest_enemy_direction(
   _enemies: &Query<&GlobalTransform, With<Enemy>>,
   _bullet_spawn_pos: Vec3,
+  _tower_range: i32
 ) -> Option<Vec3> {
   return None;
 }

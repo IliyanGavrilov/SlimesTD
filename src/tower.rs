@@ -80,15 +80,26 @@ fn tower_shooting(
     tower_type,
     mut tower_transform,
     transform) in &mut towers {
+    // Check if an enemy is in range so we can tick the timer
     if enemy_in_range(&tower, &tower_transform, &enemies) {
       let bullet_spawn_pos = transform.translation() + tower.bullet_spawn_offset;
     
       let direction = match &tower.target {
-        FIRST => first_enemy_direction(&enemies, bullet_spawn_pos),
-        LAST => last_enemy_direction(&enemies, bullet_spawn_pos),
-        CLOSE => closest_enemy_direction(&enemies, bullet_spawn_pos),
-        STRONGEST => strongest_enemy_direction(&enemies, bullet_spawn_pos),
-        WEAKEST => weakest_enemy_direction(&enemies, bullet_spawn_pos)
+        FIRST => first_enemy_direction(&enemies,
+                                       bullet_spawn_pos,
+                                       tower.range),
+        LAST => last_enemy_direction(&enemies,
+                                     bullet_spawn_pos,
+                                     tower.range),
+        CLOSE => closest_enemy_direction(&enemies,
+                                         bullet_spawn_pos,
+                                         tower.range),
+        STRONGEST => strongest_enemy_direction(&enemies,
+                                               bullet_spawn_pos,
+                                               tower.range),
+        WEAKEST => weakest_enemy_direction(&enemies,
+                                           bullet_spawn_pos,
+                                           tower.range)
       };
     
       // If there is an enemy in the tower's range!!! (if direction != None), then shoot bullet
