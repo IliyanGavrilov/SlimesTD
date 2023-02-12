@@ -72,7 +72,7 @@ fn tower_shooting(
   mut commands: Commands,
   assets: Res<GameAssets>, // Bullet assets
   mut towers: Query<(Entity, &mut Tower, &TowerType, &mut Transform, &GlobalTransform)>,
-  enemies: Query<&GlobalTransform, With<Enemy>>, // Gets all entities With the Enemy component
+  enemies: Query<(&GlobalTransform, &Enemy)>, // Gets all entities With the Enemy component
   time: Res<Time>,
 ) {
   for (tower_entity,
@@ -94,10 +94,10 @@ fn tower_shooting(
         CLOSE => closest_enemy_direction(&enemies,
                                          bullet_spawn_pos,
                                          tower.range),
-        STRONGEST => strongest_enemy_direction(&enemies,
+        STRONG => strongest_enemy_direction(&enemies,
                                                bullet_spawn_pos,
                                                tower.range),
-        WEAKEST => weakest_enemy_direction(&enemies,
+        WEAK => weakest_enemy_direction(&enemies,
                                            bullet_spawn_pos,
                                            tower.range)
       };
@@ -138,9 +138,9 @@ fn tower_shooting(
 fn enemy_in_range(
   tower: &Mut<Tower>,
   tower_transform: &Mut<Transform>,
-  enemies: &Query<&GlobalTransform, With<Enemy>>
+  enemies: &Query<(&GlobalTransform, &Enemy)>
 ) -> bool {
-  for enemy_transform in enemies {
+  for (enemy_transform, _) in enemies {
     if Vec3::distance(tower_transform.translation,
                       enemy_transform.translation()) <= tower.range as f32 {
       return true
