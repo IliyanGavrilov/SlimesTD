@@ -281,7 +281,9 @@ fn generate_ui(mut commands: Commands, assets: Res<GameAssets>) {
           .insert(TowerButtonState {
             price: i.get_price()
           })
-          .insert(i);
+          .insert(i)
+          .insert(Name::new("TowerButton"));
       }
-    });
+    })
+    .insert(Name::new("TowerButtons"));
 }
