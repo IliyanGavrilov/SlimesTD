@@ -55,7 +55,7 @@ fn spawn_gameplay_ui(
   commands
     .spawn(NodeBundle {
       style: Style {
-        size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+        size: Size::new(Val::Percent(100.0), Val::Percent(75.0)),
         position_type: PositionType::Absolute,
         justify_content: JustifyContent::FlexStart,
         flex_direction: FlexDirection::Column,
