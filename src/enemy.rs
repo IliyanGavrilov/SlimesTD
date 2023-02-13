@@ -51,7 +51,7 @@ impl Default for EnemyBundle {
 #[derive(Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct Enemy {
-  pub health: i32
+  pub health: u32
 }
 
 #[derive(Reflect, Component, Default)]
@@ -67,7 +67,7 @@ pub struct TimeAlive {
 }
 
 impl Enemy {
-  pub fn new(health: i32) -> Self {
+  pub fn new(health: u32) -> Self {
     Self {
       health
     }

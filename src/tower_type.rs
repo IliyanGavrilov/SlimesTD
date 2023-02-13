@@ -115,7 +115,7 @@ impl TowerType {
     }
   }
   
-  pub fn get_bullet(&self, damage: i32, assets: &GameAssets, position: Transform) -> BulletBundle {
+  pub fn get_bullet(&self, damage: u32, assets: &GameAssets, position: Transform) -> BulletBundle {
     match self {
       TowerType::Nature => BulletBundle {
           bullet: Bullet {
@@ -216,7 +216,7 @@ impl TowerType {
     }
   }
   
-  pub fn get_range(&self) -> i32 {
+  pub fn get_range(&self) -> u32 {
     match self {
       TowerType::Nature => 125,
       TowerType::Fire => 125,
@@ -227,7 +227,7 @@ impl TowerType {
     }
   }
   
-  pub fn get_price(&self) -> i32 {
+  pub fn get_price(&self) -> u32 {
     match self {
       TowerType::Nature => 100,
       TowerType::Fire => 100,

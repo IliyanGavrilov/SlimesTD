@@ -19,7 +19,7 @@ pub enum TargetingPriority {
 pub fn first_enemy_direction(
   enemies: &Query<(&GlobalTransform, &Enemy, &Movement, &TimeAlive)>,
   bullet_spawn_pos: Vec3,
-  tower_range: i32
+  tower_range: u32
 ) -> Option<Vec3> {
   let first_enemy = enemies
     .iter()
@@ -41,7 +41,7 @@ pub fn first_enemy_direction(
 pub fn last_enemy_direction(
   enemies: &Query<(&GlobalTransform, &Enemy, &Movement, &TimeAlive)>,
   bullet_spawn_pos: Vec3,
-  tower_range: i32
+  tower_range: u32
 ) -> Option<Vec3> {
   let last_enemy = enemies
     .iter()
@@ -63,7 +63,7 @@ pub fn last_enemy_direction(
 pub fn closest_enemy_direction(
   enemies: &Query<(&GlobalTransform, &Enemy, &Movement, &TimeAlive)>,
   bullet_spawn_pos: Vec3,
-  tower_range: i32
+  tower_range: u32
 ) -> Option<Vec3> {
   let closest_enemy = enemies
     .iter()
@@ -84,7 +84,7 @@ pub fn closest_enemy_direction(
 pub fn strongest_enemy_direction(
   enemies: &Query<(&GlobalTransform, &Enemy, &Movement, &TimeAlive)>,
   bullet_spawn_pos: Vec3,
-  tower_range: i32
+  tower_range: u32
 ) -> Option<Vec3> {
   let strongest_enemy = enemies
     .iter()
@@ -105,7 +105,7 @@ pub fn strongest_enemy_direction(
 pub fn weakest_enemy_direction(
   enemies: &Query<(&GlobalTransform, &Enemy, &Movement, &TimeAlive)>,
   bullet_spawn_pos: Vec3,
-  tower_range: i32
+  tower_range: u32
 ) -> Option<Vec3> {
   let weakest_enemy = enemies
     .iter()

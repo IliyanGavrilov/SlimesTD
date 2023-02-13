@@ -27,7 +27,7 @@ pub struct SpriteFollower;
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct TowerButtonState {
-  price: i32
+  price: u32
 }
 
 fn lock_tower_buttons(
@@ -40,7 +40,7 @@ fn lock_tower_buttons(
   
   for (state, tower_type) in &mut buttons {
     for (mut image, button_tower_type) in button_images.iter_mut() {
-      if player.money >= state.price {
+      if player.money >= state.price as usize {
         if button_tower_type == tower_type {
           image.0 = assets.get_button_asset(*tower_type);
         }
@@ -101,7 +101,7 @@ fn place_tower(
     // Spawn the tower if user clicks with mouse button in a valid tower placement zone!!!
     if mouse.just_pressed(MouseButton::Left) {
       if let Some(screen_pos) = window.cursor_position() {
-        player.money -= tower_type.get_price();
+        player.money -= tower_type.get_price() as usize;
         commands.entity(entity).despawn_recursive();
         spawn_tower(&mut commands,
                     *tower_type,
@@ -171,42 +171,42 @@ fn tower_button_interaction(
   // Keyboard shortcuts
   if query.is_empty() { // Spawn one tower at a time
     if keys.just_pressed(KeyCode::Key1) &&
-      player.money >= TowerType::Nature.get_price() {
+      player.money >= TowerType::Nature.get_price() as usize {
       info!("Spawning: Nature wizard");
       
       spawn_sprite_follower(&mut commands, window, camera, camera_transform,
                             &mut meshes, &mut materials, &TowerType::Nature, &assets);
     }
     else if keys.just_pressed(KeyCode::Key2) &&
-      player.money >= TowerType::Fire.get_price() {
+      player.money >= TowerType::Fire.get_price() as usize {
       info!("Spawning: Fire wizard");
   
       spawn_sprite_follower(&mut commands, window, camera, camera_transform,
                             &mut meshes, &mut materials, &TowerType::Fire, &assets);
     }
     else if keys.just_pressed(KeyCode::Key3) &&
-      player.money >= TowerType::Ice.get_price() {
+      player.money >= TowerType::Ice.get_price() as usize {
       info!("Spawning: Ice wizard");
   
       spawn_sprite_follower(&mut commands, window, camera, camera_transform,
                             &mut meshes, &mut materials, &TowerType::Ice, &assets);
     }
     else if keys.just_pressed(KeyCode::Key4) &&
-      player.money >= TowerType::Dark.get_price() {
+      player.money >= TowerType::Dark.get_price() as usize{
       info!("Spawning: Dark wizard");
   
       spawn_sprite_follower(&mut commands, window, camera, camera_transform,
                             &mut meshes, &mut materials, &TowerType::Dark, &assets);
     }
     else if keys.just_pressed(KeyCode::Key5) &&
-      player.money >= TowerType::Mage.get_price() {
+      player.money >= TowerType::Mage.get_price() as usize {
       info!("Spawning: Mage wizard");
   
       spawn_sprite_follower(&mut commands, window, camera, camera_transform,
                             &mut meshes, &mut materials, &TowerType::Mage, &assets);
     }
     else if keys.just_pressed(KeyCode::Key6) &&
-      player.money >= TowerType::Archmage.get_price() {
+      player.money >= TowerType::Archmage.get_price() as usize {
       info!("Spawning: Archmage wizard");
   
       spawn_sprite_follower(&mut commands, window, camera, camera_transform,
@@ -215,7 +215,7 @@ fn tower_button_interaction(
   }
   
   for (interaction, tower_type, state) in &interaction {
-    if player.money >= state.price {
+    if player.money >= state.price as usize {
       match interaction {
         Interaction::Clicked => {
           info!("Spawning: {tower_type} wizard");

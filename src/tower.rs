@@ -27,11 +27,11 @@ pub struct TowerBundle {
 #[reflect(Component)]
 pub struct Tower {
   pub bullet_spawn_offset: Vec3,
-  pub damage: i32,
+  pub damage: u32,
   pub attack_speed: Timer,
-  pub range: i32,
-  pub price: i32,
-  pub sell_price: i32,
+  pub range: u32,
+  pub price: u32,
+  pub sell_price: u32,
   // Flag to stop timer from counting when there are no enemies
   pub first_enemy_appeared: bool,
   pub target: TargetingPriority
@@ -40,10 +40,10 @@ pub struct Tower {
 impl Tower {
   pub fn new(
     bullet_spawn_offset: Vec3,
-    damage: i32,
+    damage: u32,
     attack_speed: Timer,
-    range: i32,
-    price: i32,
+    range: u32,
+    price: u32,
   ) -> Self {
     Self {
       bullet_spawn_offset,
@@ -51,7 +51,7 @@ impl Tower {
       attack_speed,
       range,
       price,
-      sell_price: (price/3) as i32,
+      sell_price: (price/3) as u32,
       first_enemy_appeared: false,
       ..default()
     }

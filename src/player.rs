@@ -17,7 +17,7 @@ impl Plugin for PlayerPlugin {
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct Player {
-  pub money: i32,
+    pub money: usize,
 }
 
 fn spawn_player(mut commands: Commands) {

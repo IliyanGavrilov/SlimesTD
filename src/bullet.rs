@@ -25,7 +25,7 @@ pub struct BulletBundle {
 #[derive(Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct Bullet {
-  pub damage: i32,
+  pub damage: u32,
   pub lifetime: Timer // !!! fix?
 }
 
