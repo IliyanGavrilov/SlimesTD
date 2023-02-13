@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 use strum_macros::{Display};
-use crate::{AnimationIndices, Enemy, EnemyBundle, GameAssets, Movement, Path};
+use crate::{AnimationIndices, Enemy, EnemyBundle, GameAssets, MapPath, Movement, Path};
 
 #[derive(Inspectable, Component, Display, Clone, Copy, Debug, PartialEq)]
 pub enum EnemyType {
@@ -16,7 +16,8 @@ pub enum EnemyType {
 }
 
 impl EnemyType {
-  pub fn get_enemy(&self, assets: &GameAssets, position: Vec3, direction: Vec3, path: Path) -> EnemyBundle {
+  pub fn get_enemy(&self, assets: &GameAssets, map_path: &MapPath, position: Vec3, path: Path) -> EnemyBundle {
+    let direction = map_path.checkpoints[1];
     match self {
       EnemyType::Green => EnemyBundle {
         movement: Movement { direction, speed: 15. },

@@ -15,23 +15,23 @@ impl Plugin for SpawnScenePlugin {
 fn spawn_basic_scene(
   mut commands: Commands,
   assets: Res<GameAssets>, // Tower and enemy assets
-  map: Res<MapPath>
+  map_path: Res<MapPath>
 ) {
   commands.spawn(Base {health: 100}).insert(Name::new("Base"));
   // Enemy
   spawn_enemy(&mut commands,
+              &map_path,
               EnemyType::Red,
               &assets,
-              Vec3::new(0., 0., 0.),
-              map.checkpoints[0],
+              map_path.checkpoints[0],
               Path {index: 0});
   
   // Enemy 2
   spawn_enemy(&mut commands,
+              &map_path,
               EnemyType::Purple,
               &assets,
-              Vec3::new(-50., 0., 0.),
-              map.checkpoints[0],
+              map_path.checkpoints[0],
               Path {index: 0});
   
   // Tower
@@ -39,8 +39,6 @@ fn spawn_basic_scene(
               TowerType::Fire,
               &assets,
               Vec3::new(100., 0., 0.));
-  
-  // Tower range
   
   // Tower range when trying to place on path/invalid tile
   // commands.spawn(MaterialMesh2dBundle {

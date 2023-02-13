@@ -21,20 +21,20 @@ fn load_map(
 ) {
   commands.insert_resource(MapPath {
     checkpoints: vec![
-      Vec3::new(500., 0., 0.),
-      Vec3::new(500., 500., 0.),
-      Vec3::new(1000., 500., 0.),
-      Vec3::new(1000., 700., 0.),
-      Vec3::new(1200., 700., 0.),
-      Vec3::new(1200., 600., 0.),
-      Vec3::new(1400., 600., 0.),
-      Vec3::new(1400., 400., 0.),
-      Vec3::new(1200., 400., 0.),
-      Vec3::new(1200., 300., 0.),
-      Vec3::new(1000., 300., 0.),
-      Vec3::new(1000., 150., 0.),
-      Vec3::new(1200., 150., 0.),
-      Vec3::new(1200., 0., 0.)
+      Vec3::new(-475., -450., 0.), // Spawn
+      Vec3::new(-475., -431.2, 0.),
+      Vec3::new(-475., -200., 0.),
+      Vec3::new(-210., -200., 0.),
+      Vec3::new(-210., 15., 0.),
+      Vec3::new(10., 15., 0.),
+      Vec3::new(10., -300., 0.),
+      Vec3::new(210., -300., 0.),
+      Vec3::new(210., 310., 0.),
+      Vec3::new(370., 310., 0.),
+      Vec3::new(370., 25., 0.),
+      Vec3::new(510., 25., 0.),
+      Vec3::new(510., -450., 0.),
+      Vec3::new(510., -450., 0.) // Despawn
     ]
   })
 }
@@ -55,7 +55,7 @@ fn update_enemy_checkpoint(
     if path.index >= map.checkpoints.len() - 1 {
       damage_base(&mut commands, &entity, enemy.health, &mut base);
     }
-    else if Vec3::distance(transform.translation, map.checkpoints[path.index]) <= 5. {
+    else if Vec3::distance(transform.translation, map.checkpoints[path.index]) <= 10. {
       path.index += 1;
       movement.direction = Vec3::new(0., 0., 0.,);
       movement.direction = map.checkpoints[path.index] - transform.translation;

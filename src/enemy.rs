@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 pub use crate::{GameAssets, Movement, enemy_type::EnemyType};
-use crate::{AnimationIndices, AnimationTimer, GameState};
+use crate::{AnimationIndices, AnimationTimer, GameState, MapPath};
 
 pub struct EnemyPlugin;
 
@@ -85,13 +85,13 @@ fn tick_enemy_time_alive(
 
 pub fn spawn_enemy(
   commands: &mut Commands,
+  map_path: &MapPath,
   enemy_type: EnemyType,
   assets: &GameAssets,
   position: Vec3,
-  direction: Vec3,
   path: Path
 ) {
-  commands.spawn(enemy_type.get_enemy(assets, position, direction, path));
+  commands.spawn(enemy_type.get_enemy(assets, map_path, position, path));
 }
 
 // !!!
