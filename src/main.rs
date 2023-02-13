@@ -28,6 +28,8 @@ pub use tower_button::*;
 mod enemy;
 pub use enemy::*;
 mod enemy_type;
+mod wave;
+pub use wave::*;
 mod bullet;
 pub use bullet::*;
 mod movement;
@@ -42,6 +44,7 @@ fn main() {
     // Game State
     .add_state(GameState::MainMenu)
     
+    // Plugins
     .add_plugin(MainMenuPlugin)
     .add_plugin(GameplayUIPlugin)
     .add_plugin(MapPlugin)
@@ -49,9 +52,11 @@ fn main() {
     .add_plugin(SettingsPlugin)
     .add_plugin(AssetPlugin)
     .add_plugin(PlayerPlugin)
+    .add_plugin(BasePlugin)
     .add_plugin(TowerPlugin)
     .add_plugin(TowerButtonPlugin)
     .add_plugin(EnemyPlugin)
+    .add_plugin(WavePlugin)
     .add_plugin(BulletPlugin)
     .add_plugin(MovementPlugin)
     
