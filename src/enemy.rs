@@ -35,7 +35,7 @@ pub struct EnemyBundle {
 
 impl Default for EnemyBundle {
   fn default() -> Self {
-    EnemyBundle {
+    Self {
       enemy_type: EnemyType::Green,
       enemy: Enemy::new(1),
       movement: Movement { direction: default(), speed: 15. },
