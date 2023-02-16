@@ -54,7 +54,7 @@ fn bullet_enemy_collision(
       if Vec3::distance(bullet_transform.translation(),
                         enemy_transform.translation) <= 25. {
         commands.entity(bullet_entity).despawn_recursive();
-        enemy.health -= bullet.damage;
+        enemy.health -= bullet.damage as i32;
         break;
       }
     }

@@ -13,15 +13,18 @@ impl Plugin for WavePlugin {
   }
 }
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct Waves {
   pub waves: Vec<Wave>,
   pub current: usize
 }
 
 impl Waves {
+  pub fn current(&self) -> Option<&Wave> {
+    return self.waves.get(self.current);
+  }
   pub fn advance(&mut self) -> Option<&Wave> {
-    self.ccurrent += 1;
+    self.current += 1;
     return self.current();
   }
 }
@@ -30,32 +33,32 @@ impl Waves {
 pub struct Wave {
   pub enemies: Vec<(EnemyType, Duration)>,
   pub current: usize, // Current enemy
-  pub delay: f32 // Delay before next wave !!!
+  pub num: usize // Number of remaining enemies to spawn
+}
+
+impl Default for Wave {
+  fn default() -> Self {
+    Self {
+      enemies: vec![],
+      current: 0,
+      num: 0
+    }
+  }
 }
 
 #[derive(Resource)]
 pub struct WaveState {
-  pub delay_timer: Timer,
+  pub wave_timer: Timer,
   pub spawn_timer: Timer,
   pub remaining: usize
-}
-
-impl Default for WaveState {
-  fn default() -> Self {
-    Self {
-      delay_timer: Timer::from_seconds(1., TimerMode::Once),
-      spawn_timer: Timer::from_seconds(1., TimerMode::Repeating),
-      remaining: 0
-    }
-  }
 }
 
 impl From<&Wave> for WaveState {
   fn from(wave: &Wave) -> Self {
     Self {
-      delay_timer: Timer::from_seconds(wave.delay, TimerMode::Once),
-      spawn_timer: Timer::from_seconds(wave.enemies.1[wave.current], TimerMode::Repeating),
-      remaining: 0
+      wave_timer: Timer::new(Duration::from_secs(5), TimerMode::Once),
+      spawn_timer: Timer::new(wave.enemies[wave.current].1, TimerMode::Repeating),
+      remaining: wave.num
     }
   }
 }
@@ -70,71 +73,110 @@ fn spawn_waves(
   mut commands: Commands,
   assets: Res<GameAssets>, // Tower and enemy assets
   map_path: Res<MapPath>,
-  waves: Res<Waves>,
-  time: Res<Time>,
-  wave_enemies: Query<With<WaveIndex>>
+  mut waves: ResMut<Waves>,
+  mut wave_state: ResMut<WaveState>,
+  time: Res<Time>
 ) {
   // If all enemies in wave have finished, if button has been pressed
   // or if in-between waves timer has finished !!!
-  if wave_enemies.is_empty() {
-    for (index, wave) in waves.waves.iter().enumerate() {
-      for enemy in &wave.enemies {
-        spawn_enemy(&mut commands,
-                    &map_path,
-                    enemy.0,
-                    &assets,
-                    map_path.checkpoints[0],
-                    Path { index: 0 },
-                    WaveIndex { index: index + 1});
-      }
+  if wave_state.remaining == 0 {
+    wave_state.wave_timer.tick(time.delta());
+    if !wave_state.wave_timer.just_finished() {
+      return;
+    }
+    if let Some(next_wave) = waves.advance() {
+      commands.insert_resource(WaveState::from(next_wave));
     }
   }
+  
+  let Some(current_wave) = waves.current() else {
+    return;
+  };
+  
+  wave_state.spawn_timer.tick(time.delta());
+  if !wave_state.spawn_timer.just_finished() {
+    return;
+  }
+  
+  let index = current_wave.enemies.len() - wave_state.remaining;
+  
+  spawn_enemy(&mut commands,
+              &map_path,
+              current_wave.enemies[index].0,
+              &assets,
+              map_path.checkpoints[0],
+              Path { index: 0 },
+              WaveIndex { index: waves.current + 1}); // !!!
+  
+  wave_state.spawn_timer = Timer::new(
+    current_wave.enemies[index].1,
+    TimerMode::Repeating);
+  
+  wave_state.remaining -= 1;
 }
 
 fn load_waves(
   mut commands: Commands
 ) {
+  let first_wave_num_enemies = 20;
   commands.insert_resource(Waves {
     waves: vec![
       Wave {
-        enemies: vec![(EnemyType::Green, Duration::from_millis(500)); 20]
+        enemies: vec![(EnemyType::Green, Duration::from_millis(1500)); 20],
+        num: first_wave_num_enemies,
+        ..default()
       },
       Wave {
-        enemies: vec![(EnemyType::Green, Duration::from_millis(250)); 35]
+        enemies: vec![(EnemyType::Green, Duration::from_millis(1000)); 35],
+        num: 35,
+        ..default()
       },
       Wave {
-        enemies: vec![(EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(500)),
-                      (EnemyType::Yellow, Duration::from_millis(500)),
-                      (EnemyType::Yellow, Duration::from_millis(500)),
-                      (EnemyType::Yellow, Duration::from_millis(500)),
-                      (EnemyType::Yellow, Duration::from_millis(500)),
-                      (EnemyType::Yellow, Duration::from_millis(500)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250)),
-                      (EnemyType::Green, Duration::from_millis(250))
-        ]
+        enemies: vec![(EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(2000)),
+                      (EnemyType::Yellow, Duration::from_millis(2000)),
+                      (EnemyType::Yellow, Duration::from_millis(2000)),
+                      (EnemyType::Yellow, Duration::from_millis(2000)),
+                      (EnemyType::Yellow, Duration::from_millis(2000)),
+                      (EnemyType::Yellow, Duration::from_millis(2000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000)),
+                      (EnemyType::Green, Duration::from_millis(1000))
+        ],
+        num: 30,
+        ..default()
       },
-    ]
+      Wave {
+        enemies: vec![(EnemyType::Red, Duration::from_millis(500)); 20],
+        num: 20,
+        ..default()
+      }
+    ],
+    ..default()
+  });
+  commands.insert_resource(WaveState {
+    wave_timer: Timer::new(Duration::from_secs(5), TimerMode::Once),
+    spawn_timer: Timer::new(Duration::from_millis(1), TimerMode::Repeating),
+    remaining: first_wave_num_enemies
   })
 }

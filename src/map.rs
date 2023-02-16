@@ -21,8 +21,7 @@ fn load_map(
 ) {
   commands.insert_resource(MapPath {
     checkpoints: vec![
-      Vec3::new(-475., -450., 0.), // Spawn
-      Vec3::new(-475., -431.2, 0.),
+      Vec3::new(-475., -440., 0.), // Spawn
       Vec3::new(-475., -200., 0.),
       Vec3::new(-210., -200., 0.),
       Vec3::new(-210., 15., 0.),
@@ -34,7 +33,7 @@ fn load_map(
       Vec3::new(370., 25., 0.),
       Vec3::new(510., 25., 0.),
       Vec3::new(510., -450., 0.),
-      Vec3::new(510., -450., 0.) // Despawn
+      Vec3::new(510., -440., 0.) // Despawn
     ]
   })
 }
@@ -66,7 +65,7 @@ fn update_enemy_checkpoint(
 fn damage_base(
   commands: &mut Commands,
   entity: &Entity,
-  enemy_health: u32,
+  enemy_health: i32,
   base: &mut Base
 ) {
   commands.entity(*entity).despawn_recursive();

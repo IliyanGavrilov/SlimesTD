@@ -1,4 +1,3 @@
-use std::time::Duration;
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 pub use crate::{GameAssets, Movement, enemy_type::EnemyType};
@@ -38,7 +37,7 @@ impl Default for EnemyBundle {
     Self {
       enemy_type: EnemyType::Green,
       enemy: Enemy::new(1),
-      movement: Movement { direction: default(), speed: 15. },
+      movement: Movement { direction: default(), speed: 50. },
       animation_indices: AnimationIndices {first: 0, last: 9},
       animation_timer: AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
       sprite_sheet_bundle: SpriteSheetBundle::default(),
@@ -54,7 +53,7 @@ impl Default for EnemyBundle {
 #[derive(Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct Enemy {
-  pub health: u32
+  pub health: i32
 }
 
 #[derive(Reflect, Component, Default)]
@@ -70,7 +69,7 @@ pub struct TimeAlive {
 }
 
 impl Enemy {
-  pub fn new(health: u32) -> Self {
+  pub fn new(health: i32) -> Self {
     Self {
       health
     }
