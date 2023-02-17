@@ -55,7 +55,7 @@ fn lock_tower_buttons(
 }
 
 // Convert cursor position from window/screen position to world position
-fn window_to_world_pos(
+pub fn window_to_world_pos(
   window: &Window,
   cursor_pos: Vec2,
   camera: &Camera,
@@ -138,7 +138,8 @@ fn spawn_sprite_follower(
       ..default()
     })
       .insert(MaterialMesh2dBundle {
-        mesh: meshes.add(shape::Circle::new(tower_type.get_range() as f32).into()).into(),
+        mesh: meshes.add(shape::Circle::new(tower_type.get_range() as f32).into())
+          .into(),
         material: materials.add(ColorMaterial::from(
           Color::rgba_u8(0, 0, 0, 85))),
         transform: Transform::from_translation(Vec3::new(100., 0., 0.)),

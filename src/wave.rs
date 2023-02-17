@@ -56,7 +56,7 @@ pub struct WaveState {
 impl From<&Wave> for WaveState {
   fn from(wave: &Wave) -> Self {
     Self {
-      wave_timer: Timer::new(Duration::from_secs(5), TimerMode::Once),
+      wave_timer: Timer::new(Duration::from_secs(10), TimerMode::Once),
       spawn_timer: Timer::new(wave.enemies[wave.current].1, TimerMode::Repeating),
       remaining: wave.num
     }
@@ -167,7 +167,7 @@ fn load_waves(
         ..default()
       },
       Wave {
-        enemies: vec![(EnemyType::Red, Duration::from_millis(500)); 20],
+        enemies: vec![(EnemyType::Red, Duration::from_millis(3000)); 20],
         num: 20,
         ..default()
       }
@@ -175,7 +175,7 @@ fn load_waves(
     ..default()
   });
   commands.insert_resource(WaveState {
-    wave_timer: Timer::new(Duration::from_secs(5), TimerMode::Once),
+    wave_timer: Timer::new(Duration::from_secs(10), TimerMode::Once),
     spawn_timer: Timer::new(Duration::from_millis(1), TimerMode::Repeating),
     remaining: first_wave_num_enemies
   })
