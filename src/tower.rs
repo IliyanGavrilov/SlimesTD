@@ -1,7 +1,9 @@
+use std::time::Duration;
 use bevy::prelude::*;
 
 pub use crate::{GameState, Bullet, Movement, tower_type::TowerType, GameAssets,
                 targeting_priority::{*, TargetingPriority::*}};
+use crate::{TowerStat, TowerUpgrades, Upgrade};
 
 pub struct TowerPlugin;
 
@@ -27,20 +29,22 @@ pub struct TowerBundle {
 pub struct Tower {
   pub bullet_spawn_offset: Vec3,
   pub damage: u32,
-  pub attack_speed: Timer,
+  pub attack_speed: f32,
   pub range: u32,
   pub price: u32,
   pub sell_price: u32,
+  pub upgrades: TowerUpgrades,
+  pub target: TargetingPriority,
+  pub shooting_timer: Timer,
   // Flag to stop timer from counting when there are no enemies
-  pub first_enemy_appeared: bool,
-  pub target: TargetingPriority
+  pub first_enemy_appeared: bool
 }
 
 impl Tower {
   pub fn new(
     bullet_spawn_offset: Vec3,
     damage: u32,
-    attack_speed: Timer,
+    attack_speed: f32,
     range: u32,
     price: u32,
   ) -> Self {
@@ -52,8 +56,29 @@ impl Tower {
       price,
       sell_price: (price/3) as u32,
       first_enemy_appeared: false,
+      shooting_timer: Timer::new(Duration::from_millis((1000. * attack_speed) as u64),
+                                 TimerMode::Repeating),
       ..default()
     }
+  }
+  
+  pub fn upgrade(&mut self, upgrade: &Upgrade, path_index: usize) {
+    for (k, v) in &upgrade.upgrade {
+      match *k {
+        TowerStat::Damage => {self.damage += *v as u32}
+        TowerStat::AttackSpeed => {
+          info!("{}", self.attack_speed);
+          self.attack_speed -= (*v as f32 )* 0.01 * self.attack_speed;
+          info!("{}", self.attack_speed);
+          self.shooting_timer.reset();
+          self.shooting_timer.set_duration(Duration::from_millis(
+            (1000. * self.attack_speed) as u64));
+        }
+        TowerStat::Range => {self.range += *v as u32}
+      }
+    }
+  
+    self.upgrades.upgrades[path_index] += 1;
   }
 }
 
@@ -103,7 +128,7 @@ fn tower_shooting(
       // If there is an enemy in the tower's range!!! (if direction != None), then shoot bullet
       if let Some(direction) = direction {
         // If the attack cooldown finished OR if there was no enemy spawned before, spawn bullet
-        if tower.attack_speed.just_finished() || tower.first_enemy_appeared {
+        if tower.shooting_timer.just_finished() || tower.first_enemy_appeared {
           tower.first_enemy_appeared = false;
         
           // Calculate angle between tower and enemy
@@ -124,10 +149,10 @@ fn tower_shooting(
           });
         }
       
-        tower.attack_speed.tick(time.delta());
+        tower.shooting_timer.tick(time.delta());
       }
     } else {
-      tower.attack_speed.reset();
+      tower.shooting_timer.reset();
       tower.first_enemy_appeared = true;
     }
   }

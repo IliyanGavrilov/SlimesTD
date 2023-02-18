@@ -25,6 +25,8 @@ pub use tower::*;
 mod tower_type;
 mod tower_button;
 pub use tower_button::*;
+mod tower_selection;
+pub use tower_selection::*;
 mod tower_upgrade;
 pub use tower_upgrade::*;
 mod enemy;
@@ -57,6 +59,7 @@ fn main() {
     .add_plugin(BasePlugin)
     .add_plugin(TowerPlugin)
     .add_plugin(TowerButtonPlugin)
+    .add_plugin(TowerSelectionPlugin)
     .add_plugin(TowerUpgradePlugin)
     .add_plugin(EnemyPlugin)
     .add_plugin(WavePlugin)

@@ -3,7 +3,7 @@ use crate::{Bullet, BulletBundle, GameAssets, Movement, Tower, TowerBundle};
 use strum_macros::{EnumIter, Display};
 use bevy_inspector_egui::Inspectable;
 
-#[derive(EnumIter, Inspectable, Component, Display, Clone, Copy, Debug, PartialEq)]
+#[derive(EnumIter, Inspectable, Component, Display, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum TowerType {
   Nature,
   Fire,
@@ -21,7 +21,7 @@ impl TowerType {
           tower: Tower::new(
             Vec3::new(20., 0., 0.),
             1,
-            Timer::from_seconds(1., TimerMode::Repeating),
+            1.,
             self.get_range(),
             self.get_price()
           ),
@@ -37,7 +37,7 @@ impl TowerType {
         tower: Tower::new(
           Vec3::new(20., 0., 0.),
           1,
-          Timer::from_seconds(1., TimerMode::Repeating),
+          1.,
           self.get_range(),
           self.get_price()
         ),
@@ -53,7 +53,7 @@ impl TowerType {
         tower: Tower::new(
           Vec3::new(20., 0., 0.),
           1,
-          Timer::from_seconds(1., TimerMode::Repeating),
+          1.,
           self.get_range(),
           self.get_price()
         ),
@@ -69,7 +69,7 @@ impl TowerType {
         tower: Tower::new(
           Vec3::new(20., 0., 0.),
           1,
-          Timer::from_seconds(1., TimerMode::Repeating),
+          1.,
           self.get_range(),
           self.get_price()
         ),
@@ -85,7 +85,7 @@ impl TowerType {
         tower: Tower::new(
           Vec3::new(20., 0., 0.),
           1,
-          Timer::from_seconds(1., TimerMode::Repeating),
+          1.,
           self.get_range(),
           self.get_price()
         ),
@@ -101,7 +101,7 @@ impl TowerType {
         tower: Tower::new(
           Vec3::new(20., 0., 0.),
           1,
-          Timer::from_seconds(1., TimerMode::Repeating),
+          1.,
           self.get_range(),
           self.get_price()
         ),

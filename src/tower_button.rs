@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::{GameAssets, GameState, MainCamera, Player, spawn_tower, TowerType};
+use crate::{GameAssets, GameState, MainCamera, Player, spawn_tower, Tower, TowerType, TowerUpgradeUI};
 use strum::IntoEnumIterator;
 use bevy::sprite::MaterialMesh2dBundle;
 
@@ -86,13 +86,19 @@ fn place_tower(
   mouse: Res<Input<MouseButton>>,
   windows: Res<Windows>,
   camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
-  mut player: Query<&mut Player>
+  mut player: Query<&mut Player>,
+  towers: Query<&Transform, (With<Tower>, Without<SpriteFollower>)>,
+  mut clicked_tower: Query<Entity, With<TowerUpgradeUI>>
 ) {
   let window = windows.get_primary().unwrap();
   let (camera, camera_transform) = camera_query.single();
   let mut player = player.single_mut();
   
   for (entity, mut transform, tower_type) in query.iter_mut() {
+    if !clicked_tower.is_empty() {
+      let entity = clicked_tower.single_mut();
+      commands.entity(entity).remove::<(Handle<ColorMaterial>, TowerUpgradeUI)>();
+    }
     // Sprite follows mouse until tower is placed or discarded
     if let Some(position) = window.cursor_position() {
       transform.translation =
@@ -101,15 +107,24 @@ fn place_tower(
     // Spawn the tower if user clicks with mouse button in a valid tower placement zone!!!
     if mouse.just_pressed(MouseButton::Left) {
       if let Some(screen_pos) = window.cursor_position() {
-        player.money -= tower_type.get_price() as usize;
-        commands.entity(entity).despawn_recursive();
-        spawn_tower(&mut commands,
-                    *tower_type,
-                    &assets,
-                    window_to_world_pos(window,
-                                        screen_pos,
-                                        camera,
-                                        camera_transform));
+        let mouse_click_pos =
+          window_to_world_pos(window, screen_pos, camera, camera_transform);
+        
+        let mut place_tower = true;
+        
+        for tower_transform in towers.iter() {
+          if Vec3::distance(mouse_click_pos, tower_transform.translation) <= 50. {
+            place_tower = false;
+          }
+        }
+        if place_tower {
+          player.money -= tower_type.get_price() as usize;
+          commands.entity(entity).despawn_recursive();
+          spawn_tower(&mut commands,
+                      *tower_type,
+                      &assets,
+                      mouse_click_pos);
+        }
       }
     } // Discard tower
     else if mouse.just_pressed(MouseButton::Right) || window.cursor_position().is_none() {
