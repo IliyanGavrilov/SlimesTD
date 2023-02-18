@@ -142,7 +142,6 @@ fn spawn_sprite_follower(
           .into(),
         material: materials.add(ColorMaterial::from(
           Color::rgba_u8(0, 0, 0, 85))),
-        transform: Transform::from_translation(Vec3::new(100., 0., 0.)),
         ..default()
       })
       .insert(SpriteFollower)

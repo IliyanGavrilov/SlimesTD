@@ -1,12 +1,13 @@
 use std::cmp::Reverse;
 use bevy::utils::FloatOrd;
 use bevy_inspector_egui::Inspectable;
+use strum_macros::EnumIter;
 
 // Debugging
 use bevy::prelude::*;
 pub use crate::enemy::*;
 
-#[derive(Inspectable, Reflect, Component, Default)]
+#[derive(EnumIter, Inspectable, Reflect, Clone, Debug, Component, Default, PartialEq)]
 pub enum TargetingPriority {
   #[default]
   FIRST,
@@ -14,6 +15,28 @@ pub enum TargetingPriority {
   CLOSE,
   STRONG,
   WEAK
+}
+
+impl TargetingPriority {
+  pub fn next_target(&mut self) {
+    *self = match self {
+      TargetingPriority::FIRST => TargetingPriority::LAST,
+      TargetingPriority::LAST => TargetingPriority::CLOSE,
+      TargetingPriority::CLOSE => TargetingPriority::STRONG,
+      TargetingPriority::STRONG => TargetingPriority::WEAK,
+      TargetingPriority::WEAK => TargetingPriority::FIRST
+    }
+  }
+  
+  pub fn prev_target(&mut self) {
+    *self = match self {
+      TargetingPriority::FIRST => TargetingPriority::WEAK,
+      TargetingPriority::LAST => TargetingPriority::FIRST,
+      TargetingPriority::CLOSE => TargetingPriority::LAST,
+      TargetingPriority::STRONG => TargetingPriority::CLOSE,
+      TargetingPriority::WEAK => TargetingPriority::STRONG
+    }
+  }
 }
 
 pub fn first_enemy_direction(

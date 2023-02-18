@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 
-pub use crate::{Bullet, Movement, tower_type::TowerType, GameAssets,
+pub use crate::{GameState, Bullet, Movement, tower_type::TowerType, GameAssets,
                 targeting_priority::{*, TargetingPriority::*}};
-use crate::GameState;
 
 pub struct TowerPlugin;
 
@@ -23,7 +22,7 @@ pub struct TowerBundle {
 }
 
 //#[derive(Component)] // !!!Debugging
-#[derive(Reflect, Component, Default)]
+#[derive(Reflect, Clone, Component, Default)]
 #[reflect(Component)]
 pub struct Tower {
   pub bullet_spawn_offset: Vec3,
