@@ -113,7 +113,7 @@ fn place_tower(
         let mut place_tower = true;
         
         for tower_transform in towers.iter() {
-          if Vec3::distance(mouse_click_pos, tower_transform.translation) <= 50. {
+          if Vec3::distance(mouse_click_pos, tower_transform.translation) <= 40. {
             place_tower = false;
           }
         }

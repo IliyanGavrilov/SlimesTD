@@ -121,8 +121,8 @@ fn tower_ui_interaction (
       let i = tower.upgrades.upgrades[path_index];
       let upgrades = &upgrades.upgrades[tower_type][path_index];
   
-      if i < upgrades.len() && player.money >= upgrades[i].price {
-        player.money -= upgrades[i].price;
+      if i < upgrades.len() && player.money >= upgrades[i].cost {
+        player.money -= upgrades[i].cost;
         tower.upgrade(&upgrades[i], path_index);
       }
     }

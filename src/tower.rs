@@ -36,6 +36,7 @@ pub struct Tower {
   pub upgrades: TowerUpgrades,
   pub target: TargetingPriority,
   pub shooting_timer: Timer,
+  pub total_spent: u32,
   // Flag to stop timer from counting when there are no enemies
   pub first_enemy_appeared: bool
 }
@@ -54,6 +55,7 @@ impl Tower {
       attack_speed,
       range,
       price,
+      total_spent: price,
       sell_price: (price/3) as u32,
       first_enemy_appeared: false,
       shooting_timer: Timer::new(Duration::from_millis((1000. * attack_speed) as u64),
@@ -63,13 +65,12 @@ impl Tower {
   }
   
   pub fn upgrade(&mut self, upgrade: &Upgrade, path_index: usize) {
+    self.total_spent += upgrade.cost as u32;
     for (k, v) in &upgrade.upgrade {
       match *k {
         TowerStat::Damage => {self.damage += *v as u32}
         TowerStat::AttackSpeed => {
-          info!("{}", self.attack_speed);
           self.attack_speed -= (*v as f32 )* 0.01 * self.attack_speed;
-          info!("{}", self.attack_speed);
           self.shooting_timer.reset();
           self.shooting_timer.set_duration(Duration::from_millis(
             (1000. * self.attack_speed) as u64));

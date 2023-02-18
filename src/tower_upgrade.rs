@@ -35,7 +35,7 @@ impl Default for TowerUpgrades {
 #[derive(Component, Reflect, FromReflect, Clone)]
 pub struct Upgrade {
   pub upgrade: HashMap<TowerStat, i32>,
-  pub price: usize
+  pub cost: usize
 }
 
 #[derive(Hash, Eq, PartialEq, Reflect, FromReflect, Clone)]
@@ -53,80 +53,80 @@ fn load_upgrades(
       TowerType::Nature, vec![vec![
         Upgrade {
           upgrade: HashMap::from([(TowerStat::Damage, 1), (TowerStat::Range, 50)]),
-          price: 50
+          cost: 50
         },
         Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 3), (TowerStat::AttackSpeed, 95)]),
-          price: 200
+          upgrade: HashMap::from([(TowerStat::Damage, 3), (TowerStat::AttackSpeed, 10)]),
+          cost: 200
         },
         Upgrade {
           upgrade: HashMap::from([(TowerStat::Damage, 10), (TowerStat::AttackSpeed, 10)]),
-          price: 300
+          cost: 300
         }]]), (
       TowerType::Fire, vec![vec![
         Upgrade {
           upgrade: HashMap::from([(TowerStat::Damage, 1), (TowerStat::Range, 50)]),
-          price: 50
+          cost: 50
         },
         Upgrade {
           upgrade: HashMap::from([(TowerStat::Damage, 3), (TowerStat::AttackSpeed, 10)]),
-          price: 200
+          cost: 200
         },
         Upgrade {
           upgrade: HashMap::from([(TowerStat::Damage, 10), (TowerStat::AttackSpeed, 10)]),
-          price: 300
+          cost: 300
         }]]), (
       TowerType::Ice, vec![vec![
         Upgrade {
           upgrade: HashMap::from([(TowerStat::Damage, 1), (TowerStat::Range, 50)]),
-          price: 50
+          cost: 50
         },
         Upgrade {
           upgrade: HashMap::from([(TowerStat::Damage, 3), (TowerStat::AttackSpeed, 10)]),
-          price: 200
+          cost: 200
         },
         Upgrade {
           upgrade: HashMap::from([(TowerStat::Damage, 10), (TowerStat::AttackSpeed, 10)]),
-          price: 300
+          cost: 300
         }]]), (
       TowerType::Dark, vec![vec![
         Upgrade {
           upgrade: HashMap::from([(TowerStat::Damage, 1), (TowerStat::Range, 50)]),
-          price: 50
+          cost: 50
         },
         Upgrade {
           upgrade: HashMap::from([(TowerStat::Damage, 3), (TowerStat::AttackSpeed, 10)]),
-          price: 200
+          cost: 200
         },
         Upgrade {
           upgrade: HashMap::from([(TowerStat::Damage, 10), (TowerStat::AttackSpeed, 10)]),
-          price: 300
+          cost: 300
         }]]), (
       TowerType::Mage, vec![vec![
         Upgrade {
           upgrade: HashMap::from([(TowerStat::Damage, 1), (TowerStat::Range, 50)]),
-          price: 50
+          cost: 50
         },
         Upgrade {
           upgrade: HashMap::from([(TowerStat::Damage, 3), (TowerStat::AttackSpeed, 10)]),
-          price: 200
+          cost: 200
         },
         Upgrade {
           upgrade: HashMap::from([(TowerStat::Damage, 10), (TowerStat::AttackSpeed, 10)]),
-          price: 300
+          cost: 300
         }]]), (
       TowerType::Archmage, vec![vec![
         Upgrade {
           upgrade: HashMap::from([(TowerStat::Damage, 1), (TowerStat::Range, 50)]),
-          price: 50
+          cost: 50
         },
         Upgrade {
           upgrade: HashMap::from([(TowerStat::Damage, 3), (TowerStat::AttackSpeed, 10)]),
-          price: 200
+          cost: 200
         },
         Upgrade {
           upgrade: HashMap::from([(TowerStat::Damage, 10), (TowerStat::AttackSpeed, 10)]),
-          price: 300
+          cost: 300
         }]]),
     ])
   });
