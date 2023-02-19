@@ -70,7 +70,8 @@ fn mouse_click_interaction(
               .into(),
             material: materials.add(ColorMaterial::from(
               Color::rgba_u8(0, 0, 0, 85))),
-            transform: *transform,
+            transform: Transform::from_translation(Vec3::new(
+              transform.translation.x, transform.translation.y, 0.)),
             ..default()
           }).insert(TowerUpgradeUI);
       }

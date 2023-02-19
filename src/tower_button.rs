@@ -74,27 +74,29 @@ pub fn window_to_world_pos(
   // use it to convert ndc to world-space coordinates
   let mut world_pos = ndc_to_world.project_point3(ndc.extend(-1.0));
   
-  world_pos.z = 0.;
+  world_pos.z = 0.5;
   
   return world_pos;
 }
 
 fn place_tower(
   mut commands: Commands,
-  mut query: Query<(Entity, &mut Transform, &TowerType), With<SpriteFollower>>,
+  mut query: Query<(Entity, &mut Transform, &TowerType, &mut Handle<ColorMaterial>), With<SpriteFollower>>,
   assets: Res<GameAssets>,
   mouse: Res<Input<MouseButton>>,
   windows: Res<Windows>,
   camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
   mut player: Query<&mut Player>,
   towers: Query<&Transform, (With<Tower>, Without<SpriteFollower>)>,
-  mut clicked_tower: Query<Entity, With<TowerUpgradeUI>>
+  mut clicked_tower: Query<Entity, With<TowerUpgradeUI>>,
+  mut meshes: ResMut<Assets<Mesh>>,
+  mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
   let window = windows.get_primary().unwrap();
   let (camera, camera_transform) = camera_query.single();
   let mut player = player.single_mut();
   
-  for (entity, mut transform, tower_type) in query.iter_mut() {
+  for (entity, mut transform, tower_type, mut color) in query.iter_mut() {
     if !clicked_tower.is_empty() {
       let entity = clicked_tower.single_mut();
       commands.entity(entity).remove::<(Handle<ColorMaterial>, TowerUpgradeUI)>();
@@ -103,6 +105,17 @@ fn place_tower(
     if let Some(position) = window.cursor_position() {
       transform.translation =
         window_to_world_pos(window, position, camera, camera_transform);
+      for tower_transform in towers.iter() {
+        // Tower range when trying to place on path/invalid tile
+        if Vec3::distance(transform.translation, tower_transform.translation) <= 40. {
+          *color = materials.add(ColorMaterial::from(
+            Color::rgba_u8(202, 0, 0, 150)));
+        }
+        else {
+          *color = materials.add(ColorMaterial::from(
+            Color::rgba_u8(0, 0, 0, 85)));
+        }
+      }
     }
     // Spawn the tower if user clicks with mouse button in a valid tower placement zone!!!
     if mouse.just_pressed(MouseButton::Left) {
@@ -123,7 +136,7 @@ fn place_tower(
           spawn_tower(&mut commands,
                       *tower_type,
                       &assets,
-                      mouse_click_pos);
+                      mouse_click_pos, &mut meshes, &mut materials);
         }
       }
     } // Discard tower
@@ -146,10 +159,10 @@ fn spawn_sprite_follower(
   // Spawn component that alerts the place_tower() system that a button has been pressed
   // and it starts moving a sprite with the cursor until the tower is placed
   if let Some(position) = window.cursor_position() {
+    let transform = window_to_world_pos(window, position, camera, camera_transform);
     commands.spawn(SpriteBundle {
       texture: assets.get_tower_asset(*tower_type),
-      transform: Transform::from_translation(
-        window_to_world_pos(window, position, camera, camera_transform)),
+      transform: Transform::from_translation(transform),
       ..default()
     })
       .insert(MaterialMesh2dBundle {
@@ -157,6 +170,7 @@ fn spawn_sprite_follower(
           .into(),
         material: materials.add(ColorMaterial::from(
           Color::rgba_u8(0, 0, 0, 85))),
+        transform: Transform::from_translation(Vec3::new(transform.x, transform.y, 0.)),
         ..default()
       })
       .insert(SpriteFollower)

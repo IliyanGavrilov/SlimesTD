@@ -1,9 +1,10 @@
 use std::time::Duration;
 use bevy::prelude::*;
+use bevy::sprite::MaterialMesh2dBundle;
 
 pub use crate::{GameState, Bullet, Movement, tower_type::TowerType, GameAssets,
                 targeting_priority::{*, TargetingPriority::*}};
-use crate::{TowerStat, TowerUpgrades, Upgrade};
+use crate::{TowerStat, TowerUpgrades, TowerUpgradeUI, Upgrade};
 
 pub struct TowerPlugin;
 
@@ -87,9 +88,20 @@ pub fn spawn_tower(
   commands: &mut Commands,
   tower_type: TowerType,
   assets: &GameAssets,
-  position: Vec3
+  position: Vec3,
+  meshes: &mut ResMut<Assets<Mesh>>,
+  materials: &mut ResMut<Assets<ColorMaterial>>,
 ) {
-  commands.spawn(tower_type.get_tower(assets, position));
+  commands.spawn(tower_type.get_tower(assets, position))
+    .insert(MaterialMesh2dBundle {
+      mesh: meshes.add(shape::Circle::new(tower_type.get_range() as f32).into())
+        .into(),
+      material: materials.add(ColorMaterial::from(
+        Color::rgba_u8(0, 0, 0, 85))),
+      transform: Transform::from_translation(Vec3::new(
+        position.x, position.y, 0.)),
+      ..default()
+    }).insert(TowerUpgradeUI);
 }
 
 fn tower_shooting(
