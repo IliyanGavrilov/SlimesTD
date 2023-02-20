@@ -1,4 +1,3 @@
-use std::cmp::Reverse;
 use bevy::utils::FloatOrd;
 use bevy_inspector_egui::Inspectable;
 use strum_macros::EnumIter;
@@ -51,8 +50,8 @@ pub fn first_enemy_direction(
                      bullet_spawn_pos) <= tower_range as f32
     })
     // Find first enemy that is closest to the base
-    .min_by_key(|(.., movement, enemy)| {
-      Reverse(FloatOrd(movement.speed * enemy.time_alive.elapsed_secs())) // S = v * t
+    .max_by_key(|(.., movement, enemy)| {
+      FloatOrd(movement.speed * enemy.time_alive.elapsed_secs()) // S = v * t
     });
   
   if let Some((first_enemy, ..)) = first_enemy {
@@ -115,8 +114,8 @@ pub fn strongest_enemy_direction(
       Vec3::distance(enemy_transform.translation(),
                      bullet_spawn_pos) <= tower_range as f32
     })
-    .min_by_key(|(_, enemy, ..)| { // Find strongest enemy
-      Reverse(FloatOrd(enemy.health as f32))
+    .max_by_key(|(_, enemy, ..)| { // Find strongest enemy
+      FloatOrd(enemy.health as f32)
     });
   
   if let Some((strongest_enemy, ..)) = strongest_enemy {

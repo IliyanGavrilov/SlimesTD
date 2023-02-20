@@ -102,7 +102,7 @@ fn spawn_main_menu(
           ..default()
         },
         text: Text::from_section(
-          "Slimes Tower Defence",
+          "Slimes Tower Defense",
           TextStyle {
             font: asset_server.load("font/FiraSans-Bold.ttf"),
             font_size: 90.,

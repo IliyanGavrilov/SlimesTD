@@ -51,10 +51,10 @@ fn main() {
     // Plugins
     .add_plugin(MainMenuPlugin)
     .add_plugin(GameplayUIPlugin)
-    .add_plugin(MapPlugin)
+    .add_plugin(MapPlugin) // !
     .add_plugin(SpawnScenePlugin)
     .add_plugin(SettingsPlugin)
-    .add_plugin(AssetPlugin)
+    .add_plugin(AssetPlugin) // ?
     .add_plugin(PlayerPlugin)
     .add_plugin(BasePlugin)
     .add_plugin(TowerPlugin)
@@ -69,10 +69,11 @@ fn main() {
     // Add basic game functionality - window, game tick, renderer,
     // asset loading, UI system, input, startup systems, etc.
     .add_plugins(DefaultPlugins
-      .set(ImagePlugin::default_nearest()) // Prevent blurry sprites
+      // Prevent blurry sprites
+      .set(ImagePlugin::default_nearest())
       .set(WindowPlugin {
       window: WindowDescriptor {
-        title: "Slimes Tower Defence".to_string(),
+        title: "Slimes Tower Defense".to_string(),
         ..default()
       },
       ..default()

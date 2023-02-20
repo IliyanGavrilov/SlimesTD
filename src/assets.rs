@@ -191,12 +191,12 @@ fn load_assets(
 // Slime sprite animation
 
 #[derive(Component, Deref, DerefMut)]
-pub struct AnimationTimer(pub Timer); // !!!
+pub struct AnimationTimer(pub Timer);
 
 #[derive(Component)]
 pub struct AnimationIndices {
-  pub first: usize, // !!!
-  pub last: usize // !!!
+  pub first: usize,
+  pub last: usize
 }
 
 fn animate_enemy_sprite(

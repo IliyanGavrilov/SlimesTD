@@ -164,7 +164,8 @@ fn tower_shooting(
       
         tower.shooting_timer.tick(time.delta());
       }
-    } else {
+    }
+    else {
       tower.shooting_timer.reset();
       tower.first_enemy_appeared = true;
     }
