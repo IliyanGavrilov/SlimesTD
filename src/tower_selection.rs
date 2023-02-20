@@ -21,7 +21,7 @@ fn tower_click(
   windows: Res<Windows>,
   camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
   mouse: Res<Input<MouseButton>>,
-  mut clicked_tower: Query<(Entity, &Tower, &TowerType, &Transform), With<TowerUpgradeUI>>,
+  mut clicked_tower: Query<Entity, (With<Handle<ColorMaterial>>, With<TowerUpgradeUI>)>,
   mut towers: Query<(Entity, &Tower, &TowerType, &Transform)>,
   mut meshes: ResMut<Assets<Mesh>>,
   mut materials: ResMut<Assets<ColorMaterial>>,
@@ -46,7 +46,7 @@ fn mouse_click_interaction(
   camera_transform: &GlobalTransform,
   meshes: &mut ResMut<Assets<Mesh>>,
   materials: &mut ResMut<Assets<ColorMaterial>>,
-  clicked_tower: &mut Query<(Entity, &Tower, &TowerType, &Transform), With<TowerUpgradeUI>>,
+  clicked_tower: &mut Query<Entity, (With<Handle<ColorMaterial>>, With<TowerUpgradeUI>)>,
   towers: &mut Query<(Entity, &Tower, &TowerType, &Transform)>
 ) {
   if let Some(position) = window.cursor_position() {
@@ -54,8 +54,9 @@ fn mouse_click_interaction(
       window_to_world_pos(window, position, camera, camera_transform);
   
     if !clicked_tower.is_empty() {
-      let (entity, ..) = clicked_tower.single_mut();
-      commands.entity(entity).remove::<(Handle<ColorMaterial>, TowerUpgradeUI)>();
+      let entity = clicked_tower.single_mut();
+      println!("{:?}", entity);
+      commands.entity(entity).despawn_recursive();
     }
     
     for (tower_entity,
@@ -63,17 +64,17 @@ fn mouse_click_interaction(
       _,
       transform) in towers.iter() {
       if Vec3::distance(mouse_click_pos, transform.translation) <= 25. {
-        
         commands.entity(tower_entity)
-          .insert(MaterialMesh2dBundle {
-            mesh: meshes.add(shape::Circle::new(tower.range as f32).into())
-              .into(),
-            material: materials.add(ColorMaterial::from(
-              Color::rgba_u8(0, 0, 0, 85))),
-            transform: Transform::from_translation(Vec3::new(
-              transform.translation.x, transform.translation.y, 0.)),
-            ..default()
-          }).insert(TowerUpgradeUI);
+          .with_children(|commands| {
+            commands.spawn(MaterialMesh2dBundle {
+              mesh: meshes.add(shape::Circle::new(tower.range as f32).into())
+                .into(),
+              material: materials.add(ColorMaterial::from(
+                Color::rgba_u8(0, 0, 0, 85))),
+              transform: Transform::from_translation(Vec3::new(0., 0., -0.5)),
+              ..default()
+            }).insert(TowerUpgradeUI);
+          });
       }
     }
   }

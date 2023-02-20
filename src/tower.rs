@@ -67,6 +67,8 @@ impl Tower {
   
   pub fn upgrade(&mut self, upgrade: &Upgrade, path_index: usize) {
     self.total_spent += upgrade.cost as u32;
+    self.sell_price = (self.total_spent/3) as u32;
+    
     for (k, v) in &upgrade.upgrade {
       match *k {
         TowerStat::Damage => {self.damage += *v as u32}
@@ -93,15 +95,16 @@ pub fn spawn_tower(
   materials: &mut ResMut<Assets<ColorMaterial>>,
 ) {
   commands.spawn(tower_type.get_tower(assets, position))
-    .insert(MaterialMesh2dBundle {
-      mesh: meshes.add(shape::Circle::new(tower_type.get_range() as f32).into())
-        .into(),
-      material: materials.add(ColorMaterial::from(
-        Color::rgba_u8(0, 0, 0, 85))),
-      transform: Transform::from_translation(Vec3::new(
-        position.x, position.y, 0.)),
-      ..default()
-    }).insert(TowerUpgradeUI);
+    .with_children(|commands| {
+      commands.spawn(MaterialMesh2dBundle {
+        mesh: meshes.add(shape::Circle::new(tower_type.get_range() as f32).into())
+          .into(),
+        material: materials.add(ColorMaterial::from(
+          Color::rgba_u8(0, 0, 0, 85))),
+        transform: Transform::from_translation(Vec3::new(0., 0., -0.5)),
+        ..default()
+      }).insert(TowerUpgradeUI);
+    });
 }
 
 fn tower_shooting(
