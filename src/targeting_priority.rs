@@ -1,12 +1,11 @@
 use bevy::utils::FloatOrd;
-use bevy_inspector_egui::Inspectable;
 use strum_macros::EnumIter;
 
 // Debugging
 use bevy::prelude::*;
 pub use crate::enemy::*;
 
-#[derive(EnumIter, Inspectable, Reflect, Clone, Debug, Component, Default, PartialEq)]
+#[derive(EnumIter, Reflect, Clone, Debug, Component, Default, PartialEq)]
 pub enum TargetingPriority {
   #[default]
   FIRST,

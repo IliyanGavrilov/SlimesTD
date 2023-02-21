@@ -141,7 +141,7 @@ fn tower_shooting(
                                            tower.range)
       };
     
-      // If there is an enemy in the tower's range!!! (if direction != None), then shoot bullet
+      // If there is an enemy in the tower's range (if direction != None), then shoot bullet
       if let Some(direction) = direction {
         // If the attack cooldown finished OR if there was no enemy spawned before, spawn bullet
         if tower.shooting_timer.just_finished() || tower.first_enemy_appeared {

@@ -44,6 +44,19 @@ fn main() {
   App::new()
     // Background of window. Set colour of screen on each refresh
     .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
+  
+    // Add basic game functionality - window, game tick, renderer,
+    // asset loading, UI system, input, startup systems, etc.
+    .add_plugins(DefaultPlugins
+      // Prevent blurry sprites
+      .set(ImagePlugin::default_nearest())
+      .set(WindowPlugin {
+        window: WindowDescriptor {
+          title: "Slimes Tower Defense".to_string(),
+          ..default()
+        },
+        ..default()
+      }))
     
     // Game State
     .add_state(GameState::MainMenu)
@@ -65,19 +78,6 @@ fn main() {
     .add_plugin(WavePlugin)
     .add_plugin(BulletPlugin)
     .add_plugin(MovementPlugin)
-    
-    // Add basic game functionality - window, game tick, renderer,
-    // asset loading, UI system, input, startup systems, etc.
-    .add_plugins(DefaultPlugins
-      // Prevent blurry sprites
-      .set(ImagePlugin::default_nearest())
-      .set(WindowPlugin {
-      window: WindowDescriptor {
-        title: "Slimes Tower Defense".to_string(),
-        ..default()
-      },
-      ..default()
-    }))
     
     // !!!Debugging
     .add_plugin(EditorPlugin) // Similar to WorldInspectorPlugin

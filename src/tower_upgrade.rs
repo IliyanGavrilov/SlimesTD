@@ -1,5 +1,7 @@
-use bevy::utils::HashMap;
 use bevy::prelude::*;
+use bevy::utils::HashMap;
+use serde::{Serialize, Deserialize};
+use std::fs::File;
 use crate::{TowerType};
 
 pub struct TowerUpgradePlugin;
@@ -14,7 +16,7 @@ impl Plugin for TowerUpgradePlugin {
   }
 }
 
-#[derive(Resource)]
+#[derive(Resource, Serialize, Deserialize, Debug)]
 pub struct Upgrades {
   pub upgrades: HashMap<TowerType, Vec<Vec<Upgrade>>>
 }
@@ -32,13 +34,13 @@ impl Default for TowerUpgrades {
   }
 }
 
-#[derive(Component, Reflect, FromReflect, Clone)]
+#[derive(Component, Reflect, FromReflect, Clone, Serialize, Deserialize, Debug)]
 pub struct Upgrade {
   pub upgrade: HashMap<TowerStat, i32>,
   pub cost: usize
 }
 
-#[derive(Hash, Eq, PartialEq, Reflect, FromReflect, Clone)]
+#[derive(Hash, Eq, PartialEq, Reflect, FromReflect, Clone, Serialize, Deserialize, Debug)]
 pub enum TowerStat { // Projectile speed, pierce !!!
   Damage,
   AttackSpeed,
@@ -48,86 +50,15 @@ pub enum TowerStat { // Projectile speed, pierce !!!
 fn load_upgrades(
   mut commands: Commands
 ) {
-  commands.insert_resource(Upgrades {
-    upgrades: HashMap::from([(
-      TowerType::Nature, vec![vec![
-        Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 1), (TowerStat::Range, 50)]),
-          cost: 50
-        },
-        Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 3), (TowerStat::AttackSpeed, 10)]),
-          cost: 200
-        },
-        Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 10), (TowerStat::AttackSpeed, 10)]),
-          cost: 300
-        }]]), (
-      TowerType::Fire, vec![vec![
-        Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 1), (TowerStat::Range, 50)]),
-          cost: 50
-        },
-        Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 3), (TowerStat::AttackSpeed, 10)]),
-          cost: 200
-        },
-        Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 10), (TowerStat::AttackSpeed, 10)]),
-          cost: 300
-        }]]), (
-      TowerType::Ice, vec![vec![
-        Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 1), (TowerStat::Range, 50)]),
-          cost: 50
-        },
-        Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 3), (TowerStat::AttackSpeed, 10)]),
-          cost: 200
-        },
-        Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 10), (TowerStat::AttackSpeed, 10)]),
-          cost: 300
-        }]]), (
-      TowerType::Dark, vec![vec![
-        Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 1), (TowerStat::Range, 50)]),
-          cost: 50
-        },
-        Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 3), (TowerStat::AttackSpeed, 10)]),
-          cost: 200
-        },
-        Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 10), (TowerStat::AttackSpeed, 10)]),
-          cost: 300
-        }]]), (
-      TowerType::Mage, vec![vec![
-        Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 1), (TowerStat::Range, 50)]),
-          cost: 50
-        },
-        Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 3), (TowerStat::AttackSpeed, 10)]),
-          cost: 200
-        },
-        Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 10), (TowerStat::AttackSpeed, 10)]),
-          cost: 300
-        }]]), (
-      TowerType::Archmage, vec![vec![
-        Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 1), (TowerStat::Range, 50)]),
-          cost: 50
-        },
-        Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 3), (TowerStat::AttackSpeed, 10)]),
-          cost: 200
-        },
-        Upgrade {
-          upgrade: HashMap::from([(TowerStat::Damage, 10), (TowerStat::AttackSpeed, 10)]),
-          cost: 300
-        }]]),
-    ])
-  });
+  let f = File::open("upgrades.ron").expect("Failed opening file");
+  let upgrades: Upgrades = match ron::de::from_reader(f) {
+    Ok(x) => x,
+    Err(e) => {
+      info!("Failed to load upgrades: {}", e);
+      
+      std::process::exit(1);
+    }
+  };
+  
+  commands.insert_resource(upgrades);
 }

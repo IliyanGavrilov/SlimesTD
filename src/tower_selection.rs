@@ -32,7 +32,7 @@ fn tower_click(
     let window = windows.get_primary().unwrap();
     let (camera, camera_transform) = camera_query.single();
   
-    if mouse.just_pressed(MouseButton::Left) {
+    if mouse.just_pressed(MouseButton::Right) {
       mouse_click_interaction(&mut commands, window, camera, camera_transform, &mut meshes,
                               &mut materials, &mut clicked_tower, &mut towers);
     }
@@ -55,7 +55,6 @@ fn mouse_click_interaction(
   
     if !clicked_tower.is_empty() {
       let entity = clicked_tower.single_mut();
-      println!("{:?}", entity);
       commands.entity(entity).despawn_recursive();
     }
     
@@ -82,50 +81,55 @@ fn mouse_click_interaction(
 
 fn tower_ui_interaction (
   mut commands: Commands,
-  mut towers: Query<(Entity, &mut Tower, &TowerType), With<TowerUpgradeUI>>,
+  mut towers: Query<(Entity, &mut Tower, &TowerType)>,
+  mut clicked_tower: Query<Entity, (With<Handle<ColorMaterial>>, With<TowerUpgradeUI>)>,
   keys: Res<Input<KeyCode>>,
   mut player: Query<&mut Player>,
   upgrades: Res<Upgrades>
 ) {
-  let mut player = player.single_mut();
-
-  for (entity, mut tower, tower_type) in towers.iter_mut() {
-    let mut upgrade_path_index: Option<usize> = None;
+  if !clicked_tower.is_empty() {
+    let entity = clicked_tower.single_mut();
     
-    // Sell tower
-    if keys.just_pressed(KeyCode::Back) {
-      commands.entity(entity).despawn_recursive();
-      player.money += (tower_type.get_price()/3) as usize;
-    }
-    // Upgrade tower - Path 1
-    else if keys.just_pressed(KeyCode::Comma) {
-      upgrade_path_index = Some(0);
-    }
-    // Upgrade tower - Path 2
-    else if keys.just_pressed(KeyCode::Period) {
-      upgrade_path_index = Some(1);
-    }
-    // Upgrade tower - Path 3
-    else if keys.just_pressed(KeyCode::Slash) {
-      upgrade_path_index = Some(2);
-    }
-    // Change targeting priority (left)
-    else if (keys.pressed(KeyCode::LControl) || keys.pressed(KeyCode::RControl))
-      && keys.just_pressed(KeyCode::Tab) {
-      tower.target.prev_target();
-    }
-    // Change targeting priority (right)
-    else if keys.just_pressed(KeyCode::Tab) {
-      tower.target.next_target();
-    }
+    let mut player = player.single_mut();
   
-    if let Some(path_index) = upgrade_path_index {
-      let i = tower.upgrades.upgrades[path_index];
-      let upgrades = &upgrades.upgrades[tower_type][path_index];
-  
-      if i < upgrades.len() && player.money >= upgrades[i].cost {
-        player.money -= upgrades[i].cost;
-        tower.upgrade(&upgrades[i], path_index);
+    for (entity, mut tower, tower_type) in towers.iter_mut() {
+      let mut upgrade_path_index: Option<usize> = None;
+    
+      // Sell tower
+      if keys.just_pressed(KeyCode::Back) {
+        commands.entity(entity).despawn_recursive();
+        player.money += (tower_type.get_price() / 3) as usize;
+      }
+      // Upgrade tower - Path 1
+      else if keys.just_pressed(KeyCode::Comma) {
+        upgrade_path_index = Some(0);
+      }
+      // Upgrade tower - Path 2
+      else if keys.just_pressed(KeyCode::Period) {
+        upgrade_path_index = Some(1);
+      }
+      // Upgrade tower - Path 3
+      else if keys.just_pressed(KeyCode::Slash) {
+        upgrade_path_index = Some(2);
+      }
+      // Change targeting priority (left)
+      else if (keys.pressed(KeyCode::LControl) || keys.pressed(KeyCode::RControl))
+        && keys.just_pressed(KeyCode::Tab) {
+        tower.target.prev_target();
+      }
+      // Change targeting priority (right)
+      else if keys.just_pressed(KeyCode::Tab) {
+        tower.target.next_target();
+      }
+    
+      if let Some(path_index) = upgrade_path_index {
+        let i = tower.upgrades.upgrades[path_index];
+        let tower_upgrades = &upgrades.upgrades[tower_type][path_index];
+      
+        if i < tower_upgrades.len() && player.money >= tower_upgrades[i].cost {
+          player.money -= tower_upgrades[i].cost;
+          tower.upgrade(&tower_upgrades[i], path_index);
+        }
       }
     }
   }

@@ -1,9 +1,8 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::Inspectable;
 use strum_macros::{Display};
 use crate::{AnimationIndices, Enemy, EnemyBundle, GameAssets, MapPath, Movement, Path, WaveIndex};
 
-#[derive(Inspectable, Component, Display, Clone, Copy, Debug, PartialEq)]
+#[derive(Component, Display, Clone, Copy, Debug, PartialEq)]
 pub enum EnemyType {
   Green,
   Yellow,
