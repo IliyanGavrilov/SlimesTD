@@ -96,7 +96,7 @@ fn tower_ui_interaction (
       // Sell tower
       if keys.just_pressed(KeyCode::Back) {
         commands.entity(entity).despawn_recursive();
-        player.money += (tower_type.get_price() / 3) as usize;
+        player.money += (tower.total_spent / 3) as usize;
       }
       // Upgrade tower - Path 1
       else if keys.just_pressed(KeyCode::Comma) {
