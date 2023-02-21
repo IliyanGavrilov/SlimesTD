@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 use strum_macros::{Display};
-use crate::{AnimationIndices, Enemy, EnemyBundle, GameAssets, MapPath, Movement, Path, WaveIndex};
+use serde::Deserialize;
+use crate::{AnimationIndices, Enemy, EnemyBundle, GameAssets, MapPath, Movement, Path};
 
-#[derive(Component, Display, Clone, Copy, Debug, PartialEq)]
+#[derive(Component, Display, Clone, Copy, Debug, PartialEq, Deserialize)]
 pub enum EnemyType {
   Green,
   Yellow,
@@ -15,7 +16,12 @@ pub enum EnemyType {
 }
 
 impl EnemyType {
-  pub fn get_enemy(&self, assets: &GameAssets, map_path: &MapPath, position: Vec3, path: Path, wave_index: WaveIndex) -> EnemyBundle {
+  pub fn get_enemy(
+    &self, assets: &GameAssets,
+    map_path: &MapPath,
+    position: Vec3,
+    path: Path
+  ) -> EnemyBundle {
     let direction = map_path.checkpoints[1];
     match self {
       EnemyType::Green => EnemyBundle {
@@ -27,7 +33,6 @@ impl EnemyType {
           ..default()
         },
         path,
-        wave_index,
         ..default()
       },
       EnemyType::Yellow => EnemyBundle {
@@ -42,7 +47,6 @@ impl EnemyType {
           ..default()
         },
         path,
-        wave_index,
         name: Name::new("YellowEnemy"),
         ..default()
       },
@@ -58,7 +62,6 @@ impl EnemyType {
           ..default()
         },
         path,
-        wave_index,
         name: Name::new("PinkEnemy"),
         ..default()
       },
@@ -74,7 +77,6 @@ impl EnemyType {
           ..default()
         },
         path,
-        wave_index,
         name: Name::new("WhiteEnemy"),
         ..default()
       },
@@ -90,7 +92,6 @@ impl EnemyType {
           ..default()
         },
         path,
-        wave_index,
         name: Name::new("BlueEnemy"),
         ..default()
       },
@@ -106,7 +107,6 @@ impl EnemyType {
           ..default()
         },
         path,
-        wave_index,
         name: Name::new("OrangeEnemy"),
         ..default()
       },
@@ -122,7 +122,6 @@ impl EnemyType {
           ..default()
         },
         path,
-        wave_index,
         name: Name::new("PurpleEnemy"),
         ..default()
       },
@@ -138,7 +137,6 @@ impl EnemyType {
           ..default()
         },
         path,
-        wave_index,
         name: Name::new("RedEnemy"),
         ..default()
       }

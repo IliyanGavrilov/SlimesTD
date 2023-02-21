@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::{Base, Enemy, GameState, Movement, Path};
+use crate::{Base, damage_base, Enemy, GameState, Movement, Path};
 
 pub struct MapPlugin;
 
@@ -59,23 +59,5 @@ fn update_enemy_checkpoint(
       movement.direction = Vec3::new(0., 0., 0.,);
       movement.direction = map.checkpoints[path.index] - transform.translation;
     }
-  }
-}
-
-fn damage_base(
-  commands: &mut Commands,
-  entity: &Entity,
-  enemy_health: i32,
-  base: &mut Base
-) {
-  commands.entity(*entity).despawn_recursive();
-  
-  if base.health > 0 {
-    base.health -= enemy_health as i32;
-  }
-  
-  if base.health <= 0{
-    base.health = 0;
-    info!("GAME OVER");
   }
 }

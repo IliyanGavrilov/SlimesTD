@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 use crate::{Bullet, BulletBundle, GameAssets, Movement, Tower, TowerBundle};
 use strum_macros::{EnumIter, Display};
-use serde::{Serialize, Deserialize};
+use serde::Deserialize;
 
 #[derive(EnumIter, Component, Display, Clone, Copy,
-Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+Debug, PartialEq, Eq, Hash, Deserialize)]
 pub enum TowerType {
   Nature,
   Fire,

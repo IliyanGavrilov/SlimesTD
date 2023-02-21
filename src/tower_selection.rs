@@ -88,8 +88,6 @@ fn tower_ui_interaction (
   upgrades: Res<Upgrades>
 ) {
   if !clicked_tower.is_empty() {
-    let entity = clicked_tower.single_mut();
-    
     let mut player = player.single_mut();
   
     for (entity, mut tower, tower_type) in towers.iter_mut() {

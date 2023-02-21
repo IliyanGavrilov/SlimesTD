@@ -1,19 +1,20 @@
 use std::time::Duration;
 use bevy::prelude::*;
+use serde::Deserialize;
+use std::fs::File;
 use crate::{EnemyType, GameAssets, GameState, MapPath, Path, spawn_enemy};
 
 pub struct WavePlugin;
 
 impl Plugin for WavePlugin {
   fn build(&self, app: &mut App) {
-    app.register_type::<WaveIndex>()
-      .add_system_set(SystemSet::on_update(GameState::Gameplay)
+    app.add_system_set(SystemSet::on_update(GameState::Gameplay)
         .with_system(spawn_waves))
       .add_startup_system_to_stage(StartupStage::PreStartup, load_waves);
   }
 }
 
-#[derive(Resource, Default)]
+#[derive(Resource, Default, Deserialize)]
 pub struct Waves {
   pub waves: Vec<Wave>,
   pub current: usize
@@ -29,44 +30,37 @@ impl Waves {
   }
 }
 
-#[derive(Component)]
+#[derive(Component, Deserialize)]
 pub struct Wave {
   pub enemies: Vec<(EnemyType, Duration)>,
-  pub current: usize, // Current enemy
-  pub num: usize // Number of remaining enemies to spawn
+  pub current: usize // Current enemy
 }
 
 impl Default for Wave {
   fn default() -> Self {
     Self {
       enemies: vec![],
-      current: 0,
-      num: 0
+      current: 0
     }
   }
 }
 
 #[derive(Resource)]
 pub struct WaveState {
-  pub wave_timer: Timer,
-  pub spawn_timer: Timer,
+  pub wave_spawn_timer: Timer,
+  pub enemy_spawn_timer: Timer,
   pub remaining: usize
 }
 
-impl From<&Wave> for WaveState {
-  fn from(wave: &Wave) -> Self {
+impl From<(&Wave, usize)> for WaveState {
+  fn from(wave: (&Wave, usize)) -> Self {
     Self {
-      wave_timer: Timer::new(Duration::from_secs(10), TimerMode::Once),
-      spawn_timer: Timer::new(wave.enemies[wave.current].1, TimerMode::Repeating),
-      remaining: wave.num
+      wave_spawn_timer: Timer::new(Duration::from_secs(10), TimerMode::Once),
+      enemy_spawn_timer: Timer::new(wave.0.enemies[wave.0.current].1,
+                                    TimerMode::Repeating),
+      remaining: wave.1
     }
   }
-}
-
-#[derive(Reflect, Component, Default)]
-#[reflect(Component)]
-pub struct WaveIndex {
-  pub index: usize
 }
 
 fn spawn_waves(
@@ -80,12 +74,12 @@ fn spawn_waves(
   // If all enemies in wave have finished, if button has been pressed
   // or if in-between waves timer has finished !!!
   if wave_state.remaining == 0 {
-    wave_state.wave_timer.tick(time.delta());
-    if !wave_state.wave_timer.just_finished() {
+    wave_state.wave_spawn_timer.tick(time.delta());
+    if !wave_state.wave_spawn_timer.just_finished() {
       return;
     }
     if let Some(next_wave) = waves.advance() {
-      commands.insert_resource(WaveState::from(next_wave));
+      commands.insert_resource(WaveState::from((next_wave, next_wave.enemies.len())));
     }
   }
   
@@ -93,8 +87,8 @@ fn spawn_waves(
     return;
   };
   
-  wave_state.spawn_timer.tick(time.delta());
-  if !wave_state.spawn_timer.just_finished() {
+  wave_state.enemy_spawn_timer.tick(time.delta());
+  if !wave_state.enemy_spawn_timer.just_finished() {
     return;
   }
   
@@ -105,10 +99,9 @@ fn spawn_waves(
               current_wave.enemies[index].0,
               &assets,
               map_path.checkpoints[0],
-              Path { index: 0 },
-              WaveIndex { index: waves.current + 1}); // !!!
+              Path { index: 0 });
   
-  wave_state.spawn_timer = Timer::new(
+  wave_state.enemy_spawn_timer = Timer::new(
     current_wave.enemies[index].1,
     TimerMode::Repeating);
   
@@ -118,65 +111,24 @@ fn spawn_waves(
 fn load_waves(
   mut commands: Commands
 ) {
-  let first_wave_num_enemies = 20;
-  commands.insert_resource(Waves {
-    waves: vec![
-      Wave {
-        enemies: vec![(EnemyType::Green, Duration::from_millis(1500)); 20],
-        num: first_wave_num_enemies,
-        ..default()
-      },
-      Wave {
-        enemies: vec![(EnemyType::Green, Duration::from_millis(1000)); 35],
-        num: 35,
-        ..default()
-      },
-      Wave {
-        enemies: vec![(EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(2000)),
-                      (EnemyType::Yellow, Duration::from_millis(2000)),
-                      (EnemyType::Yellow, Duration::from_millis(2000)),
-                      (EnemyType::Yellow, Duration::from_millis(2000)),
-                      (EnemyType::Yellow, Duration::from_millis(2000)),
-                      (EnemyType::Yellow, Duration::from_millis(2000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000)),
-                      (EnemyType::Green, Duration::from_millis(1000))
-        ],
-        num: 30,
-        ..default()
-      },
-      Wave {
-        enemies: vec![(EnemyType::Red, Duration::from_millis(3000)); 20],
-        num: 20,
-        ..default()
-      }
-    ],
-    ..default()
-  });
+  let f = File::open("waves.ron").expect("Failed opening wave file!");
+  let waves: Waves = match ron::de::from_reader(f) {
+    Ok(x) => x,
+    Err(e) => {
+      info!("Failed to load waves: {}", e);
+      
+      std::process::exit(1);
+    }
+  };
+  
+  let num_enemies = waves.waves[0].enemies.len();
+  
+  
+  commands.insert_resource(waves);
   commands.insert_resource(WaveState {
-    wave_timer: Timer::new(Duration::from_secs(10), TimerMode::Once),
-    spawn_timer: Timer::new(Duration::from_millis(1), TimerMode::Repeating),
-    remaining: first_wave_num_enemies
+    wave_spawn_timer: Timer::new(Duration::from_secs(10), TimerMode::Once),
+    enemy_spawn_timer: Timer::new(Duration::from_millis(1),
+                                  TimerMode::Repeating),
+    remaining: num_enemies
   })
 }

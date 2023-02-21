@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 pub use crate::{GameAssets, Movement, enemy_type::EnemyType};
-use crate::{AnimationIndices, AnimationTimer, GameState, MapPath, WaveIndex};
+use crate::{AnimationIndices, AnimationTimer, GameState, MapPath};
 
 pub struct EnemyPlugin;
 
@@ -28,7 +28,6 @@ pub struct EnemyBundle {
   pub sprite_sheet_bundle: SpriteSheetBundle,
   pub path: Path,
   pub time_alive: TimeAlive,
-  pub wave_index: WaveIndex,
   pub name: Name
 }
 
@@ -43,7 +42,6 @@ impl Default for EnemyBundle {
       sprite_sheet_bundle: SpriteSheetBundle::default(),
       path: Path {index: 0},
       time_alive: TimeAlive {time_alive: Stopwatch::new()},
-      wave_index: WaveIndex {index: 0},
       name: Name::new("GreenEnemy")
     }
   }
@@ -91,10 +89,9 @@ pub fn spawn_enemy(
   enemy_type: EnemyType,
   assets: &GameAssets,
   position: Vec3,
-  path: Path,
-  wave_index: WaveIndex
+  path: Path
 ) {
-  commands.spawn(enemy_type.get_enemy(assets, map_path, position, path, wave_index));
+  commands.spawn(enemy_type.get_enemy(assets, map_path, position, path));
 }
 
 // !!! Spawn weaker enemy?
