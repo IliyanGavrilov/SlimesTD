@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use serde::{Serialize, Deserialize};
 use crate::{Movement, TowerType};
 
 pub struct AssetPlugin;
@@ -190,10 +191,10 @@ fn load_assets(
 
 // Slime sprite animation
 
-#[derive(Component, Deref, DerefMut)]
+#[derive(Component, Deref, DerefMut, Serialize, Deserialize, Clone)]
 pub struct AnimationTimer(pub Timer);
 
-#[derive(Component)]
+#[derive(Component, Serialize, Deserialize, Clone)]
 pub struct AnimationIndices {
   pub first: usize,
   pub last: usize

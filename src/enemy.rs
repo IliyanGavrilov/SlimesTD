@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 pub use crate::{GameAssets, Movement, enemy_type::EnemyType};
 use crate::{AnimationIndices, AnimationTimer, GameState, MapPath};
+use crate::enemy_type::{EnemyTypeStats, load_enemy_type_stats};
+use serde::{Serialize, Deserialize};
 
 pub struct EnemyPlugin;
 
@@ -10,6 +12,7 @@ impl Plugin for EnemyPlugin {
     app.register_type::<Enemy>()
       .register_type::<Path>()
       .add_event::<EnemyDeathEvent>()
+      .add_startup_system(load_enemy_type_stats)
       .add_system_set(SystemSet::on_update(GameState::Gameplay)
         .with_system(despawn_enemy_on_death)
         .with_system(tick_enemy_time_alive));
@@ -18,14 +21,13 @@ impl Plugin for EnemyPlugin {
 
 pub struct EnemyDeathEvent;
 
-#[derive(Bundle)]
+#[derive(Bundle, Serialize, Deserialize, Clone)]
 pub struct EnemyBundle {
   pub enemy_type: EnemyType,
   pub enemy: Enemy,
   pub movement: Movement,
   pub animation_indices: AnimationIndices,
   pub animation_timer: AnimationTimer,
-  pub sprite_sheet_bundle: SpriteSheetBundle,
   pub path: Path,
   pub time_alive: TimeAlive,
   pub name: Name
@@ -39,7 +41,6 @@ impl Default for EnemyBundle {
       movement: Movement { direction: default(), speed: 50. },
       animation_indices: AnimationIndices {first: 0, last: 9},
       animation_timer: AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
-      sprite_sheet_bundle: SpriteSheetBundle::default(),
       path: Path {index: 0},
       time_alive: TimeAlive {time_alive: Stopwatch::new()},
       name: Name::new("GreenEnemy")
@@ -48,19 +49,19 @@ impl Default for EnemyBundle {
 }
 
 // !!! Debugging
-#[derive(Reflect, Component, Default)]
+#[derive(Reflect, Component, Default, Clone, Serialize, Deserialize)]
 #[reflect(Component)]
 pub struct Enemy {
   pub health: i32
 }
 
-#[derive(Reflect, Component, Default)]
+#[derive(Reflect, Component, Default, Clone, Serialize, Deserialize)]
 #[reflect(Component)]
 pub struct Path {
   pub index: usize
 }
 
-#[derive(Reflect, Component, Default)]
+#[derive(Reflect, Component, Default, Clone, Serialize, Deserialize)]
 #[reflect(Component)]
 pub struct TimeAlive {
   pub time_alive: Stopwatch
@@ -89,9 +90,11 @@ pub fn spawn_enemy(
   enemy_type: EnemyType,
   assets: &GameAssets,
   position: Vec3,
-  path: Path
+  path: Path,
+  enemy_stats: &EnemyTypeStats
 ) {
-  commands.spawn(enemy_type.get_enemy(assets, map_path, position, path));
+  commands.spawn(enemy_type.get_enemy(map_path, path, enemy_stats))
+    .insert(enemy_type.get_sprite_sheet_bundle(assets, position));
 }
 
 // !!! Spawn weaker enemy?

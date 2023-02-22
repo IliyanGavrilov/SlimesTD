@@ -1,31 +1,33 @@
 use std::time::Duration;
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
+use serde::{Serialize, Deserialize};
 
 pub use crate::{GameState, Bullet, Movement, tower_type::TowerType, GameAssets,
                 targeting_priority::{*, TargetingPriority::*}};
 use crate::{TowerStat, TowerUpgrades, TowerUpgradeUI, Upgrade};
+use crate::tower_type::TowerTypeStats;
 
 pub struct TowerPlugin;
 
 impl Plugin for TowerPlugin {
   fn build(&self, app: &mut App) {
     app.register_type::<Tower>()
+      .register_type::<TargetingPriority>()
       .add_system_set(SystemSet::on_update(GameState::Gameplay)
         .with_system(tower_shooting));
   }
 }
 
-#[derive(Bundle)]
+#[derive(Bundle, Serialize, Deserialize, Clone)]
 pub struct TowerBundle {
   pub tower_type: TowerType,
   pub tower: Tower,
-  pub sprite: SpriteBundle,
   pub name: Name
 }
 
 //#[derive(Component)] // !!!Debugging
-#[derive(Reflect, Clone, Component, Default)]
+#[derive(Reflect, Clone, Component, Default, Serialize, Deserialize)]
 #[reflect(Component)]
 pub struct Tower {
   pub bullet_spawn_offset: Vec3,
@@ -93,11 +95,14 @@ pub fn spawn_tower(
   position: Vec3,
   meshes: &mut ResMut<Assets<Mesh>>,
   materials: &mut ResMut<Assets<ColorMaterial>>,
+  tower_stats: &TowerTypeStats
 ) {
-  commands.spawn(tower_type.get_tower(assets, position))
+  commands.spawn(tower_type.get_tower(tower_stats))
+    .insert(tower_type.get_sprite_sheet_bundle(assets, position))
     .with_children(|commands| {
       commands.spawn(MaterialMesh2dBundle {
-        mesh: meshes.add(shape::Circle::new(tower_type.get_range() as f32).into())
+        mesh: meshes.add(shape::Circle::new(
+          tower_stats.tower[&tower_type].tower.range as f32).into())
           .into(),
         material: materials.add(ColorMaterial::from(
           Color::rgba_u8(0, 0, 0, 85))),
@@ -126,19 +131,19 @@ fn tower_shooting(
       let direction = match &tower.target {
         FIRST => first_enemy_direction(&enemies,
                                        bullet_spawn_pos,
-                                       tower.range),
+                                       tower.range + 1),
         LAST => last_enemy_direction(&enemies,
                                      bullet_spawn_pos,
-                                     tower.range),
+                                     tower.range + 1),
         CLOSE => closest_enemy_direction(&enemies,
                                          bullet_spawn_pos,
-                                         tower.range),
+                                         tower.range + 1),
         STRONG => strongest_enemy_direction(&enemies,
                                                bullet_spawn_pos,
-                                               tower.range),
+                                               tower.range + 1),
         WEAK => weakest_enemy_direction(&enemies,
                                            bullet_spawn_pos,
-                                           tower.range)
+                                           tower.range + 1)
       };
     
       // If there is an enemy in the tower's range (if direction != None), then shoot bullet
@@ -182,7 +187,7 @@ fn enemy_in_range(
 ) -> bool {
   for (enemy_transform, ..) in enemies {
     if Vec3::distance(tower_transform.translation,
-                      enemy_transform.translation()) <= tower.range as f32 {
+                      enemy_transform.translation()) <= (tower.range + 30) as f32 {
       return true
     }
   }

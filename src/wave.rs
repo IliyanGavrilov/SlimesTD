@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use serde::Deserialize;
 use std::fs::File;
 use crate::{EnemyType, GameAssets, GameState, MapPath, Path, spawn_enemy};
+use crate::enemy_type::EnemyTypeStats;
 
 pub struct WavePlugin;
 
@@ -69,6 +70,7 @@ fn spawn_waves(
   map_path: Res<MapPath>,
   mut waves: ResMut<Waves>,
   mut wave_state: ResMut<WaveState>,
+  enemy_stats: Res<EnemyTypeStats>,
   time: Res<Time>
 ) {
   // If all enemies in wave have finished, if button has been pressed
@@ -99,7 +101,8 @@ fn spawn_waves(
               current_wave.enemies[index].0,
               &assets,
               map_path.checkpoints[0],
-              Path { index: 0 });
+              Path { index: 0 },
+              &enemy_stats);
   
   wave_state.enemy_spawn_timer = Timer::new(
     current_wave.enemies[index].1,
@@ -111,7 +114,7 @@ fn spawn_waves(
 fn load_waves(
   mut commands: Commands
 ) {
-  let f = File::open("waves.ron").expect("Failed opening wave file!");
+  let f = File::open("./assets/game_data/waves.ron").expect("Failed opening wave file!");
   let waves: Waves = match ron::de::from_reader(f) {
     Ok(x) => x,
     Err(e) => {

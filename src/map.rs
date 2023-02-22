@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::sprite::collide_aabb::collide;
 use crate::{Base, damage_base, Enemy, GameState, Movement, Path};
 
 pub struct MapPlugin;
@@ -54,7 +55,9 @@ fn update_enemy_checkpoint(
     if path.index >= map.checkpoints.len() - 1 {
       damage_base(&mut commands, &entity, enemy.health, &mut base);
     }
-    else if Vec3::distance(transform.translation, map.checkpoints[path.index]) <= 10. {
+    if collide(transform.translation, Vec2::new(5., 5.),
+               map.checkpoints[path.index], Vec2::new(1., 1.)).is_some() {
+    //else if Vec3::distance(transform.translation, map.checkpoints[path.index]) <= 15. {
       path.index += 1;
       movement.direction = Vec3::new(0., 0., 0.,);
       movement.direction = map.checkpoints[path.index] - transform.translation;

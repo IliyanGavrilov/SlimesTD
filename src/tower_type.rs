@@ -1,10 +1,12 @@
 use bevy::prelude::*;
-use crate::{Bullet, BulletBundle, GameAssets, Movement, Tower, TowerBundle};
+use bevy::utils::HashMap;
+use crate::{Bullet, BulletBundle, GameAssets, Movement, TowerBundle};
 use strum_macros::{EnumIter, Display};
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
+use std::fs::File;
 
 #[derive(EnumIter, Component, Display, Clone, Copy,
-Debug, PartialEq, Eq, Hash, Deserialize)]
+Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum TowerType {
   Nature,
   Fire,
@@ -14,105 +16,47 @@ pub enum TowerType {
   Archmage
 }
 
+#[derive(Resource, Serialize, Deserialize, Clone)]
+pub struct TowerTypeStats {
+  pub tower: HashMap<TowerType, TowerBundle>
+}
+
+pub fn load_tower_type_stats(
+  mut commands: Commands
+) {
+  let f = File::open("./assets/game_data/tower_stats.ron")
+    .expect("Failed opening tower stats file!");
+  let tower_type_stats: TowerTypeStats = match ron::de::from_reader(f) {
+    Ok(x) => x,
+    Err(e) => {
+      info!("Failed to load upgrades: {}", e);
+      
+      std::process::exit(1);
+    }
+  };
+  
+  commands.insert_resource(tower_type_stats);
+}
+
 impl TowerType {
-  pub fn get_tower(&self, assets: &GameAssets, position: Vec3) -> TowerBundle {
-    match self {
-      TowerType::Nature => TowerBundle {
-          tower_type: TowerType::Nature,
-          tower: Tower::new(
-            Vec3::new(20., 0., 0.),
-            1,
-            1.,
-            self.get_range(),
-            self.get_price()
-          ),
-          sprite: SpriteBundle {
-            texture: assets.wizard_nature.clone(),
-            transform: Transform::from_translation(position),
-            ..default()
-          },
-          name: Name::new("NatureTower")
-      },
-      TowerType::Fire => TowerBundle {
-        tower_type: TowerType::Fire,
-        tower: Tower::new(
-          Vec3::new(20., 0., 0.),
-          1,
-          1.,
-          self.get_range(),
-          self.get_price()
-        ),
-        sprite: SpriteBundle {
-          texture: assets.wizard_fire.clone(),
-          transform: Transform::from_translation(position),
-          ..default()
-        },
-        name: Name::new("FireTower")
-      },
-      TowerType::Ice => TowerBundle {
-        tower_type: TowerType::Ice,
-        tower: Tower::new(
-          Vec3::new(20., 0., 0.),
-          1,
-          1.,
-          self.get_range(),
-          self.get_price()
-        ),
-        sprite: SpriteBundle {
-          texture: assets.wizard_ice.clone(),
-          transform: Transform::from_translation(position),
-          ..default()
-        },
-        name: Name::new("IceTower")
-      },
-      TowerType::Dark => TowerBundle {
-        tower_type: TowerType::Dark,
-        tower: Tower::new(
-          Vec3::new(20., 0., 0.),
-          1,
-          1.,
-          self.get_range(),
-          self.get_price()
-        ),
-        sprite: SpriteBundle {
-          texture: assets.wizard_dark.clone(),
-          transform: Transform::from_translation(position),
-          ..default()
-        },
-        name: Name::new("DarkTower")
-      },
-      TowerType::Mage => TowerBundle {
-        tower_type: TowerType::Mage,
-        tower: Tower::new(
-          Vec3::new(20., 0., 0.),
-          1,
-          1.,
-          self.get_range(),
-          self.get_price()
-        ),
-        sprite: SpriteBundle {
-          texture: assets.wizard_mage.clone(),
-          transform: Transform::from_translation(position),
-          ..default()
-        },
-        name: Name::new("MageTower")
-      },
-      TowerType::Archmage => TowerBundle {
-        tower_type: TowerType::Archmage,
-        tower: Tower::new(
-          Vec3::new(20., 0., 0.),
-          1,
-          1.,
-          self.get_range(),
-          self.get_price()
-        ),
-        sprite: SpriteBundle {
-          texture: assets.wizard_archmage.clone(),
-          transform: Transform::from_translation(position),
-          ..default()
-        },
-        name: Name::new("ArchmageTower")
-      }
+  pub fn get_tower(&self, tower_stats: &TowerTypeStats) -> TowerBundle {
+    return tower_stats.tower[self].clone();
+  }
+  
+  pub fn get_sprite_sheet_bundle(&self, assets: &GameAssets, position: Vec3) -> SpriteBundle {
+    let texture = match self {
+      TowerType::Nature => assets.wizard_nature.clone(),
+      TowerType::Fire => assets.wizard_fire.clone(),
+      TowerType::Ice => assets.wizard_ice.clone(),
+      TowerType::Dark => assets.wizard_dark.clone(),
+      TowerType::Mage => assets.wizard_mage.clone(),
+      TowerType::Archmage => assets.wizard_archmage.clone()
+    };
+    
+    return SpriteBundle {
+      texture,
+      transform: Transform::from_translation(position),
+      ..default()
     }
   }
   
@@ -214,28 +158,6 @@ impl TowerType {
         },
         name: Name::new("Bullet")
       }
-    }
-  }
-  
-  pub fn get_range(&self) -> u32 {
-    match self {
-      TowerType::Nature => 125,
-      TowerType::Fire => 125,
-      TowerType::Ice => 125,
-      TowerType::Dark => 125,
-      TowerType::Mage => 125,
-      TowerType::Archmage => 125
-    }
-  }
-  
-  pub fn get_price(&self) -> u32 {
-    match self {
-      TowerType::Nature => 100,
-      TowerType::Fire => 100,
-      TowerType::Ice => 100,
-      TowerType::Dark => 100,
-      TowerType::Mage => 100,
-      TowerType::Archmage => 100
     }
   }
 }

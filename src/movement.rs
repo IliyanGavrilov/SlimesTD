@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use serde::{Serialize, Deserialize};
 use crate::GameState;
 
 pub struct MovementPlugin;
@@ -12,7 +13,7 @@ impl Plugin for MovementPlugin {
 }
 
 // !!! Debugging
-#[derive(Reflect, Component, Default)]
+#[derive(Reflect, Component, Clone, Default, Serialize, Deserialize)]
 #[reflect(Component)]
 pub struct Movement {
   pub direction: Vec3,

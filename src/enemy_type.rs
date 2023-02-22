@@ -1,9 +1,11 @@
 use bevy::prelude::*;
+use bevy::utils::HashMap;
 use strum_macros::{Display};
-use serde::Deserialize;
-use crate::{AnimationIndices, Enemy, EnemyBundle, GameAssets, MapPath, Movement, Path};
+use serde::{Serialize, Deserialize};
+use std::fs::File;
+use crate::{EnemyBundle, GameAssets, MapPath, Path};
 
-#[derive(Component, Display, Clone, Copy, Debug, PartialEq, Deserialize)]
+#[derive(Component, Display, Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize, Hash)]
 pub enum EnemyType {
   Green,
   Yellow,
@@ -15,131 +17,62 @@ pub enum EnemyType {
   Red
 }
 
+#[derive(Resource, Serialize, Deserialize, Clone)]
+pub struct EnemyTypeStats {
+  pub enemy: HashMap<EnemyType, EnemyBundle>
+}
+
+pub fn load_enemy_type_stats(
+  mut commands: Commands
+) {
+  let f = File::open("./assets/game_data/enemy_stats.ron")
+    .expect("Failed opening enemy stats file!");
+  let enemy_type_stats: EnemyTypeStats = match ron::de::from_reader(f) {
+    Ok(x) => x,
+    Err(e) => {
+      info!("Failed to load upgrades: {}", e);
+  
+      std::process::exit(1);
+    }
+  };
+  
+  commands.insert_resource(enemy_type_stats);
+}
+
 impl EnemyType {
   pub fn get_enemy(
-    &self, assets: &GameAssets,
+    &self,
     map_path: &MapPath,
-    position: Vec3,
-    path: Path
+    path: Path,
+    enemy_stats: &EnemyTypeStats
   ) -> EnemyBundle {
-    let direction = map_path.checkpoints[1];
-    match self {
-      EnemyType::Green => EnemyBundle {
-        movement: Movement { direction, speed: 50. },
-        sprite_sheet_bundle: SpriteSheetBundle {
-          texture_atlas: assets.enemy.clone(),
-          transform: Transform::from_translation(position),
-          sprite: TextureAtlasSprite::new(0),
-          ..default()
-        },
-        path,
-        ..default()
-      },
-      EnemyType::Yellow => EnemyBundle {
-        enemy_type: EnemyType::Yellow,
-        enemy: Enemy::new(2),
-        movement: Movement { direction, speed: 50. },
-        animation_indices: AnimationIndices {first: 10, last: 19},
-        sprite_sheet_bundle: SpriteSheetBundle {
-          texture_atlas: assets.enemy.clone(),
-          transform: Transform::from_translation(position),
-          sprite: TextureAtlasSprite::new(10),
-          ..default()
-        },
-        path,
-        name: Name::new("YellowEnemy"),
-        ..default()
-      },
-      EnemyType::Pink => EnemyBundle {
-        enemy_type: EnemyType::Pink,
-        enemy: Enemy::new(3),
-        movement: Movement { direction, speed: 50. },
-        animation_indices: AnimationIndices {first: 20, last: 29},
-        sprite_sheet_bundle: SpriteSheetBundle {
-          texture_atlas: assets.enemy.clone(),
-          transform: Transform::from_translation(position),
-          sprite: TextureAtlasSprite::new(20),
-          ..default()
-        },
-        path,
-        name: Name::new("PinkEnemy"),
-        ..default()
-      },
-      EnemyType::White => EnemyBundle {
-        enemy_type: EnemyType::White,
-        enemy: Enemy::new(4),
-        movement: Movement { direction, speed: 50. },
-        animation_indices: AnimationIndices {first: 30, last: 39},
-        sprite_sheet_bundle: SpriteSheetBundle {
-          texture_atlas: assets.enemy.clone(),
-          transform: Transform::from_translation(position),
-          sprite: TextureAtlasSprite::new(30),
-          ..default()
-        },
-        path,
-        name: Name::new("WhiteEnemy"),
-        ..default()
-      },
-      EnemyType::Blue => EnemyBundle {
-        enemy_type: EnemyType::Blue,
-        enemy: Enemy::new(5),
-        movement: Movement { direction, speed: 50. },
-        animation_indices: AnimationIndices {first: 40, last: 49},
-        sprite_sheet_bundle: SpriteSheetBundle {
-          texture_atlas: assets.enemy.clone(),
-          transform: Transform::from_translation(position),
-          sprite: TextureAtlasSprite::new(40),
-          ..default()
-        },
-        path,
-        name: Name::new("BlueEnemy"),
-        ..default()
-      },
-      EnemyType::Orange => EnemyBundle {
-        enemy_type: EnemyType::Orange,
-        enemy: Enemy::new(6),
-        movement: Movement { direction, speed: 50. },
-        animation_indices: AnimationIndices {first: 50, last: 59},
-        sprite_sheet_bundle: SpriteSheetBundle {
-          texture_atlas: assets.enemy.clone(),
-          transform: Transform::from_translation(position),
-          sprite: TextureAtlasSprite::new(50),
-          ..default()
-        },
-        path,
-        name: Name::new("OrangeEnemy"),
-        ..default()
-      },
-      EnemyType::Purple => EnemyBundle {
-        enemy_type: EnemyType::Purple,
-        enemy: Enemy::new(7),
-        movement: Movement { direction, speed: 50. },
-        animation_indices: AnimationIndices {first: 60, last: 69},
-        sprite_sheet_bundle: SpriteSheetBundle {
-          texture_atlas: assets.enemy.clone(),
-          transform: Transform::from_translation(position),
-          sprite: TextureAtlasSprite::new(60),
-          ..default()
-        },
-        path,
-        name: Name::new("PurpleEnemy"),
-        ..default()
-      },
-      EnemyType::Red => EnemyBundle {
-        enemy_type: EnemyType::Green,
-        enemy: Enemy::new(8),
-        movement: Movement { direction, speed: 50. },
-        animation_indices: AnimationIndices {first: 70, last: 79},
-        sprite_sheet_bundle: SpriteSheetBundle {
-          texture_atlas: assets.enemy.clone(),
-          transform: Transform::from_translation(position),
-          sprite: TextureAtlasSprite::new(70),
-          ..default()
-        },
-        path,
-        name: Name::new("RedEnemy"),
-        ..default()
-      }
-    }
+    let direction = map_path.checkpoints[path.index + 1];
+    
+    let mut enemy_bundle = enemy_stats.enemy[self].clone();
+    
+    enemy_bundle.path = path;
+    enemy_bundle.movement.direction = direction;
+    
+    return enemy_bundle;
+  }
+  
+  pub fn get_sprite_sheet_bundle(&self, assets: &GameAssets, position: Vec3) -> SpriteSheetBundle {
+    let texture_atlas_sprite = match self {
+      EnemyType::Green => TextureAtlasSprite::new(0),
+      EnemyType::Yellow => TextureAtlasSprite::new(10),
+      EnemyType::Pink => TextureAtlasSprite::new(20),
+      EnemyType::White => TextureAtlasSprite::new(30),
+      EnemyType::Blue => TextureAtlasSprite::new(40),
+      EnemyType::Orange => TextureAtlasSprite::new(50),
+      EnemyType::Purple => TextureAtlasSprite::new(60),
+      EnemyType::Red => TextureAtlasSprite::new(70)
+    };
+  
+    return SpriteSheetBundle {
+      texture_atlas: assets.enemy.clone(),
+      transform: Transform::from_translation(position),
+      sprite: texture_atlas_sprite,
+      ..default()
+    };
   }
 }

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy::utils::HashMap;
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 use std::fs::File;
 use crate::{TowerType};
 
@@ -9,9 +9,6 @@ pub struct TowerUpgradePlugin;
 impl Plugin for TowerUpgradePlugin {
   fn build(&self, app: &mut App) {
     app
-      // .add_system_set(SystemSet::on_update(GameState::Gameplay)
-      //   .with_system(tower_click)
-      //   .with_system(tower_ui_interaction))
       .add_startup_system_to_stage(StartupStage::PreStartup, load_upgrades);
   }
 }
@@ -21,7 +18,7 @@ pub struct Upgrades {
   pub upgrades: HashMap<TowerType, Vec<Vec<Upgrade>>>
 }
 
-#[derive(Component, Reflect, FromReflect, Clone)]
+#[derive(Component, Reflect, FromReflect, Clone, Serialize, Deserialize)]
 pub struct TowerUpgrades {
   pub upgrades: Vec<usize>
 }
@@ -50,7 +47,7 @@ pub enum TowerStat { // Projectile speed, pierce !!!
 fn load_upgrades(
   mut commands: Commands
 ) {
-  let f = File::open("upgrades.ron").expect("Failed opening upgrades file!");
+  let f = File::open("./assets/game_data/upgrades.ron").expect("Failed opening upgrades file!");
   let upgrades: Upgrades = match ron::de::from_reader(f) {
     Ok(x) => x,
     Err(e) => {
