@@ -93,23 +93,31 @@ pub fn spawn_tower(
   tower_type: TowerType,
   assets: &GameAssets,
   position: Vec3,
-  meshes: &mut ResMut<Assets<Mesh>>,
-  materials: &mut ResMut<Assets<ColorMaterial>>,
+  meshes: &mut Assets<Mesh>,
+  materials: &mut Assets<ColorMaterial>,
   tower_stats: &TowerTypeStats
 ) {
   commands.spawn(tower_type.get_tower(tower_stats))
     .insert(tower_type.get_sprite_sheet_bundle(assets, position))
     .with_children(|commands| {
-      commands.spawn(MaterialMesh2dBundle {
-        mesh: meshes.add(shape::Circle::new(
-          tower_stats.tower[&tower_type].tower.range as f32).into())
-          .into(),
-        material: materials.add(ColorMaterial::from(
-          Color::rgba_u8(0, 0, 0, 85))),
-        transform: Transform::from_translation(Vec3::new(0., 0., -0.5)),
-        ..default()
-      }).insert(TowerUpgradeUI);
+      commands.spawn(spawn_tower_range(meshes, materials,
+                                       tower_stats.tower[&tower_type].tower.range))
+        .insert(TowerUpgradeUI);
     });
+}
+
+pub fn spawn_tower_range(
+  meshes: &mut Assets<Mesh>,
+  materials: &mut Assets<ColorMaterial>,
+  radius: u32
+) -> MaterialMesh2dBundle<ColorMaterial> {
+  MaterialMesh2dBundle {
+    mesh: meshes.add(shape::Circle::new(radius as f32).into()).into(),
+    material: materials.add(ColorMaterial::from(
+      Color::rgba_u8(0, 0, 0, 85))),
+    transform: Transform::from_translation(Vec3::new(0., 0., -0.5)),
+    ..default()
+  }
 }
 
 fn tower_shooting(

@@ -1,6 +1,5 @@
 use bevy::prelude::*;
-use bevy::sprite::MaterialMesh2dBundle;
-use crate::{GameState, MainCamera, Player, SpriteFollower, Tower, TowerType, Upgrades, window_to_world_pos};
+use crate::{GameState, MainCamera, Player, spawn_tower_range, SpriteFollower, Tower, TowerType, Upgrades, window_to_world_pos};
 
 pub struct TowerSelectionPlugin;
 
@@ -65,14 +64,7 @@ fn mouse_click_interaction(
       if Vec3::distance(mouse_click_pos, transform.translation) <= 25. {
         commands.entity(tower_entity)
           .with_children(|commands| {
-            commands.spawn(MaterialMesh2dBundle {
-              mesh: meshes.add(shape::Circle::new(tower.range as f32).into())
-                .into(),
-              material: materials.add(ColorMaterial::from(
-                Color::rgba_u8(0, 0, 0, 85))),
-              transform: Transform::from_translation(Vec3::new(0., 0., -0.5)),
-              ..default()
-            }).insert(TowerUpgradeUI);
+            commands.spawn(spawn_tower_range(meshes, materials, tower.range)).insert(TowerUpgradeUI);
           });
       }
     }

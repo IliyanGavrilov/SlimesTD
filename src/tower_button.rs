@@ -1,6 +1,5 @@
-use std::any::Any;
 use bevy::prelude::*;
-use crate::{GameAssets, GameState, MainCamera, Player, spawn_tower, Tower, TowerType, TowerUpgradeUI};
+use crate::{GameAssets, GameState, MainCamera, Player, spawn_tower, spawn_tower_range, Tower, TowerType, TowerUpgradeUI};
 use strum::IntoEnumIterator;
 use bevy::sprite::MaterialMesh2dBundle;
 use crate::tower_type::{load_tower_type_stats, TowerTypeStats};
@@ -87,10 +86,11 @@ fn place_tower(
     With<SpriteFollower>>,
   assets: Res<GameAssets>,
   mouse: Res<Input<MouseButton>>,
+  keys: Res<Input<KeyCode>>,
   windows: Res<Windows>,
   camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
   mut player: Query<&mut Player>,
-  towers: Query<(Entity, &Transform), (With<Tower>, Without<SpriteFollower>)>,
+  towers: Query<&Transform, (With<Tower>, Without<SpriteFollower>)>,
   mut clicked_tower: Query<Entity, With<TowerUpgradeUI>>,
   mut meshes: ResMut<Assets<Mesh>>,
   mut materials: ResMut<Assets<ColorMaterial>>,
@@ -101,7 +101,6 @@ fn place_tower(
   let mut player = player.single_mut();
   
   for (entity, mut transform, tower_type, mut color) in query.iter_mut() {
-    println!("Entity: {:?}", entity);
     if !clicked_tower.is_empty() {
       let entity = clicked_tower.single_mut();
       commands.entity(entity).remove::<(Handle<ColorMaterial>, TowerUpgradeUI)>();
@@ -110,19 +109,22 @@ fn place_tower(
     if let Some(position) = window.cursor_position() {
       transform.translation =
         window_to_world_pos(window, position, camera, camera_transform);
-      for (tower_entity, tower_transform) in towers.iter() {
-        // Tower range when trying to place on path/invalid tile
-        if Vec3::distance(transform.translation, tower_transform.translation) <= 40. {
-          println!("RED");
+      
+        // Tower range becomes red when trying to place on path/invalid tile
+        let mouse_on_placed_tower = towers
+          .iter()
+          .filter(|tower_transform| {
+            Vec3::distance(transform.translation, tower_transform.translation) <= 40. })
+          .last();
+  
+        if mouse_on_placed_tower.is_some() {
           *color = materials.add(ColorMaterial::from(
             Color::rgba_u8(202, 0, 0, 150)));
         }
         else {
-          println!("NORMAL");
           *color = materials.add(ColorMaterial::from(
             Color::rgba_u8(0, 0, 0, 85)));
         }
-      }
     }
     // Spawn the tower if user clicks with mouse button in a valid tower placement zone!!!
     if mouse.just_pressed(MouseButton::Left) {
@@ -150,6 +152,14 @@ fn place_tower(
     else if mouse.just_pressed(MouseButton::Right) || window.cursor_position().is_none() {
       commands.entity(entity).despawn_recursive();
     }
+    else if keys.just_pressed(KeyCode::Key1) || keys.just_pressed(KeyCode::Key2) ||
+      keys.just_pressed(KeyCode::Key3) || keys.just_pressed(KeyCode::Key4) ||
+      keys.just_pressed(KeyCode::Key5) || keys.just_pressed(KeyCode::Key6) {
+      commands.entity(entity).despawn_recursive();
+      tower_spawn_from_keyboard_input(&mut commands, &keys, &player, window,
+                                      camera, camera_transform, &mut meshes,
+                                      &mut materials, &assets, &tower_stats);
+    }
   }
 }
 
@@ -158,10 +168,10 @@ fn spawn_sprite_follower(
   window: &Window,
   camera: &Camera,
   camera_transform: &GlobalTransform,
-  meshes: &mut ResMut<Assets<Mesh>>,
-  materials: &mut ResMut<Assets<ColorMaterial>>,
+  meshes: &mut Assets<Mesh>,
+  materials: &mut Assets<ColorMaterial>,
   tower_type: &TowerType,
-  assets: &Res<GameAssets>,
+  assets: &GameAssets,
   tower_stats: &TowerTypeStats
 ) {
   // Spawn component that alerts the place_tower() system that a button has been pressed
@@ -173,15 +183,8 @@ fn spawn_sprite_follower(
       transform: Transform::from_translation(transform),
       ..default()
     })
-      .insert(MaterialMesh2dBundle {
-        mesh: meshes.add(shape::Circle::new(
-          tower_stats.tower[&tower_type].tower.range as f32).into())
-          .into(),
-        material: materials.add(ColorMaterial::from(
-          Color::rgba_u8(0, 0, 0, 85))),
-        transform: Transform::from_translation(Vec3::new(transform.x, transform.y, 0.)),
-        ..default()
-      })
+      .insert(spawn_tower_range(meshes, materials,
+                                tower_stats.tower[&tower_type].tower.range))
       .insert(SpriteFollower)
       .insert(*tower_type);
   }
@@ -205,52 +208,11 @@ fn tower_button_interaction(
   let (camera, camera_transform) = camera_query.single();
   let player = player.single();
   
-  // If player can afford to buy tower
-  
   // Keyboard shortcuts
   if query.is_empty() { // Spawn one tower at a time
-    if keys.just_pressed(KeyCode::Key1) &&
-      player.money >= tower_stats.tower[&TowerType::Nature].tower.price as usize {
-      info!("Spawning: Nature wizard");
-      
-      spawn_sprite_follower(&mut commands, window, camera, camera_transform, &mut meshes,
-                            &mut materials, &TowerType::Nature, &assets, &tower_stats);
-    }
-    else if keys.just_pressed(KeyCode::Key2) &&
-      player.money >= tower_stats.tower[&TowerType::Fire].tower.price as usize {
-      info!("Spawning: Fire wizard");
-  
-      spawn_sprite_follower(&mut commands, window, camera, camera_transform, &mut meshes,
-                            &mut materials, &TowerType::Fire, &assets, &tower_stats);
-    }
-    else if keys.just_pressed(KeyCode::Key3) &&
-      player.money >= tower_stats.tower[&TowerType::Ice].tower.price as usize {
-      info!("Spawning: Ice wizard");
-  
-      spawn_sprite_follower(&mut commands, window, camera, camera_transform, &mut meshes,
-                            &mut materials, &TowerType::Ice, &assets, &tower_stats);
-    }
-    else if keys.just_pressed(KeyCode::Key4) &&
-      player.money >= tower_stats.tower[&TowerType::Dark].tower.price as usize {
-      info!("Spawning: Dark wizard");
-  
-      spawn_sprite_follower(&mut commands, window, camera, camera_transform, &mut meshes,
-                            &mut materials, &TowerType::Dark, &assets, &tower_stats);
-    }
-    else if keys.just_pressed(KeyCode::Key5) &&
-      player.money >= tower_stats.tower[&TowerType::Mage].tower.price as usize {
-      info!("Spawning: Mage wizard");
-  
-      spawn_sprite_follower(&mut commands, window, camera, camera_transform, &mut meshes,
-                            &mut materials, &TowerType::Mage, &assets, &tower_stats);
-    }
-    else if keys.just_pressed(KeyCode::Key6) &&
-      player.money >= tower_stats.tower[&TowerType::Archmage].tower.price as usize {
-      info!("Spawning: Archmage wizard");
-  
-      spawn_sprite_follower(&mut commands, window, camera, camera_transform, &mut meshes,
-                            &mut materials, &TowerType::Archmage, &assets, &tower_stats);
-    }
+    tower_spawn_from_keyboard_input(&mut commands, &keys, &player, window,
+                                    camera, camera_transform, &mut meshes,
+                                    &mut materials, &assets, &tower_stats);
   }
   
   for (interaction, tower_type, state) in &interaction {
@@ -289,6 +251,56 @@ fn tower_button_interaction(
         }
       }
     }
+  }
+}
+
+fn tower_spawn_from_keyboard_input(
+  commands: &mut Commands,
+  keys: &Input<KeyCode>,
+  player: &Player,
+  window: &Window,
+  camera: &Camera,
+  camera_transform: &GlobalTransform,
+  meshes: &mut Assets<Mesh>,
+  materials: &mut Assets<ColorMaterial>,
+  assets: &GameAssets,
+  tower_stats: &TowerTypeStats
+) {
+  if keys.just_pressed(KeyCode::Key1) &&
+    player.money >= tower_stats.tower[&TowerType::Nature].tower.price as usize {
+    
+    spawn_sprite_follower(commands, window, camera, camera_transform, meshes,
+                          materials, &TowerType::Nature, assets, &tower_stats);
+  }
+  else if keys.just_pressed(KeyCode::Key2) &&
+    player.money >= tower_stats.tower[&TowerType::Fire].tower.price as usize {
+  
+    spawn_sprite_follower(commands, window, camera, camera_transform, meshes,
+                          materials, &TowerType::Fire, assets, &tower_stats);
+  }
+  else if keys.just_pressed(KeyCode::Key3) &&
+    player.money >= tower_stats.tower[&TowerType::Ice].tower.price as usize {
+  
+    spawn_sprite_follower(commands, window, camera, camera_transform, meshes,
+                          materials, &TowerType::Ice, assets, &tower_stats);
+  }
+  else if keys.just_pressed(KeyCode::Key4) &&
+    player.money >= tower_stats.tower[&TowerType::Dark].tower.price as usize {
+  
+    spawn_sprite_follower(commands, window, camera, camera_transform, meshes,
+                          materials, &TowerType::Dark, assets, &tower_stats);
+  }
+  else if keys.just_pressed(KeyCode::Key5) &&
+    player.money >= tower_stats.tower[&TowerType::Mage].tower.price as usize {
+  
+    spawn_sprite_follower(commands, window, camera, camera_transform, meshes,
+                          materials, &TowerType::Mage, assets, &tower_stats);
+  }
+  else if keys.just_pressed(KeyCode::Key6) &&
+    player.money >= tower_stats.tower[&TowerType::Archmage].tower.price as usize {
+  
+    spawn_sprite_follower(commands, window, camera, camera_transform, meshes,
+                          materials, &TowerType::Archmage, assets, &tower_stats);
   }
 }
 
