@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 
-use crate::{Base, GameAssets, GameState, Player};
+use crate::assets::*;
+use crate::gameplay_ui::*;
+use crate::GameState;
 
 #[derive(Component)]
 pub struct GameplayUIRoot;

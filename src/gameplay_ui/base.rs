@@ -11,7 +11,6 @@ impl Plugin for BasePlugin {
   }
 }
 
-// !!! Debugging
 #[derive(Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct Base {

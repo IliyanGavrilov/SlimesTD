@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use serde::{Serialize, Deserialize};
-use crate::{Movement, TowerType};
+
+use crate::TowerType;
+use crate::movement::*;
 
 pub struct AssetPlugin;
 
@@ -177,7 +179,7 @@ fn load_assets(
                               Vec2::new(50., 90.),
                               10, 8,
                               Some(Vec2::new(5., 5.)), None)),
-    // Bullets !!!!!
+    // Bullets !!!
     wizard_nature_bullet: assets_server.load("tower_bullets/wizard_nature_bullet.png"),
     wizard_fire_bullet: assets_server.load("tower_bullets/wizard_fire_bullet.png"),
     wizard_ice_bullet: assets_server.load("tower_bullets/wizard_ice_bullet.png"),

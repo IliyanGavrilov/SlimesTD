@@ -3,7 +3,10 @@ use bevy::utils::HashMap;
 use strum_macros::{Display};
 use serde::{Serialize, Deserialize};
 use std::fs::File;
-use crate::{EnemyBundle, GameAssets, MapPath, Path};
+
+use crate::assets::*;
+use crate::enemy::*;
+use crate::map::*;
 
 #[derive(Component, Display, Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize, Hash)]
 pub enum EnemyType {

@@ -1,5 +1,7 @@
 use bevy::{app::AppExit, prelude::*};
-use crate::{GameAssets, GameState};
+
+use crate::assets::*;
+use crate::main_menu::*;
 
 pub struct MainMenuPlugin;
 

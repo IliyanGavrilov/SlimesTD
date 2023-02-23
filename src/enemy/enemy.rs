@@ -1,9 +1,11 @@
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
-pub use crate::{GameAssets, Movement, enemy_type::EnemyType};
-use crate::{AnimationIndices, AnimationTimer, GameState, MapPath};
-use crate::enemy_type::{EnemyTypeStats, load_enemy_type_stats};
 use serde::{Serialize, Deserialize};
+
+use crate::assets::*;
+use crate::enemy::*;
+use crate::movement::*;
+use crate::{GameState, MapPath};
 
 pub struct EnemyPlugin;
 
@@ -48,7 +50,6 @@ impl Default for EnemyBundle {
   }
 }
 
-// !!! Debugging
 #[derive(Reflect, Component, Default, Clone, Serialize, Deserialize)]
 #[reflect(Component)]
 pub struct Enemy {

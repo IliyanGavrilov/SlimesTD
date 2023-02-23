@@ -1,44 +1,22 @@
 use bevy::prelude::*;
-// !!!Debugging
 use bevy_editor_pls::*;
 
 mod map;
 pub use map::*;
-mod player;
-pub use player::*;
-mod game_state;
-pub use game_state::*;
 mod main_menu;
 pub use main_menu::*;
 mod gameplay_ui;
 pub use gameplay_ui::*;
 mod spawn_scene;
 pub use spawn_scene::*;
-mod settings;
-pub use settings::*;
 mod assets;
 pub use assets::*;
-mod base;
-pub use base::*;
 mod tower;
 pub use tower::*;
-mod tower_type;
-mod tower_button;
-pub use tower_button::*;
-mod tower_selection;
-pub use tower_selection::*;
-mod tower_upgrade;
-pub use tower_upgrade::*;
 mod enemy;
 pub use enemy::*;
-mod enemy_type;
-mod wave;
-pub use wave::*;
-mod bullet;
-pub use bullet::*;
 mod movement;
 pub use movement::*;
-mod targeting_priority;
 
 fn main() {
   App::new()

@@ -1,10 +1,10 @@
+use bevy::prelude::*;
 use bevy::utils::FloatOrd;
 use strum_macros::EnumIter;
 use serde::{Serialize, Deserialize};
 
-// Debugging
-use bevy::prelude::*;
-pub use crate::enemy::*;
+use crate::enemy::*;
+use crate::movement::*;
 
 #[derive(EnumIter, Reflect, Clone, Debug, Component, Default, PartialEq, Serialize, Deserialize)]
 pub enum TargetingPriority {

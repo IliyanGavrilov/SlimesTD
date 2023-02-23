@@ -1,9 +1,12 @@
 use bevy::prelude::*;
 use bevy::utils::HashMap;
-use crate::{Bullet, BulletBundle, GameAssets, Movement, TowerBundle};
 use strum_macros::{EnumIter, Display};
 use serde::{Serialize, Deserialize};
 use std::fs::File;
+
+use crate::assets::*;
+use crate::tower::*;
+use crate::movement::*;
 
 #[derive(EnumIter, Component, Display, Clone, Copy,
 Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]

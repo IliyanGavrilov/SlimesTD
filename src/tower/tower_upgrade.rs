@@ -2,7 +2,8 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 use serde::{Serialize, Deserialize};
 use std::fs::File;
-use crate::{TowerType};
+
+use crate::tower::*;
 
 pub struct TowerUpgradePlugin;
 

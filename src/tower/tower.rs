@@ -3,10 +3,11 @@ use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
 use serde::{Serialize, Deserialize};
 
-pub use crate::{GameState, Bullet, Movement, tower_type::TowerType, GameAssets,
-                targeting_priority::{*, TargetingPriority::*}};
-use crate::{TowerStat, TowerUpgrades, TowerUpgradeUI, Upgrade};
-use crate::tower_type::TowerTypeStats;
+use crate::assets::*;
+use crate::tower::*;
+use crate::enemy::*;
+use crate::movement::*;
+use crate::GameState;
 
 pub struct TowerPlugin;
 
@@ -137,19 +138,19 @@ fn tower_shooting(
       let bullet_spawn_pos = transform.translation() + tower.bullet_spawn_offset;
     
       let direction = match &tower.target {
-        FIRST => first_enemy_direction(&enemies,
+        TargetingPriority::FIRST => first_enemy_direction(&enemies,
                                        bullet_spawn_pos,
                                        tower.range + 1),
-        LAST => last_enemy_direction(&enemies,
+        TargetingPriority::LAST => last_enemy_direction(&enemies,
                                      bullet_spawn_pos,
                                      tower.range + 1),
-        CLOSE => closest_enemy_direction(&enemies,
+        TargetingPriority::CLOSE => closest_enemy_direction(&enemies,
                                          bullet_spawn_pos,
                                          tower.range + 1),
-        STRONG => strongest_enemy_direction(&enemies,
+        TargetingPriority::STRONG => strongest_enemy_direction(&enemies,
                                                bullet_spawn_pos,
                                                tower.range + 1),
-        WEAK => weakest_enemy_direction(&enemies,
+        TargetingPriority::WEAK => weakest_enemy_direction(&enemies,
                                            bullet_spawn_pos,
                                            tower.range + 1)
       };

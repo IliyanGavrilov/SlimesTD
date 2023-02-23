@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::collide;
-pub use crate::enemy::*;
+
+use crate::enemy::*;
 use crate::GameState;
+use crate::movement::*;
 
 pub struct BulletPlugin;
 
@@ -22,7 +24,6 @@ pub struct BulletBundle {
   pub name: Name
 }
 
-// !!! Debugging
 #[derive(Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct Bullet {
@@ -52,8 +53,6 @@ fn bullet_enemy_collision(
 ) {
   for (bullet_entity, bullet, bullet_transform) in &bullets {
     for (mut enemy, enemy_transform) in &mut enemies {
-      //if Vec3::distance(bullet_transform.translation(),
-      //                  enemy_transform.translation) <= 35. {
       if collide(bullet_transform.translation(), Vec2::new(40., 22.),
                  enemy_transform.translation, Vec2::new(50., 50.)).is_some() {
         commands.entity(bullet_entity).despawn_recursive();

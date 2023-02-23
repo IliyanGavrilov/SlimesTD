@@ -1,5 +1,7 @@
 use bevy::prelude::*;
-use crate::{GameState, MainCamera, Player, spawn_tower_range, SpriteFollower, Tower, TowerType, Upgrades, window_to_world_pos};
+
+use crate::tower::*;
+use crate::{GameState, MainCamera, Player};
 
 pub struct TowerSelectionPlugin;
 
