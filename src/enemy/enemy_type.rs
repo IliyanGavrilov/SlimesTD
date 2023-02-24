@@ -28,7 +28,7 @@ pub struct EnemyTypeStats {
 pub fn load_enemy_type_stats(
   mut commands: Commands
 ) {
-  let f = File::open("./assets/game_data/enemy_stats.ron")
+  let f = File::open("./assets/data/enemy_stats.ron")
     .expect("Failed opening enemy stats file!");
   let enemy_type_stats: EnemyTypeStats = match ron::de::from_reader(f) {
     Ok(x) => x,

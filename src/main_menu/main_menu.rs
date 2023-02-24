@@ -55,17 +55,11 @@ fn exit_button_clicked(
 }
 
 fn spawn_main_menu(
-  mut commands: Commands, assets: Res<GameAssets>, asset_server: Res<AssetServer>
+  mut commands: Commands, assets: Res<GameAssets>
 ) {
   let start_button = commands
     .spawn(ButtonBundle {
-      style: Style {
-        size: Size::new(Val::Px(570.), Val::Px(147.)),
-        align_self: AlignSelf::Center,
-        justify_content: JustifyContent::Center,
-        margin: UiRect::all(Val::Percent(2.)),
-        ..default()
-      },
+      style: spawn_button_style(),
       image: assets.start_button.clone().into(),
       ..default()
     }).id();
@@ -73,13 +67,7 @@ fn spawn_main_menu(
   
   let exit_button = commands
     .spawn(ButtonBundle {
-      style: Style {
-        size: Size::new(Val::Px(570.), Val::Px(147.)),
-        align_self: AlignSelf::Center,
-        justify_content: JustifyContent::Center,
-        margin: UiRect::all(Val::Percent(2.)),
-        ..default()
-      },
+      style: spawn_button_style(),
       image: assets.exit_button.clone().into(),
       ..default()
     }).id();
@@ -106,7 +94,7 @@ fn spawn_main_menu(
         text: Text::from_section(
           "Slimes Tower Defense",
           TextStyle {
-            font: asset_server.load("font/FiraSans-Bold.ttf"),
+            font: assets.font.clone(),
             font_size: 90.,
             color: Color::CYAN,
           },
@@ -116,4 +104,14 @@ fn spawn_main_menu(
     })
     .add_child(start_button)
     .add_child(exit_button);
+}
+
+fn spawn_button_style() -> Style {
+  Style {
+    size: Size::new(Val::Px(570.), Val::Px(147.)),
+    align_self: AlignSelf::Center,
+    justify_content: JustifyContent::Center,
+    margin: UiRect::all(Val::Percent(2.)),
+    ..default()
+  }
 }

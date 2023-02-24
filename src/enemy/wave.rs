@@ -117,7 +117,7 @@ fn spawn_waves(
 fn load_waves(
   mut commands: Commands
 ) {
-  let f = File::open("./assets/game_data/waves.ron").expect("Failed opening wave file!");
+  let f = File::open("./assets/data/waves.ron").expect("Failed opening wave file!");
   let waves: Waves = match ron::de::from_reader(f) {
     Ok(x) => x,
     Err(e) => {

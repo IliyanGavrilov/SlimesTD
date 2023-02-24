@@ -52,7 +52,6 @@ fn update_gameplay_ui(
 
 fn spawn_gameplay_ui(
   mut commands: Commands,
-  asset_server: Res<AssetServer>,
   assets: Res<GameAssets>) {
   commands
     .spawn(NodeBundle {
@@ -112,7 +111,7 @@ fn spawn_gameplay_ui(
               text: Text::from_section(
                 "",
                 TextStyle {
-                  font: asset_server.load("font/FiraSans-Bold.ttf"),
+                  font: assets.font.clone(),
                   font_size: 36.0,
                   color: Color::WHITE,
                 },
@@ -151,7 +150,7 @@ fn spawn_gameplay_ui(
               text: Text::from_section(
                 "",
                 TextStyle {
-                  font: asset_server.load("font/FiraSans-Bold.ttf"),
+                  font: assets.font.clone(),
                   font_size: 36.0,
                   color: Color::WHITE,
                 },

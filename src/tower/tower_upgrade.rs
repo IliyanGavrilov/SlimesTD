@@ -48,7 +48,7 @@ pub enum TowerStat { // Projectile speed, pierce !!!
 fn load_upgrades(
   mut commands: Commands
 ) {
-  let f = File::open("./assets/game_data/upgrades.ron").expect("Failed opening upgrades file!");
+  let f = File::open("./assets/data/upgrades.ron").expect("Failed opening upgrades file!");
   let upgrades: Upgrades = match ron::de::from_reader(f) {
     Ok(x) => x,
     Err(e) => {

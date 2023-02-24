@@ -27,7 +27,7 @@ pub struct TowerTypeStats {
 pub fn load_tower_type_stats(
   mut commands: Commands
 ) {
-  let f = File::open("./assets/game_data/tower_stats.ron")
+  let f = File::open("./assets/data/tower_stats.ron")
     .expect("Failed opening tower stats file!");
   let tower_type_stats: TowerTypeStats = match ron::de::from_reader(f) {
     Ok(x) => x,

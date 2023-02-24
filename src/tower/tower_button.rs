@@ -220,7 +220,6 @@ fn tower_button_interaction(
     if player.money >= state.price as usize {
       match interaction {
         Interaction::Clicked => {
-          info!("Spawning: {tower_type} wizard");
           if query.is_empty() { // Spawn one tower at a time
             // Change button UI
             for (mut image, button_tower_type) in images.iter_mut() {

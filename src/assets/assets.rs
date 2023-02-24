@@ -18,6 +18,8 @@ impl Plugin for AssetPlugin {
 
 #[derive(Resource)]
 pub struct GameAssets {
+  // Fonts
+  pub font: Handle<Font>,
   // Main menu buttons - Start Game & Exit
   pub start_button: Handle<Image>,
   pub exit_button: Handle<Image>,
@@ -132,60 +134,62 @@ fn load_assets(
   mut texture_atlases: ResMut<Assets<TextureAtlas>>
 ) {
   commands.insert_resource(GameAssets {
+    // Fonts
+    font: assets_server.load("fonts/FiraSans-Bold.ttf"),
     // Main menu buttons - Start Game & Exit
-    start_button: assets_server.load("start_menu/start_button.png"),
-    exit_button: assets_server.load("start_menu/exit_button.png"),
+    start_button: assets_server.load("textures/start_menu/start_button.png"),
+    exit_button: assets_server.load("textures/start_menu/exit_button.png"),
     // Gameplay images - Health & Money
-    heart: assets_server.load("ui/heart.png"),
-    coin: assets_server.load("ui/coin.png"),
+    heart: assets_server.load("textures/ui/heart.png"),
+    coin: assets_server.load("textures/ui/coin.png"),
     // Towers
-    wizard_nature: assets_server.load("towers/wizard_nature.png"),
-    wizard_fire: assets_server.load("towers/wizard_fire.png"),
-    wizard_ice: assets_server.load("towers/wizard_ice.png"),
-    wizard_dark: assets_server.load("towers/wizard_dark.png"),
-    wizard_mage: assets_server.load("towers/wizard_mage.png"),
-    wizard_archmage: assets_server.load("towers/wizard_archmage.png"),
+    wizard_nature: assets_server.load("textures/towers/wizard_nature.png"),
+    wizard_fire: assets_server.load("textures/towers/wizard_fire.png"),
+    wizard_ice: assets_server.load("textures/towers/wizard_ice.png"),
+    wizard_dark: assets_server.load("textures/towers/wizard_dark.png"),
+    wizard_mage: assets_server.load("textures/towers/wizard_mage.png"),
+    wizard_archmage: assets_server.load("textures/towers/wizard_archmage.png"),
     // Tower buttons
-    wizard_nature_button: assets_server.load("tower_buttons/buttons/wizard_nature_button.png"),
-    wizard_fire_button: assets_server.load("tower_buttons/buttons/wizard_fire_button.png"),
-    wizard_ice_button: assets_server.load("tower_buttons/buttons/wizard_ice_button.png"),
-    wizard_dark_button: assets_server.load("tower_buttons/buttons/wizard_dark_button.png"),
-    wizard_mage_button: assets_server.load("tower_buttons/buttons/wizard_mage_button.png"),
-    wizard_archmage_button: assets_server.load("tower_buttons/buttons/wizard_archmage_button.png"),
+    wizard_nature_button: assets_server.load("textures/tower_buttons/buttons/wizard_nature_button.png"),
+    wizard_fire_button: assets_server.load("textures/tower_buttons/buttons/wizard_fire_button.png"),
+    wizard_ice_button: assets_server.load("textures/tower_buttons/buttons/wizard_ice_button.png"),
+    wizard_dark_button: assets_server.load("textures/tower_buttons/buttons/wizard_dark_button.png"),
+    wizard_mage_button: assets_server.load("textures/tower_buttons/buttons/wizard_mage_button.png"),
+    wizard_archmage_button: assets_server.load("textures/tower_buttons/buttons/wizard_archmage_button.png"),
     // Tower buttons hovered
-    wizard_nature_button_hover: assets_server.load("tower_buttons/buttons_hover/wizard_nature_button_hover.png"),
-    wizard_fire_button_hover: assets_server.load("tower_buttons/buttons_hover/wizard_fire_button_hover.png"),
-    wizard_ice_button_hover: assets_server.load("tower_buttons/buttons_hover/wizard_ice_button_hover.png"),
-    wizard_dark_button_hover: assets_server.load("tower_buttons/buttons_hover/wizard_dark_button_hover.png"),
-    wizard_mage_button_hover: assets_server.load("tower_buttons/buttons_hover/wizard_mage_button_hover.png"),
-    wizard_archmage_button_hover: assets_server.load("tower_buttons/buttons_hover/wizard_archmage_button_hover.png"),
+    wizard_nature_button_hover: assets_server.load("textures/tower_buttons/buttons_hover/wizard_nature_button_hover.png"),
+    wizard_fire_button_hover: assets_server.load("textures/tower_buttons/buttons_hover/wizard_fire_button_hover.png"),
+    wizard_ice_button_hover: assets_server.load("textures/tower_buttons/buttons_hover/wizard_ice_button_hover.png"),
+    wizard_dark_button_hover: assets_server.load("textures/tower_buttons/buttons_hover/wizard_dark_button_hover.png"),
+    wizard_mage_button_hover: assets_server.load("textures/tower_buttons/buttons_hover/wizard_mage_button_hover.png"),
+    wizard_archmage_button_hover: assets_server.load("textures/tower_buttons/buttons_hover/wizard_archmage_button_hover.png"),
     // Tower buttons pressed
-    wizard_nature_button_press: assets_server.load("tower_buttons/buttons_press/wizard_nature_button_press.png"),
-    wizard_fire_button_press: assets_server.load("tower_buttons/buttons_press/wizard_fire_button_press.png"),
-    wizard_ice_button_press: assets_server.load("tower_buttons/buttons_press/wizard_ice_button_press.png"),
-    wizard_dark_button_press: assets_server.load("tower_buttons/buttons_press/wizard_dark_button_press.png"),
-    wizard_mage_button_press: assets_server.load("tower_buttons/buttons_press/wizard_mage_button_press.png"),
-    wizard_archmage_button_press: assets_server.load("tower_buttons/buttons_press/wizard_archmage_button_press.png"),
+    wizard_nature_button_press: assets_server.load("textures/tower_buttons/buttons_press/wizard_nature_button_press.png"),
+    wizard_fire_button_press: assets_server.load("textures/tower_buttons/buttons_press/wizard_fire_button_press.png"),
+    wizard_ice_button_press: assets_server.load("textures/tower_buttons/buttons_press/wizard_ice_button_press.png"),
+    wizard_dark_button_press: assets_server.load("textures/tower_buttons/buttons_press/wizard_dark_button_press.png"),
+    wizard_mage_button_press: assets_server.load("textures/tower_buttons/buttons_press/wizard_mage_button_press.png"),
+    wizard_archmage_button_press: assets_server.load("textures/tower_buttons/buttons_press/wizard_archmage_button_press.png"),
     // Tower buttons locked
-     wizard_nature_button_lock: assets_server.load("tower_buttons/buttons_lock/wizard_nature_button_lock.png"),
-     wizard_fire_button_lock: assets_server.load("tower_buttons/buttons_lock/wizard_fire_button_lock.png"),
-     wizard_ice_button_lock: assets_server.load("tower_buttons/buttons_lock/wizard_ice_button_lock.png"),
-     wizard_dark_button_lock: assets_server.load("tower_buttons/buttons_lock/wizard_dark_button_lock.png"),
-     wizard_mage_button_lock: assets_server.load("tower_buttons/buttons_lock/wizard_mage_button_lock.png"),
-     wizard_archmage_button_lock: assets_server.load("tower_buttons/buttons_lock/wizard_archmage_button_lock.png"),
+     wizard_nature_button_lock: assets_server.load("textures/tower_buttons/buttons_lock/wizard_nature_button_lock.png"),
+     wizard_fire_button_lock: assets_server.load("textures/tower_buttons/buttons_lock/wizard_fire_button_lock.png"),
+     wizard_ice_button_lock: assets_server.load("textures/tower_buttons/buttons_lock/wizard_ice_button_lock.png"),
+     wizard_dark_button_lock: assets_server.load("textures/tower_buttons/buttons_lock/wizard_dark_button_lock.png"),
+     wizard_mage_button_lock: assets_server.load("textures/tower_buttons/buttons_lock/wizard_mage_button_lock.png"),
+     wizard_archmage_button_lock: assets_server.load("textures/tower_buttons/buttons_lock/wizard_archmage_button_lock.png"),
     // Enemies
     enemy: texture_atlases.add(
-      TextureAtlas::from_grid(assets_server.load("slime_jump.png"),
+      TextureAtlas::from_grid(assets_server.load("textures/slime_jump.png"),
                               Vec2::new(50., 90.),
                               10, 8,
                               Some(Vec2::new(5., 5.)), None)),
     // Bullets !!!
-    wizard_nature_bullet: assets_server.load("tower_bullets/wizard_nature_bullet.png"),
-    wizard_fire_bullet: assets_server.load("tower_bullets/wizard_fire_bullet.png"),
-    wizard_ice_bullet: assets_server.load("tower_bullets/wizard_ice_bullet.png"),
-    wizard_dark_bullet: assets_server.load("tower_bullets/wizard_dark_bullet.png"),
-    wizard_mage_bullet: assets_server.load("tower_bullets/wizard_mage_bullet.png"),
-    wizard_archmage_bullet: assets_server.load("tower_bullets/wizard_archmage_bullet.png")
+    wizard_nature_bullet: assets_server.load("textures/tower_bullets/wizard_nature_bullet.png"),
+    wizard_fire_bullet: assets_server.load("textures/tower_bullets/wizard_fire_bullet.png"),
+    wizard_ice_bullet: assets_server.load("textures/tower_bullets/wizard_ice_bullet.png"),
+    wizard_dark_bullet: assets_server.load("textures/tower_bullets/wizard_dark_bullet.png"),
+    wizard_mage_bullet: assets_server.load("textures/tower_bullets/wizard_mage_bullet.png"),
+    wizard_archmage_bullet: assets_server.load("textures/tower_bullets/wizard_archmage_bullet.png")
   })
 }
 
