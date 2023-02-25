@@ -115,7 +115,7 @@ fn place_tower(
         let mouse_on_placed_tower = towers
           .iter()
           .filter(|tower_transform| {
-            Vec3::distance(transform.translation, tower_transform.translation) <= 40. })
+            Vec3::distance(transform.translation, tower_transform.translation) <= 50. })
           .last();
   
         if mouse_on_placed_tower.is_some() {
@@ -308,22 +308,29 @@ fn tower_spawn_from_keyboard_input(
 fn generate_ui(mut commands: Commands, assets: Res<GameAssets>, tower_stats: Res<TowerTypeStats>) {
   commands
     .spawn(NodeBundle {
+      background_color: BackgroundColor(Color::GOLD),
       style: Style {
-        size: Size::new(Val::Percent(100.), Val::Percent(100.)),
+        size: Size::new(Val::Percent(100.), Val::Percent(15.)),
         justify_content: JustifyContent::Center,
+        align_self: AlignSelf::FlexEnd,
         ..default()
       },
       ..default()
     })
     .insert(TowerUIRoot) // Marker component
+    .insert(Name::new("TowerButtons"))
     .with_children(|commands| { // Make the buttons children of the menu
       for i in TowerType::iter() {
         commands
           .spawn(ButtonBundle {
             style: Style {
-              size: Size::new(Val::Px(80.), Val::Px(80.)),
-              align_self: AlignSelf::FlexEnd, // Bottom of screen
-              margin: UiRect::all(Val::Percent(2.)),
+              size: Size::new(Val::Px(85.), Val::Px(85.)),
+              align_self: AlignSelf::Center,
+              margin: UiRect {
+                left: Val::Percent(2.),
+                right: Val::Percent(2.),
+                ..default()
+              },
               ..default()
             },
             image: assets.get_button_asset(i).into(),
@@ -335,6 +342,5 @@ fn generate_ui(mut commands: Commands, assets: Res<GameAssets>, tower_stats: Res
           .insert(i)
           .insert(Name::new("TowerButton"));
       }
-    })
-    .insert(Name::new("TowerButtons"));
+    });
 }

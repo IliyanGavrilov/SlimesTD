@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::render::camera::ScalingMode;
 
 pub struct SpawnScenePlugin;
 
@@ -14,5 +15,7 @@ impl Plugin for SpawnScenePlugin {
 pub struct MainCamera;
 
 fn spawn_camera(mut commands: Commands) {
-  commands.spawn((Camera2dBundle::default(), MainCamera));
+  let mut camera = Camera2dBundle::default(); // !!!
+  camera.projection.scaling_mode = ScalingMode::Auto { min_width: 1472., min_height: 828.0 };
+  commands.spawn((camera, MainCamera));
 }

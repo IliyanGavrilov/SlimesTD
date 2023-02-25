@@ -31,6 +31,8 @@ fn main() {
       .set(WindowPlugin {
         window: WindowDescriptor {
           title: "Slimes Tower Defense".to_string(),
+          position: WindowPosition::Centered,
+          resizable: false,
           ..default()
         },
         ..default()

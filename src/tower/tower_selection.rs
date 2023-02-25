@@ -55,8 +55,9 @@ fn mouse_click_interaction(
       window_to_world_pos(window, position, camera, camera_transform);
   
     if !clicked_tower.is_empty() {
-      let entity = clicked_tower.single_mut();
-      commands.entity(entity).despawn_recursive();
+      for entity in clicked_tower.iter() {
+        commands.entity(entity).despawn_recursive();
+      }
     }
     
     for (tower_entity,
