@@ -1,9 +1,10 @@
+use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
 use strum::IntoEnumIterator;
 
 use crate::assets::*;
 use crate::tower::*;
-use crate::{GameState, MainCamera, Player};
+use crate::{GameplayUIRoot, GameState, MainCamera, Player};
 
 pub struct TowerButtonPlugin;
 
@@ -81,6 +82,32 @@ pub fn window_to_world_pos(
   return world_pos;
 }
 
+#[derive(Resource)]
+struct CursorExitedUI(bool);
+
+fn cursor_above_tower_ui(
+  window: &Window,
+  node_query: &Query<(&Node, &GlobalTransform, &Visibility), With<GameplayUIRoot>>
+) -> bool {
+  if let Some(pointer_position) = window.cursor_position() {
+    for (node,
+      global_transform,
+      &Visibility{is_visible}) in node_query.iter() {
+      if is_visible {
+        let node_position = global_transform.translation().xy();
+        let half_size = 0.5 * Vec2::new(node.size().x, window.height() * 0.20);
+        let min = node_position - half_size;
+        let max = node_position + half_size;
+        if (min.x .. max.x).contains(&pointer_position.x)
+          && (min.y .. max.y).contains(&pointer_position.y) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 fn place_tower(
   mut commands: Commands,
   mut query: Query<(Entity, &mut Transform, &TowerType, &mut Handle<ColorMaterial>),
@@ -95,19 +122,29 @@ fn place_tower(
   mut clicked_tower: Query<Entity, With<TowerUpgradeUI>>,
   mut meshes: ResMut<Assets<Mesh>>,
   mut materials: ResMut<Assets<ColorMaterial>>,
-  tower_stats: Res<TowerTypeStats>
+  tower_stats: Res<TowerTypeStats>,
+  node_query: Query<(&Node, &GlobalTransform, &Visibility), With<GameplayUIRoot>>,
+  mut cursor_exited_ui: ResMut<CursorExitedUI> // Flag to check initial mouse exit from button UI
 ) {
   let window = windows.get_primary().unwrap();
   let (camera, camera_transform) = camera_query.single();
   let mut player = player.single_mut();
   
-  for (entity, mut transform, tower_type, mut color) in query.iter_mut() {
+  for (entity,
+    mut transform,
+    tower_type,
+    mut color) in query.iter_mut() {
+    
     if !clicked_tower.is_empty() {
       let entity = clicked_tower.single_mut();
       commands.entity(entity).remove::<(Handle<ColorMaterial>, TowerUpgradeUI)>();
     }
     // Sprite follows mouse until tower is placed or discarded
     if let Some(position) = window.cursor_position() {
+      if !cursor_above_tower_ui(&window, &node_query) {
+        cursor_exited_ui.0 = true;
+      }
+      
       transform.translation =
         window_to_world_pos(window, position, camera, camera_transform);
       
@@ -127,9 +164,12 @@ fn place_tower(
             Color::rgba_u8(0, 0, 0, 85)));
         }
     }
+    
     // Spawn the tower if user clicks with mouse button in a valid tower placement zone!!!
-    if mouse.just_pressed(MouseButton::Left) {
+    if mouse.just_pressed(MouseButton::Left) &&
+      !cursor_above_tower_ui(&window, &node_query) {
       if let Some(screen_pos) = window.cursor_position() {
+        cursor_exited_ui.0 = false;
         let mouse_click_pos =
           window_to_world_pos(window, screen_pos, camera, camera_transform);
         
@@ -150,12 +190,15 @@ fn place_tower(
         }
       }
     } // Discard tower
-    else if mouse.just_pressed(MouseButton::Right) || window.cursor_position().is_none() {
+    else if mouse.just_pressed(MouseButton::Right) || window.cursor_position().is_none() ||
+      (cursor_exited_ui.0 && cursor_above_tower_ui(&window, &node_query)) {
+      cursor_exited_ui.0 = false;
       commands.entity(entity).despawn_recursive();
     }
     else if keys.just_pressed(KeyCode::Key1) || keys.just_pressed(KeyCode::Key2) ||
       keys.just_pressed(KeyCode::Key3) || keys.just_pressed(KeyCode::Key4) ||
       keys.just_pressed(KeyCode::Key5) || keys.just_pressed(KeyCode::Key6) {
+      cursor_exited_ui.0 = false;
       commands.entity(entity).despawn_recursive();
       tower_spawn_from_keyboard_input(&mut commands, &keys, &player, window,
                                       camera, camera_transform, &mut meshes,
@@ -194,7 +237,8 @@ fn spawn_sprite_follower(
 fn tower_button_interaction(
   mut commands: Commands,
   assets: Res<GameAssets>,
-  interaction: Query<(&Interaction, &TowerType, &TowerButtonState), (Changed<Interaction>, With<Button>)>,
+  interaction: Query<(&Interaction, &TowerType, &TowerButtonState),
+    (Changed<Interaction>, With<Button>)>,
   mut images: Query<(&mut UiImage, &TowerType)>,
   windows: Res<Windows>,
   camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
@@ -306,11 +350,14 @@ fn tower_spawn_from_keyboard_input(
 
 // Creating a UI menu on the whole screen with buttons
 fn generate_ui(mut commands: Commands, assets: Res<GameAssets>, tower_stats: Res<TowerTypeStats>) {
+  commands.insert_resource(CursorExitedUI {
+    0: false,
+  });
   commands
     .spawn(NodeBundle {
       background_color: BackgroundColor(Color::GOLD),
       style: Style {
-        size: Size::new(Val::Percent(100.), Val::Percent(15.)),
+        size: Size::new(Val::Percent(100.), Val::Percent(12.)),
         justify_content: JustifyContent::Center,
         align_self: AlignSelf::FlexEnd,
         ..default()
@@ -324,7 +371,7 @@ fn generate_ui(mut commands: Commands, assets: Res<GameAssets>, tower_stats: Res
         commands
           .spawn(ButtonBundle {
             style: Style {
-              size: Size::new(Val::Px(85.), Val::Px(85.)),
+              size: Size::new(Val::Px(85.), Val::Px(80.)),
               align_self: AlignSelf::Center,
               margin: UiRect {
                 left: Val::Percent(2.),

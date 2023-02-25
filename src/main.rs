@@ -32,7 +32,7 @@ fn main() {
         window: WindowDescriptor {
           title: "Slimes Tower Defense".to_string(),
           position: WindowPosition::Centered,
-          resizable: false,
+          //resizable: false,
           ..default()
         },
         ..default()

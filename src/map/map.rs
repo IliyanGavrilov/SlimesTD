@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy::sprite::collide_aabb::collide;
 
 use crate::gameplay_ui::*;
 use crate::{Enemy, GameState, Path};
@@ -44,25 +43,39 @@ fn load_map(
 
 fn update_enemy_checkpoint(
   mut commands: Commands,
-  mut enemies: Query<(Entity, &Enemy, &mut Movement, &Transform, &mut Path)>,
+  mut enemies: Query<(Entity, &Enemy, &mut Movement, &mut Transform, &mut Path)>,
   map: Res<MapPath>,
-  mut base: Query<&mut Base>
+  mut base: Query<&mut Base>,
+  time: Res<Time>
 ) {
   let mut base = base.single_mut();
   
   for (entity,
     enemy,
     mut movement,
-    transform,
+    mut transform,
     mut path) in &mut enemies {
     if path.index >= map.checkpoints.len() - 1 {
       damage_base(&mut commands, &entity, enemy.health, &mut base);
     }
-    if collide(transform.translation, Vec2::new(5., 5.),
-               map.checkpoints[path.index], Vec2::new(1., 1.)).is_some() {
+    
+    let distance = map.checkpoints[path.index] - transform.translation;
+    if distance == Vec3::ZERO {
       path.index += 1;
-      movement.direction = Vec3::new(0., 0., 0.,);
+      continue;
+    }
+    let enemy_movement = distance.normalize() * movement.speed * time.delta_seconds();
+    
+    if enemy_movement.length() > distance.length() {
+      transform.translation = map.checkpoints[path.index];
+      //movement.direction = Vec3::new(0., 0., 0.,);
+      movement.distance_travelled += distance.length();
       movement.direction = map.checkpoints[path.index] - transform.translation;
+      path.index += 1;
+    }
+    else {
+      movement.distance_travelled += enemy_movement.length();
+      transform.translation += enemy_movement;
     }
   }
 }

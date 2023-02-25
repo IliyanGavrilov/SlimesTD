@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy::time::Stopwatch;
 use serde::{Serialize, Deserialize};
 
 use crate::assets::*;
@@ -16,8 +15,7 @@ impl Plugin for EnemyPlugin {
       .add_event::<EnemyDeathEvent>()
       .add_startup_system(load_enemy_type_stats)
       .add_system_set(SystemSet::on_update(GameState::Gameplay)
-        .with_system(despawn_enemy_on_death)
-        .with_system(tick_enemy_time_alive));
+        .with_system(despawn_enemy_on_death));
   }
 }
 
@@ -31,7 +29,6 @@ pub struct EnemyBundle {
   pub animation_indices: AnimationIndices,
   pub animation_timer: AnimationTimer,
   pub path: Path,
-  pub time_alive: TimeAlive,
   pub name: Name
 }
 
@@ -40,11 +37,10 @@ impl Default for EnemyBundle {
     Self {
       enemy_type: EnemyType::Green,
       enemy: Enemy::new(1),
-      movement: Movement { direction: default(), speed: 50. },
+      movement: Movement { speed: 50. , ..default()},
       animation_indices: AnimationIndices {first: 0, last: 9},
       animation_timer: AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
       path: Path {index: 0},
-      time_alive: TimeAlive {time_alive: Stopwatch::new()},
       name: Name::new("GreenEnemy")
     }
   }
@@ -62,26 +58,11 @@ pub struct Path {
   pub index: usize
 }
 
-#[derive(Reflect, Component, Default, Clone, Serialize, Deserialize)]
-#[reflect(Component)]
-pub struct TimeAlive {
-  pub time_alive: Stopwatch
-}
-
 impl Enemy {
   pub fn new(health: i32) -> Self {
     Self {
       health
     }
-  }
-}
-
-fn tick_enemy_time_alive(
-  mut enemies: Query<&mut TimeAlive>,
-  time: Res<Time>
-) {
-  for mut enemy in &mut enemies {
-    enemy.time_alive.tick(time.delta());
   }
 }
 

@@ -70,10 +70,7 @@ impl TowerType {
             damage,
             lifetime: Timer::from_seconds(1.25, TimerMode::Once),
           },
-          movement: Movement {
-            direction: Vec3::new(0.00000001,0.,0.),
-            speed: 1500.
-          },
+          movement: Movement::new(Vec3::new(0.00000001, 0., 0.), 1500.),
           sprite: SpriteBundle {
             texture: assets.wizard_nature_bullet.clone(),
             transform: position,
@@ -86,10 +83,7 @@ impl TowerType {
           damage,
           lifetime: Timer::from_seconds(1.25, TimerMode::Once),
         },
-        movement: Movement {
-          direction: Vec3::new(0.00000001,0.,0.),
-          speed: 1500.
-        },
+        movement: Movement::new(Vec3::new(0.00000001, 0., 0.), 1500.),
         sprite: SpriteBundle {
           texture: assets.wizard_fire_bullet.clone(),
           transform: position,
@@ -102,10 +96,7 @@ impl TowerType {
           damage,
           lifetime: Timer::from_seconds(1.25, TimerMode::Once),
         },
-        movement: Movement {
-          direction: Vec3::new(0.00000001,0.,0.),
-          speed: 1500.
-        },
+        movement: Movement::new(Vec3::new(0.00000001, 0., 0.), 1500.),
         sprite: SpriteBundle {
           texture: assets.wizard_ice_bullet.clone(),
           transform: position,
@@ -118,10 +109,7 @@ impl TowerType {
           damage,
           lifetime: Timer::from_seconds(1.25, TimerMode::Once),
         },
-        movement: Movement {
-          direction: Vec3::new(0.00000001,0.,0.),
-          speed: 1500.
-        },
+        movement: Movement::new(Vec3::new(0.00000001, 0., 0.), 1500.),
         sprite: SpriteBundle {
           texture: assets.wizard_dark_bullet.clone(),
           transform: position,
@@ -134,10 +122,7 @@ impl TowerType {
           damage,
           lifetime: Timer::from_seconds(1.25, TimerMode::Once),
         },
-        movement: Movement {
-          direction: Vec3::new(0.00000001,0.,0.),
-          speed: 1500.
-        },
+        movement: Movement::new(Vec3::new(0.00000001, 0., 0.), 1500.),
         sprite: SpriteBundle {
           texture: assets.wizard_mage_bullet.clone(),
           transform: position,
@@ -150,10 +135,7 @@ impl TowerType {
           damage,
           lifetime: Timer::from_seconds(1.25, TimerMode::Once),
         },
-        movement: Movement {
-          direction: Vec3::new(0.00000001,0.,0.),
-          speed: 1500.
-        },
+        movement: Movement::new(Vec3::new(0.00000001, 0., 0.), 1500.),
         sprite: SpriteBundle {
           texture: assets.wizard_archmage_bullet.clone(),
           transform: position,
