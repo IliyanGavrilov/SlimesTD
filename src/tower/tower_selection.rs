@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::sprite::Mesh2dHandle;
 
 use crate::tower::*;
 use crate::{GameState, MainCamera, Player};
@@ -9,7 +10,7 @@ impl Plugin for TowerSelectionPlugin {
   fn build(&self, app: &mut App) {
     app
       .add_system_set(SystemSet::on_update(GameState::Gameplay)
-        .with_system(tower_click)
+        .with_system(mouse_click)
         .with_system(tower_ui_interaction));
   }
 }
@@ -17,7 +18,7 @@ impl Plugin for TowerSelectionPlugin {
 #[derive(Component)]
 pub struct TowerUpgradeUI;
 
-fn tower_click(
+fn mouse_click(
   mut commands: Commands,
   windows: Res<Windows>,
   camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
@@ -80,7 +81,9 @@ fn tower_ui_interaction (
   clicked_tower: Query<Entity, (With<Handle<ColorMaterial>>, With<TowerUpgradeUI>)>,
   keys: Res<Input<KeyCode>>,
   mut player: Query<&mut Player>,
-  upgrades: Res<Upgrades>
+  upgrades: Res<Upgrades>,
+  mut meshes: ResMut<Assets<Mesh>>,
+  mut tower_range_radius: Query<&mut Mesh2dHandle>
 ) {
   if !clicked_tower.is_empty() {
     let mut player = player.single_mut();
@@ -123,7 +126,7 @@ fn tower_ui_interaction (
       
           if i < tower_upgrades.len() && player.money >= tower_upgrades[i].cost {
             player.money -= tower_upgrades[i].cost;
-            tower.upgrade(&tower_upgrades[i], path_index);
+            tower.upgrade(&tower_upgrades[i], path_index, &mut meshes, &mut tower_range_radius);
           }
         }
       }

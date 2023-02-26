@@ -1,6 +1,6 @@
 use std::time::Duration;
 use bevy::prelude::*;
-use bevy::sprite::MaterialMesh2dBundle;
+use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
 use serde::{Serialize, Deserialize};
 
 use crate::assets::*;
@@ -68,7 +68,12 @@ impl Tower {
     }
   }
   
-  pub fn upgrade(&mut self, upgrade: &Upgrade, path_index: usize) {
+  pub fn upgrade(
+    &mut self, upgrade: &Upgrade,
+    path_index: usize,
+    meshes: &mut Assets<Mesh>,
+    tower_range_radius: &mut Query<&mut Mesh2dHandle>
+  ) {
     self.total_spent += upgrade.cost as u32;
     self.sell_price = (self.total_spent/3) as u32;
     
@@ -81,7 +86,12 @@ impl Tower {
           self.shooting_timer.set_duration(Duration::from_millis(
             (1000. * self.attack_speed) as u64));
         }
-        TowerStat::Range => {self.range += *v as u32}
+        TowerStat::Range => {
+          self.range += *v as u32;
+          for mut radius in tower_range_radius.iter_mut() {
+            (*radius).0 = meshes.add(shape::Circle::new(self.range as f32).into());
+          }
+        }
       }
     }
   
