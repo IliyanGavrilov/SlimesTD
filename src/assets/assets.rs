@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use serde::{Serialize, Deserialize};
 
-use crate::TowerType;
+use crate::{Tile, TowerType};
 use crate::movement::*;
 
 pub struct AssetPlugin;
@@ -23,6 +23,10 @@ pub struct GameAssets {
   // Main menu buttons - Start Game & Exit
   pub start_button: Handle<Image>,
   pub exit_button: Handle<Image>,
+  // Map tiles
+  pub grass_tile: Handle<Image>,
+  pub water_tile: Handle<Image>,
+  pub path_tile: Handle<Image>,
   // Gameplay images - Health & Money
   pub heart: Handle<Image>,
   pub coin: Handle<Image>,
@@ -126,6 +130,15 @@ impl GameAssets {
       TowerType::Archmage => self.wizard_archmage_button_lock.clone()
     }
   }
+  
+  pub fn get_tile(&self, tile: &Tile) -> Handle<Image>{
+    match tile {
+      Tile::Grass => self.grass_tile.clone(),
+      Tile::Water => self.water_tile.clone(),
+      Tile::Path(_) | Tile::Spawn | Tile::End => self.path_tile.clone(),
+      _ => self.grass_tile.clone()
+    }
+  }
 }
 
 fn load_assets(
@@ -139,6 +152,10 @@ fn load_assets(
     // Main menu buttons - Start Game & Exit
     start_button: assets_server.load("textures/start_menu/start_button.png"),
     exit_button: assets_server.load("textures/start_menu/exit_button.png"),
+    // Map tiles
+    grass_tile: assets_server.load("textures/map/grass.png"),
+    water_tile: assets_server.load("textures/map/water.png"),
+    path_tile: assets_server.load("textures/map/path.png"),
     // Gameplay images - Health & Money
     heart: assets_server.load("textures/ui/heart.png"),
     coin: assets_server.load("textures/ui/coin.png"),
@@ -212,21 +229,20 @@ fn animate_enemy_sprite(
     &AnimationIndices,
     &mut AnimationTimer,
     &mut TextureAtlasSprite,
-    &GlobalTransform,
     &Movement
   )>
 ) {
   for (indices,
     mut timer,
     mut sprite,
-    transform,
     movement) in &mut query {
     // Change direction based on where enemy is heading
-    if transform.translation().x > movement.direction.x {
-      sprite.flip_x = true;
-    }
-    else {
-      sprite.flip_x = false;
+    if movement.direction.x != 0. {
+      if movement.direction.x < 0. {
+        sprite.flip_x = true;
+      } else {
+        sprite.flip_x = false;
+      }
     }
     
     // Animate sprite

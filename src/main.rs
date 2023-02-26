@@ -45,7 +45,7 @@ fn main() {
     .add_plugin(MainMenuPlugin)
     .add_plugin(GameplayUIPlugin)
     .add_plugin(MapPlugin) // !
-    .add_plugin(SpawnScenePlugin)
+    //.add_plugin(SpawnScenePlugin)
     .add_plugin(SettingsPlugin)
     .add_plugin(AssetPlugin) // ?
     .add_plugin(PlayerPlugin)

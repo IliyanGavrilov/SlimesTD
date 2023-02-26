@@ -70,7 +70,7 @@ impl From<(&Wave, usize)> for WaveState {
 fn spawn_waves(
   mut commands: Commands,
   assets: Res<GameAssets>, // Tower and enemy assets
-  map_path: Res<MapPath>,
+  map_path: Res<Map>,
   mut waves: ResMut<Waves>,
   mut wave_state: ResMut<WaveState>,
   enemy_stats: Res<EnemyTypeStats>,

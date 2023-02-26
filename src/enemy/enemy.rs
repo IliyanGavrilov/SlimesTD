@@ -4,7 +4,7 @@ use serde::{Serialize, Deserialize};
 use crate::assets::*;
 use crate::enemy::*;
 use crate::movement::*;
-use crate::{GameState, MapPath};
+use crate::{GameState, Map};
 
 pub struct EnemyPlugin;
 
@@ -68,7 +68,7 @@ impl Enemy {
 
 pub fn spawn_enemy(
   commands: &mut Commands,
-  map_path: &MapPath,
+  map_path: &Map,
   enemy_type: EnemyType,
   assets: &GameAssets,
   position: Vec3,

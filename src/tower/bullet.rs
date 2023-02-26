@@ -54,7 +54,7 @@ fn bullet_enemy_collision(
   for (bullet_entity, bullet, bullet_transform) in &bullets {
     for (mut enemy, enemy_transform) in &mut enemies {
       if collide(bullet_transform.translation(), Vec2::new(40., 22.),
-                 enemy_transform.translation, Vec2::new(50., 50.)).is_some() {
+                 enemy_transform.translation, Vec2::new(30., 30.)).is_some() {
         commands.entity(bullet_entity).despawn_recursive();
         enemy.health -= bullet.damage as i32;
         break;

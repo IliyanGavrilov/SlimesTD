@@ -45,7 +45,7 @@ pub fn load_enemy_type_stats(
 impl EnemyType {
   pub fn get_enemy(
     &self,
-    map_path: &MapPath,
+    map_path: &Map,
     path: Path,
     enemy_stats: &EnemyTypeStats
   ) -> EnemyBundle {

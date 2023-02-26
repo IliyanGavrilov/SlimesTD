@@ -32,7 +32,7 @@ fn tower_click(
   if query.is_empty() {
     let window = windows.get_primary().unwrap();
     let (camera, camera_transform) = camera_query.single();
-  
+    
     if mouse.just_pressed(MouseButton::Left) {
       mouse_click_interaction(&mut commands, window, camera, camera_transform, &mut meshes,
                               &mut materials, &mut clicked_tower, &mut towers);
@@ -116,6 +116,7 @@ fn tower_ui_interaction (
           tower.target.next_target();
         }
     
+        // Upgrade
         if let Some(path_index) = upgrade_path_index {
           let i = tower.upgrades.upgrades[path_index];
           let tower_upgrades = &upgrades.upgrades[tower_type][path_index];
