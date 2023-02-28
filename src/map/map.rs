@@ -98,7 +98,6 @@ fn load_map(mut commands: Commands) {
   
   map.checkpoints.push(spawn.to_vec3());
   map.create_checkpoints(path_tiles, spawn, end);
-  println!("{:?}", map.checkpoints);
   commands.insert_resource(map);
 }
 

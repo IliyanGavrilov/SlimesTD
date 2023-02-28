@@ -137,8 +137,9 @@ fn place_tower(
     mut color) in query.iter_mut() {
     
     if !clicked_tower.is_empty() {
-      let entity = clicked_tower.single_mut();
-      commands.entity(entity).remove::<(Handle<ColorMaterial>, TowerUpgradeUI)>();
+      for entity in clicked_tower.iter_mut() {
+        commands.entity(entity).despawn_recursive();
+      }
     }
     // Sprite follows mouse until tower is placed or discarded
     if let Some(position) = window.cursor_position() {
@@ -247,10 +248,17 @@ fn spawn_sprite_follower(
       transform: Transform::from_translation(transform),
       ..default()
     })
+      // .with_children(|commands| {
+      //   commands.spawn(spawn_tower_range(meshes, materials,
+      //                                    tower_stats.tower[&tower_type].tower.range))
+      //     .insert(SpriteFollower)
+      //     .insert(Name::new("Tower Range"));
+      // })
       .insert(spawn_tower_range(meshes, materials,
                                 tower_stats.tower[&tower_type].tower.range))
       .insert(SpriteFollower)
-      .insert(*tower_type);
+      .insert(*tower_type)
+      .insert(Name::new("SpriteFollower"));
   }
 }
 

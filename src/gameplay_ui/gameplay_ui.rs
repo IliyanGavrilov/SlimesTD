@@ -31,7 +31,7 @@ impl Plugin for GameplayUIPlugin {
 fn update_gameplay_ui(
   player: Query<&Player>,
   base: Query<&Base>,
-  // The without here prevents queries from potentially matching the same text component
+  // The without prevents queries from matching the same text component
   mut money_ui: Query<&mut Text, (With<MoneyUI>, Without<HealthUI>)>,
   mut health_ui: Query<&mut Text, With<HealthUI>>,
 ) {

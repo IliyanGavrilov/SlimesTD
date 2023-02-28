@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::sprite::collide_aabb::collide;
 
 use crate::enemy::*;
-use crate::GameState;
+use crate::{GameState, Tower};
 use crate::movement::*;
 
 pub struct BulletPlugin;
@@ -48,13 +48,24 @@ fn despawn_bullets(
 
 fn bullet_enemy_collision(
   mut commands: Commands,
-  bullets: Query<(Entity, &Bullet, &GlobalTransform)>,
-  mut enemies: Query<(&mut Enemy, &Transform)>
+  bullets: Query<(Entity, &Bullet, &Parent, &GlobalTransform)>,
+  mut enemies: Query<(&mut Enemy, &Transform)>,
+  mut towers: Query<&mut Tower>
 ) {
-  for (bullet_entity, bullet, bullet_transform) in &bullets {
+  for (bullet_entity, bullet, tower_parent, bullet_transform) in &bullets {
     for (mut enemy, enemy_transform) in &mut enemies {
       if collide(bullet_transform.translation(), Vec2::new(40., 22.),
                  enemy_transform.translation, Vec2::new(30., 30.)).is_some() {
+        // Update tower's total damage
+        let mut tower = towers.get_mut(tower_parent.get()).unwrap();
+        if enemy.health >= bullet.damage as i32 {
+          tower.total_damage += bullet.damage;
+        }
+        else {
+          tower.total_damage += enemy.health as u32;
+        }
+        
+        // Despawn bullet upon hit and damage enemy
         commands.entity(bullet_entity).despawn_recursive();
         enemy.health -= bullet.damage as i32;
         break;

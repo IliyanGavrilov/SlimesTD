@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy::sprite::Mesh2dHandle;
 
+use crate::assets::*;
 use crate::tower::*;
 use crate::{GameState, MainCamera, Player};
 
@@ -20,10 +21,11 @@ pub struct TowerUpgradeUI;
 
 fn mouse_click(
   mut commands: Commands,
+  assets: Res<GameAssets>,
   windows: Res<Windows>,
   camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
   mouse: Res<Input<MouseButton>>,
-  mut clicked_tower: Query<Entity, (With<Handle<ColorMaterial>>, With<TowerUpgradeUI>)>,
+  mut clicked_tower: Query<Entity, With<TowerUpgradeUI>>,
   mut towers: Query<(Entity, &Tower, &TowerType, &Transform)>,
   mut meshes: ResMut<Assets<Mesh>>,
   mut materials: ResMut<Assets<ColorMaterial>>,
@@ -35,7 +37,7 @@ fn mouse_click(
     let (camera, camera_transform) = camera_query.single();
     
     if mouse.just_pressed(MouseButton::Left) {
-      mouse_click_interaction(&mut commands, window, camera, camera_transform, &mut meshes,
+      mouse_click_interaction(&mut commands, &assets, window, camera, camera_transform, &mut meshes,
                               &mut materials, &mut clicked_tower, &mut towers);
     }
   }
@@ -43,12 +45,13 @@ fn mouse_click(
 
 fn mouse_click_interaction(
   commands: &mut Commands,
+  assets: &GameAssets,
   window: &Window,
   camera: &Camera,
   camera_transform: &GlobalTransform,
   meshes: &mut ResMut<Assets<Mesh>>,
   materials: &mut ResMut<Assets<ColorMaterial>>,
-  clicked_tower: &mut Query<Entity, (With<Handle<ColorMaterial>>, With<TowerUpgradeUI>)>,
+  clicked_tower: &mut Query<Entity, With<TowerUpgradeUI>>,
   towers: &mut Query<(Entity, &Tower, &TowerType, &Transform)>
 ) {
   if let Some(position) = window.cursor_position() {
@@ -63,31 +66,45 @@ fn mouse_click_interaction(
     
     for (tower_entity,
       tower,
-      _,
+      tower_type,
       transform) in towers.iter() {
       if Vec3::distance(mouse_click_pos, transform.translation) <= 25. {
         commands.entity(tower_entity)
           .with_children(|commands| {
-            commands.spawn(spawn_tower_range(meshes, materials, tower.range)).insert(TowerUpgradeUI);
+            commands.spawn(spawn_tower_range(meshes, materials, tower.range))
+              .insert(Name::new("Tower Range"))
+              .insert(TowerUpgradeUI);
           });
+  
+        spawn_tower_ui(commands, assets, *tower_type);
       }
     }
   }
 }
 
 fn tower_ui_interaction (
+  //assets: Res<GameAssets>,
   mut commands: Commands,
   mut towers: Query<(Entity, &mut Tower, &TowerType, &Children)>,
-  clicked_tower: Query<Entity, (With<Handle<ColorMaterial>>, With<TowerUpgradeUI>)>,
+  clicked_tower: Query<Entity, With<TowerUpgradeUI>>,
   keys: Res<Input<KeyCode>>,
   mut player: Query<&mut Player>,
   upgrades: Res<Upgrades>,
   mut meshes: ResMut<Assets<Mesh>>,
-  mut tower_range_radius: Query<&mut Mesh2dHandle>
+  mut tower_range_radius: Query<&mut Mesh2dHandle>,
+  // UI Buttons
+  //mut images: Query<(&mut UiImage, With<SellButton>)>,
+  prev_target_button_interaction: Query<&Interaction,
+    (Changed<Interaction>, With<Button>, With<PreviousTargetingPriorityButton>)>,
+  next_target_button_interaction: Query<&Interaction,
+    (Changed<Interaction>, With<Button>, With<NextTargetingPriorityButton>)>,
+  sell_button_interaction: Query<&Interaction,
+    (Changed<Interaction>, With<Button>, With<SellButton>)>
 ) {
   if !clicked_tower.is_empty() {
     let mut player = player.single_mut();
     
+    // Keyboard shortcuts
     for (entity, mut tower, tower_type, children) in towers.iter_mut() {
       for _ in clicked_tower.iter_many(children) {
         let mut upgrade_path_index: Option<usize> = None;
@@ -127,6 +144,66 @@ fn tower_ui_interaction (
           if i < tower_upgrades.len() && player.money >= tower_upgrades[i].cost {
             player.money -= tower_upgrades[i].cost;
             tower.upgrade(&tower_upgrades[i], path_index, &mut meshes, &mut tower_range_radius);
+          }
+        }
+      }
+  
+      // Button interaction
+  
+      // Targeting priority - Previous target
+      for interaction in &prev_target_button_interaction {
+        match interaction {
+          Interaction::Clicked => {
+            // Change button UI
+            // for (mut image) in images.iter_mut() {
+            // }
+  
+            tower.target.prev_target();
+          }
+          Interaction::Hovered => {
+            // Change button UI !!!
+          }
+          Interaction::None => {
+            // Change button UI !!!
+          }
+        }
+      }
+  
+      // Targeting priority - Next target
+      for interaction in &next_target_button_interaction {
+        match interaction {
+          Interaction::Clicked => {
+            // Change button UI
+            // for (mut image) in images.iter_mut() {
+            // }
+  
+            tower.target.next_target();
+          }
+          Interaction::Hovered => {
+            // Change button UI !!!
+          }
+          Interaction::None => {
+            // Change button UI !!!
+          }
+        }
+      }
+      
+      // Sell button
+      for interaction in &sell_button_interaction {
+        match interaction {
+          Interaction::Clicked => {
+            // Change button UI
+            // for (mut image) in images.iter_mut() {
+            // }
+            
+            commands.entity(entity).despawn_recursive();
+            player.money += (tower.total_spent / 3) as usize;
+          }
+          Interaction::Hovered => {
+            // Change button UI !!!
+          }
+          Interaction::None => {
+            // Change button UI !!!
           }
         }
       }

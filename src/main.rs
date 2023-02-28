@@ -44,16 +44,17 @@ fn main() {
     // Plugins
     .add_plugin(MainMenuPlugin)
     .add_plugin(GameplayUIPlugin)
-    .add_plugin(MapPlugin) // !
+    .add_plugin(MapPlugin)
     //.add_plugin(SpawnScenePlugin)
     .add_plugin(SettingsPlugin)
-    .add_plugin(AssetPlugin) // ?
+    .add_plugin(AssetPlugin)
     .add_plugin(PlayerPlugin)
     .add_plugin(BasePlugin)
     .add_plugin(TowerPlugin)
     .add_plugin(TowerButtonPlugin)
     .add_plugin(TowerSelectionPlugin)
     .add_plugin(TowerUpgradePlugin)
+    .add_plugin(TowerUIPlugin)
     .add_plugin(EnemyPlugin)
     .add_plugin(WavePlugin)
     .add_plugin(BulletPlugin)

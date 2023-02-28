@@ -65,6 +65,21 @@ pub struct GameAssets {
   pub wizard_dark_button_lock: Handle<Image>,
   pub wizard_mage_button_lock: Handle<Image>,
   pub wizard_archmage_button_lock: Handle<Image>,
+  // Selected tower UI - Tower icons
+  pub wizard_nature_icon: Handle<Image>,
+  pub wizard_fire_icon: Handle<Image>,
+  pub wizard_ice_icon: Handle<Image>,
+  pub wizard_dark_icon: Handle<Image>,
+  pub wizard_mage_icon: Handle<Image>,
+  pub wizard_archmage_icon: Handle<Image>,
+  // Selected tower UI - Targeting Priority buttons
+  pub prev_target_button: Handle<Image>,
+  pub next_target_button: Handle<Image>,
+  // Selected tower UI - Sell button
+  pub sell_button: Handle<Image>,
+  // Upgrade buttons
+  
+  
   // Enemies
   pub enemy: Handle<TextureAtlas>, // !!!! Rename
   // Tower bullets
@@ -84,6 +99,17 @@ impl GameAssets {
       TowerType::Dark => self.wizard_dark.clone(),
       TowerType::Mage => self.wizard_mage.clone(),
       TowerType::Archmage => self.wizard_archmage.clone()
+    }
+  }
+  
+  pub fn get_tower_icon(&self, tower_type: TowerType) -> Handle<Image> {
+    match tower_type {
+      TowerType::Nature => self.wizard_nature_icon.clone(),
+      TowerType::Fire => self.wizard_fire_icon.clone(),
+      TowerType::Ice => self.wizard_ice_icon.clone(),
+      TowerType::Dark => self.wizard_dark_icon.clone(),
+      TowerType::Mage => self.wizard_mage_icon.clone(),
+      TowerType::Archmage => self.wizard_archmage_icon.clone()
     }
   }
   
@@ -149,16 +175,20 @@ fn load_assets(
   commands.insert_resource(GameAssets {
     // Fonts
     font: assets_server.load("fonts/FiraSans-Bold.ttf"),
+    
     // Main menu buttons - Start Game & Exit
     start_button: assets_server.load("textures/start_menu/start_button.png"),
     exit_button: assets_server.load("textures/start_menu/exit_button.png"),
+    
     // Map tiles
     grass_tile: assets_server.load("textures/map/grass.png"),
     water_tile: assets_server.load("textures/map/water.png"),
     path_tile: assets_server.load("textures/map/path.png"),
+    
     // Gameplay images - Health & Money
     heart: assets_server.load("textures/ui/heart.png"),
     coin: assets_server.load("textures/ui/coin.png"),
+    
     // Towers
     wizard_nature: assets_server.load("textures/towers/wizard_nature.png"),
     wizard_fire: assets_server.load("textures/towers/wizard_fire.png"),
@@ -166,6 +196,7 @@ fn load_assets(
     wizard_dark: assets_server.load("textures/towers/wizard_dark.png"),
     wizard_mage: assets_server.load("textures/towers/wizard_mage.png"),
     wizard_archmage: assets_server.load("textures/towers/wizard_archmage.png"),
+    
     // Tower buttons
     wizard_nature_button: assets_server.load("textures/tower_buttons/buttons/wizard_nature_button.png"),
     wizard_fire_button: assets_server.load("textures/tower_buttons/buttons/wizard_fire_button.png"),
@@ -173,6 +204,7 @@ fn load_assets(
     wizard_dark_button: assets_server.load("textures/tower_buttons/buttons/wizard_dark_button.png"),
     wizard_mage_button: assets_server.load("textures/tower_buttons/buttons/wizard_mage_button.png"),
     wizard_archmage_button: assets_server.load("textures/tower_buttons/buttons/wizard_archmage_button.png"),
+    
     // Tower buttons hovered
     wizard_nature_button_hover: assets_server.load("textures/tower_buttons/buttons_hover/wizard_nature_button_hover.png"),
     wizard_fire_button_hover: assets_server.load("textures/tower_buttons/buttons_hover/wizard_fire_button_hover.png"),
@@ -180,6 +212,7 @@ fn load_assets(
     wizard_dark_button_hover: assets_server.load("textures/tower_buttons/buttons_hover/wizard_dark_button_hover.png"),
     wizard_mage_button_hover: assets_server.load("textures/tower_buttons/buttons_hover/wizard_mage_button_hover.png"),
     wizard_archmage_button_hover: assets_server.load("textures/tower_buttons/buttons_hover/wizard_archmage_button_hover.png"),
+    
     // Tower buttons pressed
     wizard_nature_button_press: assets_server.load("textures/tower_buttons/buttons_press/wizard_nature_button_press.png"),
     wizard_fire_button_press: assets_server.load("textures/tower_buttons/buttons_press/wizard_fire_button_press.png"),
@@ -187,16 +220,33 @@ fn load_assets(
     wizard_dark_button_press: assets_server.load("textures/tower_buttons/buttons_press/wizard_dark_button_press.png"),
     wizard_mage_button_press: assets_server.load("textures/tower_buttons/buttons_press/wizard_mage_button_press.png"),
     wizard_archmage_button_press: assets_server.load("textures/tower_buttons/buttons_press/wizard_archmage_button_press.png"),
+    
     // Tower buttons locked
-     wizard_nature_button_lock: assets_server.load("textures/tower_buttons/buttons_lock/wizard_nature_button_lock.png"),
-     wizard_fire_button_lock: assets_server.load("textures/tower_buttons/buttons_lock/wizard_fire_button_lock.png"),
-     wizard_ice_button_lock: assets_server.load("textures/tower_buttons/buttons_lock/wizard_ice_button_lock.png"),
-     wizard_dark_button_lock: assets_server.load("textures/tower_buttons/buttons_lock/wizard_dark_button_lock.png"),
-     wizard_mage_button_lock: assets_server.load("textures/tower_buttons/buttons_lock/wizard_mage_button_lock.png"),
-     wizard_archmage_button_lock: assets_server.load("textures/tower_buttons/buttons_lock/wizard_archmage_button_lock.png"),
+    wizard_nature_button_lock: assets_server.load("textures/tower_buttons/buttons_lock/wizard_nature_button_lock.png"),
+    wizard_fire_button_lock: assets_server.load("textures/tower_buttons/buttons_lock/wizard_fire_button_lock.png"),
+    wizard_ice_button_lock: assets_server.load("textures/tower_buttons/buttons_lock/wizard_ice_button_lock.png"),
+    wizard_dark_button_lock: assets_server.load("textures/tower_buttons/buttons_lock/wizard_dark_button_lock.png"),
+    wizard_mage_button_lock: assets_server.load("textures/tower_buttons/buttons_lock/wizard_mage_button_lock.png"),
+    wizard_archmage_button_lock: assets_server.load("textures/tower_buttons/buttons_lock/wizard_archmage_button_lock.png"),
+    
+    // Selected tower UI - Tower icons
+    wizard_nature_icon: assets_server.load("textures/selected_tower_ui/tower_icons/wizard_nature_icon.png"),
+    wizard_fire_icon: assets_server.load("textures/selected_tower_ui/tower_icons/wizard_fire_icon.png"),
+    wizard_ice_icon: assets_server.load("textures/selected_tower_ui/tower_icons/wizard_ice_icon.png"),
+    wizard_dark_icon: assets_server.load("textures/selected_tower_ui/tower_icons/wizard_dark_icon.png"),
+    wizard_mage_icon: assets_server.load("textures/selected_tower_ui/tower_icons/wizard_mage_icon.png"),
+    wizard_archmage_icon: assets_server.load("textures/selected_tower_ui/tower_icons/wizard_archmage_icon.png"),
+    
+    // Selected tower UI - Targeting Priority buttons
+    prev_target_button: assets_server.load("textures/selected_tower_ui/targeting_priority_ui/prev_button.png"),
+    next_target_button: assets_server.load("textures/selected_tower_ui/targeting_priority_ui/next_button.png"),
+    
+    // Selected tower UI - Sell button
+    sell_button: assets_server.load("textures/selected_tower_ui/sell_button/sell_button.png"),
+    
     // Enemies
     enemy: texture_atlases.add(
-      TextureAtlas::from_grid(assets_server.load("textures/slime_jump.png"),
+      TextureAtlas::from_grid(assets_server.load("textures/enemies/slime_jump.png"),
                               Vec2::new(50., 90.),
                               10, 8,
                               Some(Vec2::new(5., 5.)), None)),
