@@ -85,9 +85,9 @@ pub fn window_to_world_pos(
 #[derive(Resource)]
 struct CursorExitedUI(bool);
 
-fn cursor_above_tower_ui(
+pub fn cursor_above_ui<T: Component>(
   window: &Window,
-  node_query: &Query<(&Node, &GlobalTransform, &Visibility), With<GameplayUIRoot>>
+  node_query: &Query<(&Node, &GlobalTransform, &Visibility), With<T>>
 ) -> bool {
   if let Some(pointer_position) = window.cursor_position() {
     for (node,
@@ -143,7 +143,7 @@ fn place_tower(
     }
     // Sprite follows mouse until tower is placed or discarded
     if let Some(position) = window.cursor_position() {
-      if !cursor_above_tower_ui(&window, &node_query) {
+      if !cursor_above_ui(&window, &node_query) {
         cursor_exited_ui.0 = true;
       }
       
@@ -188,7 +188,7 @@ fn place_tower(
     
     // Spawn the tower if user clicks with mouse button in a valid tower placement zone!!!
     if mouse.just_pressed(MouseButton::Left) &&
-      !cursor_above_tower_ui(&window, &node_query) {
+      !cursor_above_ui(&window, &node_query) {
       if let Some(screen_pos) = window.cursor_position() {
         cursor_exited_ui.0 = false;
         let mouse_click_pos =
@@ -212,7 +212,7 @@ fn place_tower(
       }
     } // Discard tower
     else if mouse.just_pressed(MouseButton::Right) || window.cursor_position().is_none() ||
-      (cursor_exited_ui.0 && cursor_above_tower_ui(&window, &node_query)) {
+      (cursor_exited_ui.0 && cursor_above_ui(&window, &node_query)) {
       cursor_exited_ui.0 = false;
       commands.entity(entity).despawn_recursive();
     }
@@ -401,6 +401,7 @@ fn generate_ui(mut commands: Commands, assets: Res<GameAssets>, tower_stats: Res
             style: Style {
               size: Size::new(Val::Px(85.), Val::Px(80.)),
               align_self: AlignSelf::Center,
+              justify_content: JustifyContent::Center,
               margin: UiRect {
                 left: Val::Percent(2.),
                 right: Val::Percent(2.),
@@ -410,6 +411,23 @@ fn generate_ui(mut commands: Commands, assets: Res<GameAssets>, tower_stats: Res
             },
             image: assets.get_button_asset(i).into(),
             ..default()
+          })
+          .with_children(|commands| {
+            commands.spawn(TextBundle {
+              text: Text::from_section(
+                format!("${}", tower_stats.tower[&i].tower.price),
+                TextStyle {
+                  font: assets.font.clone(),
+                  font_size: 30.0,
+                  color: Color::YELLOW_GREEN,
+                },
+              ),
+              style: Style {
+                align_self: AlignSelf::FlexEnd,
+                ..default()
+              },
+              ..default()
+            });
           })
           .insert(TowerButtonState {
             price: tower_stats.tower[&i].tower.price

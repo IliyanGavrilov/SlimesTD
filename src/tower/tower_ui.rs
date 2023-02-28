@@ -16,6 +16,9 @@ impl Plugin for TowerUIPlugin {
 }
 
 #[derive(Component)]
+pub struct TowerUI;
+
+#[derive(Component)]
 pub struct TowerStatsUI;
 
 #[derive(Component)]
@@ -135,11 +138,12 @@ pub fn spawn_tower_ui(commands: &mut Commands, assets: &GameAssets, tower_type: 
         },
         image: assets.get_tower_icon(tower_type).clone().into(),
         ..default()
-      }).insert(Name::new("TowerIcon"));
+      }).insert(TowerUI)
+        .insert(Name::new("TowerIcon"));
       
       // Tower Stats
       commands.spawn(NodeBundle {
-        background_color: BackgroundColor(Color::AQUAMARINE),
+        background_color: BackgroundColor(Color::CRIMSON),
         style: Style {
           size: Size::new(Val::Percent(50.), Val::Percent(35.)),
           align_items: AlignItems::Center,
@@ -159,9 +163,11 @@ pub fn spawn_tower_ui(commands: &mut Commands, assets: &GameAssets, tower_type: 
           ),
           ..default()
         })
+          .insert(TowerUI)
           .insert(TowerStatsUI)
           .insert(Name::new("TowerStatsText"));
-      }).insert(Name::new("TowerStats"));
+      }).insert(TowerUI)
+        .insert(Name::new("TowerStats"));
       
       // Total damage and total spent
       commands.spawn(NodeBundle {
@@ -183,10 +189,11 @@ pub fn spawn_tower_ui(commands: &mut Commands, assets: &GameAssets, tower_type: 
             },
           ),
           ..default()
-        })
+        }).insert(TowerUI)
           .insert(TowerLifetimeStatsUI)
           .insert(Name::new("TowerLifetimeStatsText"));
-      }).insert(Name::new("TowerLifetimeStats"));
+      }).insert(TowerUI)
+        .insert(Name::new("TowerLifetimeStats"));
       
       // Targeting priority and sell button node
       commands.spawn(NodeBundle {
@@ -217,7 +224,7 @@ pub fn spawn_tower_ui(commands: &mut Commands, assets: &GameAssets, tower_type: 
             },
             image: assets.prev_target_button.clone().into(),
             ..default()
-          })
+          }).insert(TowerUI)
           .insert(PreviousTargetingPriorityButton)
           .insert(Name::new("PreviousButton"));
         
@@ -242,9 +249,11 @@ pub fn spawn_tower_ui(commands: &mut Commands, assets: &GameAssets, tower_type: 
             ),
             ..default()
           })
+            .insert(TowerUI)
             .insert(TargetingPriorityUI)
             .insert(Name::new("TargetingPriorityText"));
-        }).insert(Name::new("TargetingPriorityUI"));
+        }).insert(TowerUI)
+          .insert(Name::new("TargetingPriorityUI"));
         
         // Next targeting priority button
         commands.spawn(ButtonBundle {
@@ -259,7 +268,7 @@ pub fn spawn_tower_ui(commands: &mut Commands, assets: &GameAssets, tower_type: 
           },
           image: assets.next_target_button.clone().into(),
           ..default()
-        })
+        }).insert(TowerUI)
           .insert(NextTargetingPriorityButton)
           .insert(Name::new("NextButton"));
         
@@ -289,12 +298,12 @@ pub fn spawn_tower_ui(commands: &mut Commands, assets: &GameAssets, tower_type: 
                 },
               ),
               ..default()
-            })
+            }).insert(TowerUI)
               .insert(SellButtonText);
-          })
+          }).insert(TowerUI)
           .insert(SellButton)
           .insert(Name::new("SellButton"));
-      })
+      }).insert(TowerUI)
         .insert(Name::new("TargetingPriorityAndSellButton"));
       
       // Upgrades
@@ -313,34 +322,9 @@ pub fn spawn_tower_ui(commands: &mut Commands, assets: &GameAssets, tower_type: 
           ..default()
         },
         ..default()
-      })
+      }).insert(TowerUI)
         .insert(Name::new("TowerUpgradeUI"));
-    })
+    }).insert(TowerUI)
     .insert(TowerUpgradeUI)
     .insert(Name::new("TowerUI"));
-  
-  // .with_children(|commands| { // Make the buttons children of the menu
-  //   for i in TowerType::iter() {
-  //     commands
-  //       .spawn(ButtonBundle {
-  //         style: Style {
-  //           size: Size::new(Val::Px(85.), Val::Px(80.)),
-  //           align_self: AlignSelf::Center,
-  //           margin: UiRect {
-  //             left: Val::Percent(2.),
-  //             right: Val::Percent(2.),
-  //             ..default()
-  //           },
-  //           ..default()
-  //         },
-  //         image: assets.get_button_asset(i).into(),
-  //         ..default()
-  //       })
-  //       .insert(TowerButtonState {
-  //         price: tower_stats.tower[&i].tower.price
-  //       })
-  //       .insert(i)
-  //       .insert(Name::new("TowerButton"));
-  //   }
-  // })
 }
