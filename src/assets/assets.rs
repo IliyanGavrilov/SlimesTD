@@ -77,9 +77,9 @@ pub struct GameAssets {
   pub next_target_button: Handle<Image>,
   // Selected tower UI - Sell button
   pub sell_button: Handle<Image>,
-  // Upgrade buttons
-  
-  
+  // Selected tower UI - Upgrades
+  pub upgrade_button: Handle<Image>,
+  pub upgrades: [Handle<Image>; 6],
   // Enemies
   pub enemy: Handle<TextureAtlas>, // !!!! Rename
   // Tower bullets
@@ -243,6 +243,17 @@ fn load_assets(
     
     // Selected tower UI - Sell button
     sell_button: assets_server.load("textures/selected_tower_ui/sell_button/sell_button.png"),
+  
+    // Selected tower UI - Upgrades
+    upgrade_button: assets_server.load("textures/selected_tower_ui/upgrades/upgrade_button.png"),
+    upgrades: [
+    assets_server.load("textures/selected_tower_ui/upgrades/upgrade0.png"),
+    assets_server.load("textures/selected_tower_ui/upgrades/upgrade1.png"),
+    assets_server.load("textures/selected_tower_ui/upgrades/upgrade2.png"),
+    assets_server.load("textures/selected_tower_ui/upgrades/upgrade3.png"),
+    assets_server.load("textures/selected_tower_ui/upgrades/upgrade4.png"),
+    assets_server.load("textures/selected_tower_ui/upgrades/upgrade5.png")
+      ],
     
     // Enemies
     enemy: texture_atlases.add(

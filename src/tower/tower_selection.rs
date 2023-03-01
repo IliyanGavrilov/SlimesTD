@@ -79,7 +79,7 @@ fn mouse_click_interaction(
               .insert(TowerUpgradeUI);
           });
   
-        spawn_tower_ui(commands, assets, *tower_type);
+        spawn_tower_ui(commands, assets,  &tower, *tower_type);
       }
     }
   }
@@ -102,7 +102,9 @@ fn tower_ui_interaction (
   next_target_button_interaction: Query<&Interaction,
     (Changed<Interaction>, With<Button>, With<NextTargetingPriorityButton>)>,
   sell_button_interaction: Query<&Interaction,
-    (Changed<Interaction>, With<Button>, With<SellButton>)>
+    (Changed<Interaction>, With<Button>, With<SellButton>)>,
+  upgrade_button_interaction: Query<(&Interaction, &TowerUpgradeButton),
+    (Changed<Interaction>, With<Button>)>,
 ) {
   if !clicked_tower.is_empty() {
     let mut player = player.single_mut();
@@ -216,6 +218,32 @@ fn tower_ui_interaction (
             }
             Interaction::None => {
               // Change button UI !!!
+            }
+          }
+        }
+        
+        // Upgrade buttons
+        for (interaction, state) in &upgrade_button_interaction {
+          let i = tower.upgrades.upgrades[state.path_index];
+          let tower_upgrades = &upgrades.upgrades[tower_type][state.path_index];
+  
+          if i < tower_upgrades.len() && player.money >= tower_upgrades[i].cost {
+            match interaction {
+              Interaction::Clicked => {
+                // Change button UI
+                // for (mut image) in images.iter_mut() {
+                // }
+  
+                player.money -= tower_upgrades[i].cost;
+                tower.upgrade(&tower_upgrades[i], state.path_index,
+                              &mut meshes, &mut tower_range_radius);
+              }
+              Interaction::Hovered => {
+                // Change button UI !!!
+              }
+              Interaction::None => {
+                // Change button UI !!!
+              }
             }
           }
         }

@@ -120,7 +120,7 @@ pub fn spawn_tower(
     });
   
   // Spawn Tower UI - Targeting priority, Selling & Upgrades
-  spawn_tower_ui(commands, assets, tower_type);
+  spawn_tower_ui(commands, assets, &tower_stats.tower[&tower_type].tower, tower_type);
 }
 
 fn tower_shooting(

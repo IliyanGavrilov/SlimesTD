@@ -39,6 +39,14 @@ pub struct TargetingPriorityUI;
 #[derive(Component)]
 pub struct NextTargetingPriorityButton;
 
+#[derive(Component)]
+pub struct TowerUpgradeButton {
+  pub path_index: usize
+}
+
+#[derive(Component)]
+pub struct TowerUpgradeIndex;
+
 fn update_tower_ui(
   mut child_q: Query<&Parent, With<TowerUpgradeUI>>,
   mut parent_q: Query<&mut Tower>,
@@ -104,7 +112,12 @@ pub fn spawn_tower_range(
   }
 }
 
-pub fn spawn_tower_ui(commands: &mut Commands, assets: &GameAssets, tower_type: TowerType) {
+pub fn spawn_tower_ui(
+  commands: &mut Commands,
+  assets: &GameAssets,
+  tower: &Tower,
+  tower_type: TowerType
+) {
   commands
     .spawn(NodeBundle {
       background_color: BackgroundColor(Color::ORANGE),
@@ -308,9 +321,9 @@ pub fn spawn_tower_ui(commands: &mut Commands, assets: &GameAssets, tower_type: 
       
       // Upgrades
       commands.spawn(NodeBundle {
-        background_color: BackgroundColor(Color::YELLOW),
         style: Style {
           size: Size::new(Val::Percent(100.), Val::Percent(42.5)),
+          flex_wrap: FlexWrap::Wrap,
           margin: UiRect {
             left: Val::Percent(5.),
             right: Val::Percent(5.),
@@ -322,7 +335,60 @@ pub fn spawn_tower_ui(commands: &mut Commands, assets: &GameAssets, tower_type: 
           ..default()
         },
         ..default()
-      }).insert(TowerUI)
+      }).with_children(|commands| {
+        // Spawn upgrade paths
+        for i in 0..3 {
+          commands.spawn(NodeBundle {
+            background_color: BackgroundColor(Color::ORANGE_RED),
+            style: Style {
+              size: Size::new(Val::Percent(100.), Val::Percent(30.)),
+              ..default()
+            },
+            ..default()
+          }).with_children(|commands| {
+            commands.spawn(ImageBundle {
+              style: Style {
+                size: Size::new(Val::Percent(45.), Val::Px(20.)),
+                position_type: PositionType::Absolute,
+                position: UiRect::top(Val::Percent(-20.)),
+                ..default()
+              },
+              image: assets.upgrades[tower.upgrades.upgrades[i]].clone().into(),
+              ..default()
+            }).insert(TowerUpgradeIndex);
+            
+            commands.spawn(ButtonBundle {
+              style: Style {
+                size: Size::new(Val::Px(80.), Val::Px(30.)),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                align_self: AlignSelf::Center,
+                margin: UiRect::left(Val::Percent(62.5)),
+                ..default()
+              },
+              image: assets.upgrade_button.clone().into(),
+              ..default()
+            }).with_children(|commands| {
+              commands.spawn(TextBundle {
+                text: Text::from_section(
+                  "Upgrade",
+                  TextStyle {
+                    font: assets.font.clone(),
+                    font_size: 16.5,
+                    color: Color::WHITE,
+                  },
+                ),
+                ..default()
+              });
+            }).insert(TowerUI)
+              .insert(TowerUpgradeButton {
+                path_index: i
+            });
+          }).insert(TowerUI)
+            .insert(Name::new(format!("TowerUpgradePath {i}")));
+        }
+      })
+        .insert(TowerUI)
         .insert(Name::new("TowerUpgradeUI"));
     }).insert(TowerUI)
     .insert(TowerUpgradeUI)
