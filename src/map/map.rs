@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
+use std::fs::File;
+use serde::{Serialize, Deserialize};
 
 use crate::gameplay_ui::*;
 use crate::{Enemy, GameAssets, GameState, MainCamera, Path};
@@ -51,7 +53,7 @@ impl Point {
   }
 }
 
-#[derive(Resource)]
+#[derive(Resource, Serialize, Deserialize)]
 pub struct Map {
   pub width: usize,
   pub height: usize,
@@ -61,22 +63,14 @@ pub struct Map {
 }
 
 fn load_map(mut commands: Commands) {
-  let mut map = Map {
-    width: 16,
-    height: 9,
-    tiles: vec![
-      vec![Tile::Grass, Tile::Grass, Tile::Water, Tile::Water, Tile::Water, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass],
-      vec![Tile::Grass, Tile::Water, Tile::Water, Tile::Water, Tile::Water, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Path(vec![0]),         Tile::Path(vec![0]),         Tile::Path(vec![0]),         Tile::Grass, Tile::Grass, Tile::Grass],
-      vec![Tile::Grass, Tile::Water, Tile::Water, Tile::Water, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Path(vec![0]),         Tile::Grass, Tile::Path(vec![0]),         Tile::Grass, Tile::Grass, Tile::Grass],
-      vec![Tile::Grass, Tile::Water, Tile::Grass, Tile::Water, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Path(vec![0]),         Tile::Grass, Tile::Path(vec![0]),         Tile::Grass, Tile::Grass, Tile::Grass],
-      vec![Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Path(vec![0]), Tile::Path(vec![0]),         Tile::Path(vec![0]),         Tile::Path(vec![0]),         Tile::Grass, Tile::Path(vec![0]),         Tile::Grass, Tile::Path(vec![0]),         Tile::Path(vec![0]),         Tile::Grass, Tile::Grass],
-      vec![Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Path(vec![0]), Tile::Grass, Tile::Grass, Tile::Path(vec![0]),         Tile::Grass, Tile::Path(vec![0]),         Tile::Grass, Tile::Grass, Tile::Path(vec![0]),         Tile::Grass, Tile::Grass],
-      vec![Tile::Grass, Tile::Grass, Tile::Grass, Tile::Path(vec![0]), Tile::Path(vec![0]), Tile::Path(vec![0]),         Tile::Grass, Tile::Grass, Tile::Path(vec![0]),         Tile::Grass, Tile::Path(vec![0]),         Tile::Grass, Tile::Grass, Tile::Path(vec![0]),         Tile::Grass, Tile::Grass],
-      vec![Tile::Grass, Tile::Grass, Tile::Grass, Tile::Path(vec![0]), Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Path(vec![0]),         Tile::Path(vec![0]),         Tile::Path(vec![0]),         Tile::Grass, Tile::Grass, Tile::Path(vec![0]),         Tile::Grass, Tile::Grass],
-      vec![Tile::Grass, Tile::Grass, Tile::Grass, Tile::Spawn, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::Grass, Tile::End,         Tile::Grass, Tile::Grass,
-      ]],
-    tile_size: 80,
-    checkpoints: vec![],
+  let f = File::open("./assets/data/map.ron").expect("Failed opening map file!");
+  let mut map: Map = match ron::de::from_reader(f) {
+    Ok(x) => x,
+    Err(e) => {
+      info!("Failed to load map: {}", e);
+      
+      std::process::exit(1);
+    }
   };
   
   let mut path_tiles = vec![];
@@ -175,7 +169,7 @@ fn render_map(
     .insert(Name::new("TileMap"));
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Tile {
   Grass,
   Water,
