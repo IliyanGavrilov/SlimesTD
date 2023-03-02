@@ -12,10 +12,15 @@ pub struct WavePlugin;
 
 impl Plugin for WavePlugin {
   fn build(&self, app: &mut App) {
-    app.add_system_set(SystemSet::on_update(GameState::Gameplay)
+    app.add_event::<WaveClearedEvent>()
+      .add_system_set(SystemSet::on_update(GameState::Gameplay)
         .with_system(spawn_waves))
       .add_startup_system_to_stage(StartupStage::PreStartup, load_waves);
   }
+}
+
+pub struct WaveClearedEvent {
+  pub index: usize
 }
 
 #[derive(Resource, Default, Deserialize)]
@@ -28,7 +33,12 @@ impl Waves {
   pub fn current(&self) -> Option<&Wave> {
     return self.waves.get(self.current);
   }
-  pub fn advance(&mut self) -> Option<&Wave> {
+  
+  pub fn advance(
+    &mut self,
+    wave_cleared_writer: &mut EventWriter<WaveClearedEvent>
+  ) -> Option<&Wave> {
+    wave_cleared_writer.send(WaveClearedEvent {index: self.current});
     self.current += 1;
     return self.current();
   }
@@ -74,7 +84,8 @@ fn spawn_waves(
   mut waves: ResMut<Waves>,
   mut wave_state: ResMut<WaveState>,
   enemy_stats: Res<EnemyTypeStats>,
-  time: Res<Time>
+  time: Res<Time>,
+  mut wave_cleared_writer: EventWriter<WaveClearedEvent>
 ) {
   // If all enemies in wave have finished, if button has been pressed
   // or if in-between waves timer has finished !!!
@@ -83,7 +94,7 @@ fn spawn_waves(
     if !wave_state.wave_spawn_timer.just_finished() {
       return;
     }
-    if let Some(next_wave) = waves.advance() {
+    if let Some(next_wave) = waves.advance(&mut wave_cleared_writer) {
       commands.insert_resource(WaveState::from((next_wave, next_wave.enemies.len())));
     }
   }
@@ -96,22 +107,23 @@ fn spawn_waves(
   if !wave_state.enemy_spawn_timer.just_finished() {
     return;
   }
+  if wave_state.remaining > 0 { // !!!
+    let index = current_wave.enemies.len() - wave_state.remaining;
+    println!("Enemy #{}", (current_wave.enemies.len() - wave_state.remaining + 1));
+    spawn_enemy(&mut commands,
+                &map_path,
+                current_wave.enemies[index].0,
+                &assets,
+                map_path.checkpoints[0],
+                Path { index: 0 },
+                &enemy_stats);
   
-  let index = current_wave.enemies.len() - wave_state.remaining;
-  println!("Enemy #{}", (current_wave.enemies.len() - wave_state.remaining + 1));
-  spawn_enemy(&mut commands,
-              &map_path,
-              current_wave.enemies[index].0,
-              &assets,
-              map_path.checkpoints[0],
-              Path { index: 0 },
-              &enemy_stats);
+    wave_state.enemy_spawn_timer = Timer::new(
+      current_wave.enemies[index].1,
+      TimerMode::Repeating);
   
-  wave_state.enemy_spawn_timer = Timer::new(
-    current_wave.enemies[index].1,
-    TimerMode::Repeating);
-  
-  wave_state.remaining -= 1;
+    wave_state.remaining -= 1;
+  }
 }
 
 fn load_waves(
@@ -128,7 +140,6 @@ fn load_waves(
   };
   
   let num_enemies = waves.waves[0].enemies.len();
-  
   
   commands.insert_resource(waves);
   commands.insert_resource(WaveState {
