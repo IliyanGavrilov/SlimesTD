@@ -32,8 +32,7 @@ pub fn damage_base(
   if base.health > 0 {
     base.health -= enemy_health as i32;
   }
-  
-  if base.health <= 0{
+  else {
     base.health = 0;
     info!("GAME OVER");
   }

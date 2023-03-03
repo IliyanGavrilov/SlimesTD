@@ -32,9 +32,7 @@ pub fn load_tower_type_stats(
   let tower_type_stats: TowerTypeStats = match ron::de::from_reader(f) {
     Ok(x) => x,
     Err(e) => {
-      info!("Failed to load upgrades: {}", e);
-      
-      std::process::exit(1);
+      panic!("Failed to load tower stats: {}", e);
     }
   };
   

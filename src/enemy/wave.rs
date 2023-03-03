@@ -95,6 +95,7 @@ fn spawn_waves(
       return;
     }
     if let Some(next_wave) = waves.advance(&mut wave_cleared_writer) {
+      wave_state.remaining = next_wave.enemies.len(); // !!!
       commands.insert_resource(WaveState::from((next_wave, next_wave.enemies.len())));
     }
   }
@@ -107,7 +108,7 @@ fn spawn_waves(
   if !wave_state.enemy_spawn_timer.just_finished() {
     return;
   }
-  if wave_state.remaining > 0 { // !!!
+  //if wave_state.remaining > 0 { // !!!
     let index = current_wave.enemies.len() - wave_state.remaining;
     println!("Enemy #{}", (current_wave.enemies.len() - wave_state.remaining + 1));
     spawn_enemy(&mut commands,
@@ -123,7 +124,7 @@ fn spawn_waves(
       TimerMode::Repeating);
   
     wave_state.remaining -= 1;
-  }
+  //}
 }
 
 fn load_waves(
@@ -133,9 +134,7 @@ fn load_waves(
   let waves: Waves = match ron::de::from_reader(f) {
     Ok(x) => x,
     Err(e) => {
-      info!("Failed to load waves: {}", e);
-      
-      std::process::exit(1);
+      panic!("Failed to load waves: {}", e);
     }
   };
   

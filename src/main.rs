@@ -7,8 +7,6 @@ mod main_menu;
 pub use main_menu::*;
 mod gameplay_ui;
 pub use gameplay_ui::*;
-mod spawn_scene;
-pub use spawn_scene::*;
 mod assets;
 pub use assets::*;
 mod tower;
@@ -49,7 +47,7 @@ fn main() {
     .add_plugin(SettingsPlugin)
     .add_plugin(AssetPlugin)
     .add_plugin(PlayerPlugin)
-    .add_plugin(BasePlugin)
+    .add_plugin(BasePlugin) // !
     .add_plugin(TowerPlugin)
     .add_plugin(TowerButtonPlugin)
     .add_plugin(TowerSelectionPlugin)

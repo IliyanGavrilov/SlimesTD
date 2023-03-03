@@ -52,9 +52,7 @@ fn load_upgrades(
   let upgrades: Upgrades = match ron::de::from_reader(f) {
     Ok(x) => x,
     Err(e) => {
-      info!("Failed to load upgrades: {}", e);
-      
-      std::process::exit(1);
+      panic!("Failed to load upgrades: {}", e);
     }
   };
   

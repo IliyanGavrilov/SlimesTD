@@ -4,7 +4,7 @@ use std::fs::File;
 use serde::{Serialize, Deserialize};
 
 use crate::gameplay_ui::*;
-use crate::{Enemy, GameAssets, GameState, MainCamera, Path};
+use crate::{Enemy, GameAssets, GameState, Path};
 use crate::movement::*;
 
 pub struct MapPlugin;
@@ -67,9 +67,7 @@ fn load_map(mut commands: Commands) {
   let mut map: Map = match ron::de::from_reader(f) {
     Ok(x) => x,
     Err(e) => {
-      info!("Failed to load map: {}", e);
-      
-      std::process::exit(1);
+      panic!("Failed to load map: {}", e);
     }
   };
   
@@ -130,6 +128,10 @@ impl Map {
     }
   }
 }
+
+// Main camera marker component
+#[derive(Component)]
+pub struct MainCamera;
 
 fn setup_camera(mut commands: Commands, map: Res<Map>) {
   let mut camera = Camera2dBundle::default();

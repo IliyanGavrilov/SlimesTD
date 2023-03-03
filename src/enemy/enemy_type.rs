@@ -33,9 +33,7 @@ pub fn load_enemy_type_stats(
   let enemy_type_stats: EnemyTypeStats = match ron::de::from_reader(f) {
     Ok(x) => x,
     Err(e) => {
-      info!("Failed to load upgrades: {}", e);
-  
-      std::process::exit(1);
+      panic!("Failed to load enemy stats: {}", e);
     }
   };
   
