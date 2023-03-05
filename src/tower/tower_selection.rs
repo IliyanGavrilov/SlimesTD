@@ -185,7 +185,6 @@ fn tower_ui_interaction (
               // Change button UI
               // for (mut image) in images.iter_mut() {
               // }
-              println!("AUGH");
               tower.target.next_target();
             }
             Interaction::Hovered => {

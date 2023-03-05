@@ -110,7 +110,7 @@ fn spawn_waves(
   }
   //if wave_state.remaining > 0 { // !!!
     let index = current_wave.enemies.len() - wave_state.remaining;
-    println!("Enemy #{}", (current_wave.enemies.len() - wave_state.remaining + 1));
+    //println!("Enemy #{}", (current_wave.enemies.len() - wave_state.remaining + 1));
     spawn_enemy(&mut commands,
                 &map_path,
                 current_wave.enemies[index].0,

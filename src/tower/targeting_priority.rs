@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::utils::FloatOrd;
 use strum_macros::EnumIter;
 use serde::{Serialize, Deserialize};
+use rand::seq::IteratorRandom;
 
 use crate::enemy::*;
 use crate::movement::*;
@@ -172,8 +173,6 @@ pub fn weakest_enemy_direction(
   }
   return None;
 }
-
-use rand::seq::IteratorRandom;
 
 pub fn random_enemy_direction(
   enemies: &Query<(&GlobalTransform, &Enemy, &Movement)>,

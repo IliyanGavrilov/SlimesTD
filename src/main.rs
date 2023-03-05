@@ -1,3 +1,4 @@
+#![windows_subsystem = "windows"] // Disable console
 use bevy::prelude::*;
 use bevy_editor_pls::*;
 
@@ -47,7 +48,7 @@ fn main() {
     .add_plugin(SettingsPlugin)
     .add_plugin(AssetPlugin)
     .add_plugin(PlayerPlugin)
-    .add_plugin(BasePlugin) // !
+    .add_plugin(BasePlugin)
     .add_plugin(TowerPlugin)
     .add_plugin(TowerButtonPlugin)
     .add_plugin(TowerSelectionPlugin)
