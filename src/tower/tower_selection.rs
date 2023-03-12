@@ -38,8 +38,8 @@ fn mouse_click(
     let (camera, camera_transform) = camera_query.single();
     
     if mouse.just_pressed(MouseButton::Left) {
-      mouse_click_interaction(&mut commands, &assets, &node_query, window, camera, camera_transform, &mut meshes,
-                              &mut materials, &mut clicked_tower, &mut towers);
+      mouse_click_interaction(&mut commands, &assets, &node_query, window, camera, camera_transform,
+                              &mut meshes, &mut materials, &mut clicked_tower, &mut towers);
     }
   }
 }
@@ -110,7 +110,10 @@ fn tower_ui_interaction (
     let mut player = player.single_mut();
     
     // Keyboard shortcuts
-    for (entity, mut tower, tower_type, children) in towers.iter_mut() {
+    for (entity,
+      mut tower,
+      tower_type,
+      children) in towers.iter_mut() {
       for _ in clicked_tower.iter_many(children) {
         let mut upgrade_path_index: Option<usize> = None;
   

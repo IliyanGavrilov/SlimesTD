@@ -9,7 +9,7 @@ pub struct AssetPlugin;
 impl Plugin for AssetPlugin {
   fn build(&self, app: &mut App) {
     app.add_system(animate_enemy_sprite)
-       // Load assets before the startup stage, so we can use them in spawn_basic_scene()
+       // Load assets before the startup stage, so we can use them in the game
        .add_startup_system_to_stage(StartupStage::PreStartup, load_assets);
   }
 }
@@ -81,7 +81,7 @@ pub struct GameAssets {
   pub upgrade_button: Handle<Image>,
   pub upgrades: [Handle<Image>; 6],
   // Enemies
-  pub enemy: Handle<TextureAtlas>, // !!!! Rename
+  pub enemy: Handle<TextureAtlas>,
   // Tower bullets
   pub wizard_nature_bullet: Handle<Image>,
   pub wizard_fire_bullet: Handle<Image>,
@@ -90,6 +90,7 @@ pub struct GameAssets {
   pub wizard_mage_bullet: Handle<Image>,
   pub wizard_archmage_bullet: Handle<Image>
 }
+
 impl GameAssets {
   pub fn get_tower_asset(&self, tower_type: TowerType) -> Handle<Image> {
     match tower_type {

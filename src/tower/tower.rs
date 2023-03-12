@@ -127,7 +127,7 @@ fn tower_shooting(
   mut commands: Commands,
   assets: Res<GameAssets>, // Bullet assets
   mut towers: Query<(Entity, &mut Tower, &TowerType, &mut Transform, &GlobalTransform)>,
-  enemies: Query<(&GlobalTransform, &Enemy, &Movement)>, // Gets all entities With the Enemy component
+  enemies: Query<(&GlobalTransform, &Enemy, &Movement)>,
   time: Res<Time>,
 ) {
   for (tower_entity,

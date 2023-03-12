@@ -31,7 +31,10 @@ impl Movement {
   }
 }
 
-fn basic_movement(mut entities: Query<(&mut Movement, &mut Transform), With<Bullet>>, time: Res<Time>) {
+fn basic_movement(
+  mut entities: Query<(&mut Movement, &mut Transform), With<Bullet>>,
+  time: Res<Time>
+) {
   for (mut movement, mut transform) in &mut entities {
     let distance = movement.direction.normalize() * movement.speed * time.delta_seconds();
     movement.distance_travelled += distance.length();

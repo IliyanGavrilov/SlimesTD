@@ -52,7 +52,11 @@ fn bullet_enemy_collision(
   mut enemies: Query<(&mut Enemy, &Transform)>,
   mut towers: Query<&mut Tower>
 ) {
-  for (bullet_entity, bullet, tower_parent, bullet_transform) in &bullets {
+  for (
+    bullet_entity,
+    bullet,
+    tower_parent,
+    bullet_transform) in &bullets {
     for (mut enemy, enemy_transform) in &mut enemies {
       if collide(bullet_transform.translation(), Vec2::new(40., 22.),
                  enemy_transform.translation, Vec2::new(30., 30.)).is_some() {

@@ -150,25 +150,29 @@ fn place_tower(
       transform.translation =
         window_to_world_pos(window, position, camera, camera_transform);
       
-        // Tower range becomes red when trying to place on path/invalid tile
-        // for (y, row) in tilemap.tiles.iter().enumerate() {
-        //   let mouse_on_path = row.iter().enumerate().filter(|(x, tile)| {
-        //     if matches!(tile, Tile::Path(_)) &&
-        //       position.x >= (*x as f32 * tilemap.tile_size as f32 - tilemap.tile_size as f32 / 2.) as f32 &&
-        //       position.y >= (y as f32 * tilemap.tile_size as f32 - tilemap.tile_size as f32 / 2.) as f32 &&
-        //       position.x <= (*x as f32 * tilemap.tile_size as f32 + tilemap.tile_size as f32 / 2.) as f32 &&
-        //       position.y <= (y as f32 * tilemap.tile_size as f32 + tilemap.tile_size as f32 / 2.) as f32 {
-        //       println!("{:?}, {:?}, {:?}", position, x, y);
-        //       return true;
-        //     }
-        //     false
-        //   }).last();
-        //   if mouse_on_path.is_some() {
-        //     println!("ON PATH");
-        //     *color = materials.add(ColorMaterial::from(
-        //       Color::rgba_u8(202, 0, 0, 150)));
-        //   }
-        // }
+// Tower range becomes red when trying to place on path/invalid tile
+// for (y, row) in tilemap.tiles.iter().enumerate() {
+//   let mouse_on_path = row.iter().enumerate().filter(|(x, tile)| {
+//     if matches!(tile, Tile::Path(_)) &&
+//       position.x >= (*x as f32 * tilemap.tile_size as f32 -
+//        tilemap.tile_size as f32 / 2.) as f32 &&
+//       position.y >= (y as f32 * tilemap.tile_size as f32 -
+//        tilemap.tile_size as f32 / 2.) as f32 &&
+//       position.x <= (*x as f32 * tilemap.tile_size as f32 +
+//        tilemap.tile_size as f32 / 2.) as f32 &&
+//       position.y <= (y as f32 * tilemap.tile_size as f32 +
+//        tilemap.tile_size as f32 / 2.) as f32 {
+//       println!("{:?}, {:?}, {:?}", position, x, y);
+//       return true;
+//     }
+//     false
+//   }).last();
+//   if mouse_on_path.is_some() {
+//     println!("ON PATH");
+//     *color = materials.add(ColorMaterial::from(
+//       Color::rgba_u8(202, 0, 0, 150)));
+//   }
+// }
       
         let mouse_on_placed_tower = towers
           .iter()
