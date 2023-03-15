@@ -139,29 +139,10 @@ fn tower_shooting(
     if enemy_in_range(&tower, &tower_transform, &enemies) {
       let bullet_spawn_pos = transform.translation() + tower.bullet_spawn_offset;
     
-      let direction = match &tower.target {
-        TargetingPriority::FIRST => first_enemy_direction(&enemies,
-                                       bullet_spawn_pos,
-                                       tower.range + 10),
-        TargetingPriority::LAST => last_enemy_direction(&enemies,
-                                     bullet_spawn_pos,
-                                     tower.range + 10),
-        TargetingPriority::CLOSE => closest_enemy_direction(&enemies,
-                                         bullet_spawn_pos,
-                                         tower.range + 10),
-        TargetingPriority::FAR => farthest_enemy_direction(&enemies,
-                                                           bullet_spawn_pos,
-                                                           tower.range + 10),
-        TargetingPriority::STRONG => strongest_enemy_direction(&enemies,
-                                               bullet_spawn_pos,
-                                               tower.range + 10),
-        TargetingPriority::WEAK => weakest_enemy_direction(&enemies,
-                                           bullet_spawn_pos,
-                                           tower.range + 10),
-        TargetingPriority::RANDOM => random_enemy_direction(&enemies,
-                                                         bullet_spawn_pos,
-                                                         tower.range + 10),
-      };
+      let direction = get_enemy_direction(&enemies,
+                                                       bullet_spawn_pos,
+                                            tower.range + 10,
+                                          &tower.target);
     
       // If there is an enemy in the tower's range (if direction != None), then shoot bullet
       if let Some(direction) = direction {
