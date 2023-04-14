@@ -6,8 +6,7 @@ pub struct BasePlugin;
 impl Plugin for BasePlugin {
   fn build(&self, app: &mut App) {
     app.register_type::<Base>()
-      .add_system_set(SystemSet::on_enter(GameState::Gameplay)
-        .with_system(spawn_base));
+      .add_system(spawn_base.in_schedule(OnEnter(GameState::Gameplay)));
   }
 }
 

@@ -9,9 +9,7 @@ pub struct TowerUIPlugin;
 
 impl Plugin for TowerUIPlugin {
   fn build(&self, app: &mut App) {
-    app
-      .add_system_set(SystemSet::on_update(GameState::Gameplay)
-        .with_system(update_tower_ui));
+    app.add_system(update_tower_ui.in_set(OnUpdate(GameState::Gameplay)));
   }
 }
 

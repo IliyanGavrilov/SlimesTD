@@ -13,15 +13,14 @@ impl Plugin for EnemyPlugin {
     app.register_type::<Enemy>()
       .register_type::<Path>()
       .add_event::<EnemyDeathEvent>()
-      .add_startup_system(load_enemy_type_stats)
-      .add_system_set(SystemSet::on_update(GameState::Gameplay)
-        .with_system(despawn_enemy_on_death));
+      //.add_startup_system(load_enemy_type_stats)
+      .add_system(despawn_enemy_on_death.in_set(OnUpdate(GameState::Gameplay)));
   }
 }
 
 pub struct EnemyDeathEvent;
 
-#[derive(Bundle, Serialize, Deserialize, Clone)]
+#[derive(Bundle, Debug, Serialize, Deserialize, Clone)]
 pub struct EnemyBundle {
   pub enemy_type: EnemyType,
   pub enemy: Enemy,
@@ -46,13 +45,13 @@ impl Default for EnemyBundle {
   }
 }
 
-#[derive(Reflect, Component, Default, Clone, Serialize, Deserialize)]
+#[derive(Reflect, Debug, Component, Default, Clone, Serialize, Deserialize)]
 #[reflect(Component)]
 pub struct Enemy {
   pub health: i32
 }
 
-#[derive(Reflect, Component, Default, Clone, Serialize, Deserialize)]
+#[derive(Reflect, Component, Default, Clone, Serialize, Debug, Deserialize)]
 #[reflect(Component)]
 pub struct Path {
   pub index: usize

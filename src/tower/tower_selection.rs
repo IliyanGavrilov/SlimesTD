@@ -3,16 +3,13 @@ use bevy::sprite::Mesh2dHandle;
 
 use crate::assets::*;
 use crate::tower::*;
-use crate::{GameState, MainCamera, Player};
+use crate::{GameData, GameState, MainCamera, Player};
 
 pub struct TowerSelectionPlugin;
 
 impl Plugin for TowerSelectionPlugin {
   fn build(&self, app: &mut App) {
-    app
-      .add_system_set(SystemSet::on_update(GameState::Gameplay)
-        .with_system(mouse_click)
-        .with_system(tower_ui_interaction));
+    app.add_systems((mouse_click, tower_ui_interaction).in_set(OnUpdate(GameState::Gameplay)));
   }
 }
 
@@ -22,7 +19,7 @@ pub struct TowerUpgradeUI;
 fn mouse_click(
   mut commands: Commands,
   assets: Res<GameAssets>,
-  windows: Res<Windows>,
+  windows: Query<&Window>,
   node_query: Query<(&Node, &GlobalTransform, &Visibility), With<TowerUI>>,
   camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
   mouse: Res<Input<MouseButton>>,
@@ -34,7 +31,7 @@ fn mouse_click(
 ) {
   // If player isn't placing a tower
   if query.is_empty() {
-    let window = windows.get_primary().unwrap();
+    let window = windows.get_single().unwrap();
     let (camera, camera_transform) = camera_query.single();
     
     if mouse.just_pressed(MouseButton::Left) {
@@ -92,7 +89,8 @@ fn tower_ui_interaction (
   clicked_tower: Query<Entity, With<TowerUpgradeUI>>,
   keys: Res<Input<KeyCode>>,
   mut player: Query<&mut Player>,
-  upgrades: Res<Upgrades>,
+  game_data: Res<GameData>,
+  upgrades: Res<Assets<Upgrades>>,
   mut meshes: ResMut<Assets<Mesh>>,
   mut tower_range_radius: Query<&mut Mesh2dHandle>,
   // UI Buttons
@@ -106,6 +104,9 @@ fn tower_ui_interaction (
   upgrade_button_interaction: Query<(&Interaction, &TowerUpgradeButton),
     (Changed<Interaction>, With<Button>)>,
 ) {
+  let Some(upgrades) = upgrades.get(&game_data.tower_upgrades)
+    else { return; };
+  
   if !clicked_tower.is_empty() {
     let mut player = player.single_mut();
     

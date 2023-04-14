@@ -4,19 +4,16 @@ use strum::IntoEnumIterator;
 
 use crate::assets::*;
 use crate::tower::*;
-use crate::{GameplayUIRoot, GameState, MainCamera, Player};
+use crate::{GameData, GameplayUIRoot, GameState, MainCamera, Player};
 
 pub struct TowerButtonPlugin;
 
 impl Plugin for TowerButtonPlugin {
   fn build(&self, app: &mut App) {
-    app.add_startup_system(load_tower_type_stats)
-      .add_system_set(SystemSet::on_enter(GameState::Gameplay)
-        .with_system(generate_ui))
-      .add_system_set(SystemSet::on_update(GameState::Gameplay)
-        .with_system(tower_button_interaction)
-        .with_system(place_tower)
-        .with_system(lock_tower_buttons.after(generate_ui)));
+    app
+      .add_system(generate_ui.in_schedule(OnEnter(GameState::Gameplay)))
+      .add_systems((tower_button_interaction, place_tower, lock_tower_buttons.after(generate_ui))
+        .in_set(OnUpdate(GameState::Gameplay)));
   }
 }
 
@@ -45,12 +42,12 @@ fn lock_tower_buttons(
     for (mut image, button_tower_type) in button_images.iter_mut() {
       if player.money >= state.price as usize {
         if button_tower_type == tower_type {
-          image.0 = assets.get_button_asset(*tower_type);
+          image.texture = assets.get_button_asset(*tower_type);
         }
       }
       else {
         if button_tower_type == tower_type {
-          image.0 = assets.get_button_locked_asset(*tower_type);
+          image.texture = assets.get_button_locked_asset(*tower_type);
         }
       }
     }
@@ -92,8 +89,8 @@ pub fn cursor_above_ui<T: Component>(
   if let Some(pointer_position) = window.cursor_position() {
     for (node,
       global_transform,
-      &Visibility{is_visible}) in node_query.iter() {
-      if is_visible {
+      &visibility) in node_query.iter() {
+      if visibility == Visibility::Inherited {
         let node_position = global_transform.translation().xy();
         let half_size = 0.5 * Vec2::new(node.size().x, window.height() * 0.20);
         let min = node_position - half_size;
@@ -115,19 +112,23 @@ fn place_tower(
   assets: Res<GameAssets>,
   mouse: Res<Input<MouseButton>>,
   keys: Res<Input<KeyCode>>,
-  windows: Res<Windows>,
+  windows: Query<&Window>,
   camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
   mut player: Query<&mut Player>,
   towers: Query<&Transform, (With<Tower>, Without<SpriteFollower>)>,
   mut clicked_tower: Query<Entity, With<TowerUpgradeUI>>,
   mut meshes: ResMut<Assets<Mesh>>,
   mut materials: ResMut<Assets<ColorMaterial>>,
-  tower_stats: Res<TowerTypeStats>,
+  game_data: Res<GameData>,
+  tower_stats: Res<Assets<TowerTypeStats>>,
   node_query: Query<(&Node, &GlobalTransform, &Visibility), With<GameplayUIRoot>>,
   //tilemap: Res<Map>,
   mut cursor_exited_ui: ResMut<CursorExitedUI> // Flag to check initial mouse exit from button UI
 ) {
-  let window = windows.get_primary().unwrap();
+  let Some(tower_stats) = tower_stats.get(&game_data.tower_type_stats)
+    else { return; };
+  
+  let window = windows.get_single().unwrap();
   let (camera, camera_transform) = camera_query.single();
   let mut player = player.single_mut();
   
@@ -272,16 +273,20 @@ fn tower_button_interaction(
   interaction: Query<(&Interaction, &TowerType, &TowerButtonState),
     (Changed<Interaction>, With<Button>)>,
   mut images: Query<(&mut UiImage, &TowerType)>,
-  windows: Res<Windows>,
+  windows: Query<&Window>,
   camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
   mut meshes: ResMut<Assets<Mesh>>,
   mut materials: ResMut<Assets<ColorMaterial>>,
   keys: Res<Input<KeyCode>>,
   query: Query<&SpriteFollower>,
   player: Query<& Player>,
-  tower_stats: Res<TowerTypeStats>
+  game_data: Res<GameData>,
+  tower_stats: Res<Assets<TowerTypeStats>>,
 ) {
-  let window = windows.get_primary().unwrap();
+  let Some(tower_stats) = tower_stats.get(&game_data.tower_type_stats)
+    else { return; };
+  
+  let window = windows.get_single().unwrap();
   let (camera, camera_transform) = camera_query.single();
   let player = player.single();
   
@@ -300,7 +305,7 @@ fn tower_button_interaction(
             // Change button UI
             for (mut image, button_tower_type) in images.iter_mut() {
               if button_tower_type == tower_type {
-                image.0 = assets.get_button_pressed_asset(*tower_type);
+                image.texture = assets.get_button_pressed_asset(*tower_type);
               }
             }
             
@@ -313,7 +318,7 @@ fn tower_button_interaction(
           // Change button UI
           for (mut image, button_tower_type) in images.iter_mut() {
             if button_tower_type == tower_type {
-              image.0 = assets.get_button_hovered_asset(*tower_type);
+              image.texture = assets.get_button_hovered_asset(*tower_type);
             }
           }
         }
@@ -321,7 +326,7 @@ fn tower_button_interaction(
           // Change button UI
           for (mut image, button_tower_type) in images.iter_mut() {
             if button_tower_type == tower_type {
-              image.0 = assets.get_button_asset(*tower_type);
+              image.texture = assets.get_button_asset(*tower_type);
             }
           }
         }
@@ -381,7 +386,15 @@ fn tower_spawn_from_keyboard_input(
 }
 
 // Creating a UI menu on the whole screen with buttons
-fn generate_ui(mut commands: Commands, assets: Res<GameAssets>, tower_stats: Res<TowerTypeStats>) {
+fn generate_ui(
+  mut commands: Commands,
+  assets: Res<GameAssets>,
+  game_data: Res<GameData>,
+  tower_stats: Res<Assets<TowerTypeStats>>
+) {
+  let Some(tower_stats) = tower_stats.get(&game_data.tower_type_stats)
+    else { return; };
+  
   commands.insert_resource(CursorExitedUI {
     0: false,
   });

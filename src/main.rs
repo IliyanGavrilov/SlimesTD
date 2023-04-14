@@ -1,6 +1,8 @@
 #![windows_subsystem = "windows"] // Disable console
 use bevy::prelude::*;
-use bevy_editor_pls::*;
+use bevy_asset_loader::prelude::*;
+use bevy_common_assets::ron::RonAssetPlugin;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 mod map;
 pub use map::*;
@@ -16,6 +18,8 @@ mod enemy;
 pub use enemy::*;
 mod movement;
 pub use movement::*;
+mod game_data;
+pub use game_data::*;
 
 fn main() {
   App::new()
@@ -28,17 +32,28 @@ fn main() {
       // Prevent blurry sprites
       .set(ImagePlugin::default_nearest())
       .set(WindowPlugin {
-        window: WindowDescriptor {
+        primary_window: Some(Window {
           title: "Slimes Tower Defense".to_string(),
-          position: WindowPosition::Centered,
+          position: WindowPosition::Centered(MonitorSelection::Primary),
           resizable: false,
           ..default()
-        },
+        }),
         ..default()
       }))
-    
+  
     // Game State
-    .add_state(GameState::MainMenu)
+    .add_state::<GameState>()
+    
+    // Asset loading
+    .add_plugin(RonAssetPlugin::<EnemyTypeStats>::new(&["enemy_types.ron"]))
+    .add_plugin(RonAssetPlugin::<Map>::new(&["map.ron"]))
+    .add_plugin(RonAssetPlugin::<TowerTypeStats>::new(&["tower_stats.ron"]))
+    .add_plugin(RonAssetPlugin::<Upgrades>::new(&["upgrades.ron"]))
+    .add_plugin(RonAssetPlugin::<Waves>::new(&["waves.ron"]))
+    .add_loading_state(LoadingState::new(GameState::AssetLoading)
+        .continue_to_state(GameState::MainMenu),
+    )
+    .add_collection_to_loading_state::<_, GameData>(GameState::AssetLoading)
     
     // Plugins
     .add_plugin(MainMenuPlugin)
@@ -52,7 +67,6 @@ fn main() {
     .add_plugin(TowerPlugin)
     .add_plugin(TowerButtonPlugin)
     .add_plugin(TowerSelectionPlugin)
-    .add_plugin(TowerUpgradePlugin)
     .add_plugin(TowerUIPlugin)
     .add_plugin(EnemyPlugin)
     .add_plugin(WavePlugin)
@@ -60,9 +74,9 @@ fn main() {
     .add_plugin(MovementPlugin)
     
     // !!!Debugging
-    .add_plugin(EditorPlugin) // Similar to WorldInspectorPlugin
-    .add_plugin(bevy::diagnostic::LogDiagnosticsPlugin::default())
-    .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin::default())
-    .add_plugin(bevy::diagnostic::EntityCountDiagnosticsPlugin)
+    // .add_plugin(WorldInspectorPlugin::new())
+    // .add_plugin(bevy::diagnostic::LogDiagnosticsPlugin::default())
+    // .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin::default())
+    // .add_plugin(bevy::diagnostic::EntityCountDiagnosticsPlugin)
     .run();
 }

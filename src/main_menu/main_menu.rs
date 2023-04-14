@@ -8,13 +8,9 @@ pub struct MainMenuPlugin;
 impl Plugin for MainMenuPlugin {
   fn build(&self, app: &mut App) {
     app
-      .add_system_set(SystemSet::on_enter(GameState::MainMenu)
-        .with_system(spawn_main_menu))
-      .add_system_set(
-        SystemSet::on_update(GameState::MainMenu)
-          .with_system(start_button_clicked)
-          .with_system(exit_button_clicked),
-      );
+      .add_system(spawn_main_menu.in_schedule(OnEnter(GameState::MainMenu)))
+      .add_systems((start_button_clicked, exit_button_clicked)
+        .in_set(OnUpdate(GameState::MainMenu)));
   }
 }
 
@@ -31,14 +27,14 @@ fn start_button_clicked(
   mut commands: Commands,
   interactions: Query<&Interaction, (With<StartButton>, Changed<Interaction>)>,
   menu_root: Query<Entity, With<MenuUIRoot>>,
-  mut game_state: ResMut<State<GameState>>,
+  mut game_state: ResMut<NextState<GameState>>,
 ) {
   for interaction in &interactions {
     if matches!(interaction, Interaction::Clicked) {
       let root_entity = menu_root.single();
       commands.entity(root_entity).despawn_recursive();
       
-      game_state.set(GameState::Gameplay).unwrap();
+      game_state.set(GameState::Gameplay);
     }
   }
 }

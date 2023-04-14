@@ -1,4 +1,4 @@
-use bevy::{prelude::*, window::PresentMode};
+use bevy::{prelude::*, window::*};
 
 pub struct SettingsPlugin;
 
@@ -9,29 +9,29 @@ impl Plugin for SettingsPlugin {
   }
 }
 
-fn toggle_vsync(input: Res<Input<KeyCode>>, mut windows: ResMut<Windows>) {
+fn toggle_vsync(input: Res<Input<KeyCode>>, mut windows: Query<&mut Window>) {
   if input.just_pressed(KeyCode::V) {
-    let window = windows.primary_mut();
+    let mut window = windows.single_mut();
     
-    window.set_present_mode(if matches!(window.present_mode(), PresentMode::AutoVsync) {
+    window.present_mode = if matches!(window.present_mode, PresentMode::AutoVsync) {
       PresentMode::AutoNoVsync
     } else {
       PresentMode::AutoVsync
-    });
-    info!("PRESENT_MODE: {:?}", window.present_mode());
+    };
+    info!("PRESENT_MODE: {:?}", window.present_mode);
   }
 }
 
-fn toggle_fullscreen(input: Res<Input<KeyCode>>, mut windows: ResMut<Windows>) {
+fn toggle_fullscreen(input: Res<Input<KeyCode>>, mut windows: Query<&mut Window>) {
   if ((input.pressed(KeyCode::LAlt) || input.pressed(KeyCode::RAlt))
     && input.just_pressed(KeyCode::Return)) || input.just_pressed(KeyCode::F11) {
-    let window = windows.primary_mut();
+    let mut window = windows.single_mut();
     
-    window.set_mode (if matches!(window.mode(), WindowMode::Windowed) {
+    window.mode = if matches!(window.mode, WindowMode::Windowed) {
       WindowMode::BorderlessFullscreen
     } else {
       WindowMode::Windowed
-    });
-    info!("WINDOW_MODE: {:?}", window.mode());
+    };
+    info!("WINDOW_MODE: {:?}", window.mode);
   }
 }

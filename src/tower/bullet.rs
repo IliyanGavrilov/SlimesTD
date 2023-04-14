@@ -10,9 +10,8 @@ pub struct BulletPlugin;
 impl Plugin for BulletPlugin {
   fn build(&self, app: &mut App) {
     app.register_type::<Bullet>()
-      .add_system_set(SystemSet::on_update(GameState::Gameplay)
-        .with_system(despawn_bullets)
-        .with_system(bullet_enemy_collision));
+      .add_systems((despawn_bullets, bullet_enemy_collision)
+        .in_set(OnUpdate(GameState::Gameplay)));
   }
 }
 

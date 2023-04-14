@@ -1,20 +1,12 @@
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use serde::{Serialize, Deserialize};
-use std::fs::File;
+use bevy::reflect::TypeUuid;
 
 use crate::tower::*;
 
-pub struct TowerUpgradePlugin;
-
-impl Plugin for TowerUpgradePlugin {
-  fn build(&self, app: &mut App) {
-    app
-      .add_startup_system_to_stage(StartupStage::PreStartup, load_upgrades);
-  }
-}
-
-#[derive(Resource, Deserialize, Debug)]
+#[derive(Resource, Deserialize, TypeUuid, Debug)]
+#[uuid = "34ef287b-4806-41da-a102-fc9effcb280f"]
 pub struct Upgrades {
   pub upgrades: HashMap<TowerType, Vec<Vec<Upgrade>>>
 }
@@ -43,19 +35,4 @@ pub enum TowerStat { // Projectile speed, pierce !!!
   Damage,
   AttackSpeed,
   Range
-}
-
-fn load_upgrades(
-  mut commands: Commands
-) {
-  let f = File::open("./assets/data/upgrades.ron")
-    .expect("Failed opening upgrades file!");
-  let upgrades: Upgrades = match ron::de::from_reader(f) {
-    Ok(x) => x,
-    Err(e) => {
-      panic!("Failed to load upgrades: {}", e);
-    }
-  };
-  
-  commands.insert_resource(upgrades);
 }

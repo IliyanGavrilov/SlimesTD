@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 use strum_macros::{EnumIter, Display};
 use serde::{Serialize, Deserialize};
-use std::fs::File;
+use bevy::reflect::TypeUuid;
 
 use crate::assets::*;
 use crate::tower::*;
@@ -19,24 +19,10 @@ pub enum TowerType {
   Archmage
 }
 
-#[derive(Resource, Serialize, Deserialize, Clone)]
+#[derive(Resource, Serialize, Deserialize, Clone, TypeUuid)]
+#[uuid = "410719fd-234e-4e88-8549-4ff3004041a9"]
 pub struct TowerTypeStats {
   pub tower: HashMap<TowerType, TowerBundle>
-}
-
-pub fn load_tower_type_stats(
-  mut commands: Commands
-) {
-  let f = File::open("./assets/data/tower_stats.ron")
-    .expect("Failed opening tower stats file!");
-  let tower_type_stats: TowerTypeStats = match ron::de::from_reader(f) {
-    Ok(x) => x,
-    Err(e) => {
-      panic!("Failed to load tower stats: {}", e);
-    }
-  };
-  
-  commands.insert_resource(tower_type_stats);
 }
 
 impl TowerType {

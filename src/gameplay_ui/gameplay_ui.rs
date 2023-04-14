@@ -17,14 +17,8 @@ pub struct GameplayUIPlugin;
 
 impl Plugin for GameplayUIPlugin {
   fn build(&self, app: &mut App) {
-    app.add_system_set(
-        SystemSet::on_enter(GameState::Gameplay)
-          .with_system(spawn_gameplay_ui),
-      )
-      .add_system_set(
-        SystemSet::on_update(GameState::Gameplay)
-          .with_system(update_gameplay_ui),
-      );
+    app.add_system(spawn_gameplay_ui.in_schedule(OnEnter(GameState::Gameplay)))
+      .add_system(update_gameplay_ui.in_set(OnUpdate(GameState::Gameplay)));
   }
 }
 

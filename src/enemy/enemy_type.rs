@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 use strum_macros::{Display};
 use serde::{Serialize, Deserialize};
-use std::fs::File;
+use bevy::reflect::TypeUuid;
 
 use crate::assets::*;
 use crate::enemy::*;
@@ -20,24 +20,10 @@ pub enum EnemyType {
   Red
 }
 
-#[derive(Resource, Serialize, Deserialize, Clone)]
+#[derive(Resource, Debug, Serialize, Deserialize, TypeUuid, Clone)]
+#[uuid = "7aad646e-4054-44d7-b138-1fb79f73f9c1"]
 pub struct EnemyTypeStats {
   pub enemy: HashMap<EnemyType, EnemyBundle>
-}
-
-pub fn load_enemy_type_stats(
-  mut commands: Commands
-) {
-  let f = File::open("./assets/data/enemy_stats.ron")
-    .expect("Failed opening enemy stats file!");
-  let enemy_type_stats: EnemyTypeStats = match ron::de::from_reader(f) {
-    Ok(x) => x,
-    Err(e) => {
-      panic!("Failed to load enemy stats: {}", e);
-    }
-  };
-  
-  commands.insert_resource(enemy_type_stats);
 }
 
 impl EnemyType {

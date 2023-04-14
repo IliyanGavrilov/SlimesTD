@@ -1,23 +1,22 @@
 use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
-use std::fs::File;
 use serde::{Serialize, Deserialize};
+use bevy::reflect::TypeUuid;
 
 use crate::gameplay_ui::*;
-use crate::{Enemy, GameAssets, GameState, Path};
+use crate::{Enemy, GameAssets, GameData, GameState, Path};
 use crate::movement::*;
 
 pub struct MapPlugin;
 
 impl Plugin for MapPlugin {
   fn build(&self, app: &mut App) {
-    app.add_system_set(SystemSet::on_enter(GameState::Gameplay)
-      .with_system(render_map))
-      .add_system_set(SystemSet::on_update(GameState::Gameplay)
-        .with_system(update_enemy_checkpoint)
-        .with_system(despawn_enemy))
-      .add_startup_system_to_stage(StartupStage::PreStartup, load_map)
-      .add_startup_system(setup_camera);
+    app
+      .add_systems((load_map, setup_camera.after(load_map))
+        .in_schedule(OnExit(GameState::AssetLoading)))
+      .add_system(render_map.in_schedule(OnEnter(GameState::Gameplay)))
+      .add_systems((update_enemy_checkpoint, despawn_enemy)
+        .in_set(OnUpdate(GameState::Gameplay)));
   }
 }
 
@@ -53,7 +52,8 @@ impl Point {
   }
 }
 
-#[derive(Resource, Serialize, Deserialize)]
+#[derive(Resource, Serialize, Deserialize, TypeUuid)]
+#[uuid = "58d181c2-39f7-4ac7-8ae7-b3cee0667ce2"]
 pub struct Map {
   pub width: usize,
   pub height: usize,
@@ -62,14 +62,12 @@ pub struct Map {
   pub checkpoints: Vec<Vec3>
 }
 
-fn load_map(mut commands: Commands) {
-  let f = File::open("./assets/data/map.ron").expect("Failed opening map file!");
-  let mut map: Map = match ron::de::from_reader(f) {
-    Ok(x) => x,
-    Err(e) => {
-      panic!("Failed to load map: {}", e);
-    }
-  };
+fn load_map(
+  game_data: Res<GameData>,
+  mut map: ResMut<Assets<Map>>
+) {
+  let Some(map) = map.get_mut(&game_data.map)
+    else { return; };
   
   let mut path_tiles = vec![];
   let mut spawn: Point = Default::default();
@@ -90,7 +88,6 @@ fn load_map(mut commands: Commands) {
   
   map.checkpoints.push(spawn.to_vec3());
   map.create_checkpoints(path_tiles, spawn, end);
-  commands.insert_resource(map);
 }
 
 impl Map {
@@ -133,18 +130,28 @@ impl Map {
 #[derive(Component)]
 pub struct MainCamera;
 
-fn setup_camera(mut commands: Commands, map: Res<Map>) {
+fn setup_camera(
+  mut commands: Commands,
+  game_data: Res<GameData>,
+  map: Res<Assets<Map>>
+) {
+  let Some(map) = map.get(&game_data.map)
+    else { return; };
   let mut camera = Camera2dBundle::default();
   camera.transform.translation.x = (map.width as f32 / 2. - 0.5) * map.tile_size as f32;
   camera.transform.translation.y = (map.height as f32 / 2. - 0.5) * map.tile_size as f32;
-  camera.projection.scaling_mode = ScalingMode::Auto { min_width: 1280., min_height: 720.0 };
+  camera.projection.scaling_mode = ScalingMode::AutoMin { min_width: 1280., min_height: 720.0 };
   commands.spawn((camera, MainCamera));
 }
 
 fn render_map(
   mut commands: Commands,
-  map: Res<Map>, assets: Res<GameAssets>
+  game_data: Res<GameData>,
+  map: Res<Assets<Map>>,
+  assets: Res<GameAssets>
 ) {
+  let Some(map) = map.get(&game_data.map)
+    else { return; };
   
   commands.spawn(SpatialBundle::default()).with_children(|commands| {
   for row in 0..map.height {
@@ -191,8 +198,12 @@ fn despawn_enemy(
   mut commands: Commands,
   mut enemies: Query<(Entity, &Enemy, &mut Path)>,
   mut base: Query<&mut Base>,
-  map: Res<Map>
+  game_data: Res<GameData>,
+  map: Res<Assets<Map>>
 ) {
+  let Some(map) = map.get(&game_data.map)
+    else { return; };
+  
   let mut base = base.single_mut();
   
   for (entity,
@@ -206,9 +217,13 @@ fn despawn_enemy(
 
 fn update_enemy_checkpoint(
   mut enemies: Query<(&mut Movement, &mut Transform, &mut Path)>,
-  map: Res<Map>,
+  game_data: Res<GameData>,
+  map: Res<Assets<Map>>,
   time: Res<Time>
 ) {
+  let Some(map) = map.get(&game_data.map)
+    else { return; };
+  
   for (mut movement,
     mut transform,
     mut path) in &mut enemies {

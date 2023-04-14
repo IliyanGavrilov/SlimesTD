@@ -7,12 +7,9 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
   fn build(&self, app: &mut App) {
     app.register_type::<Player>()
-      .add_system_set(SystemSet::on_enter(GameState::Gameplay)
-        .with_system(spawn_player))
-      .add_system_set(
-        SystemSet::on_update(GameState::Gameplay)
-          .with_system(give_money_on_enemy_death)
-          .with_system(give_money_on_wave_cleared));
+      .add_system(spawn_player.in_schedule(OnEnter(GameState::Gameplay)))
+      .add_systems((give_money_on_enemy_death, give_money_on_wave_cleared)
+        .in_set(OnUpdate(GameState::Gameplay)));
   }
 }
 

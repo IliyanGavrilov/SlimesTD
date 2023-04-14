@@ -15,8 +15,7 @@ impl Plugin for TowerPlugin {
   fn build(&self, app: &mut App) {
     app.register_type::<Tower>()
       .register_type::<TargetingPriority>()
-      .add_system_set(SystemSet::on_update(GameState::Gameplay)
-        .with_system(tower_shooting));
+      .add_system(tower_shooting.in_set(OnUpdate(GameState::Gameplay)));
   }
 }
 

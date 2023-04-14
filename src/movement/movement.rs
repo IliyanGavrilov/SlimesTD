@@ -8,12 +8,11 @@ pub struct MovementPlugin;
 impl Plugin for MovementPlugin {
   fn build(&self, app: &mut App) {
     app.register_type::<Movement>()
-      .add_system_set(SystemSet::on_update(GameState::Gameplay)
-        .with_system(basic_movement));
+      .add_system(basic_movement.in_set(OnUpdate(GameState::Gameplay)));
   }
 }
 
-#[derive(Reflect, Component, Clone, Default, Serialize, Deserialize)]
+#[derive(Reflect, Debug, Component, Clone, Default, Serialize, Deserialize)]
 #[reflect(Component)]
 pub struct Movement {
   pub direction: Vec3,

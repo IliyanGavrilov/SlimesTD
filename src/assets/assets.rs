@@ -10,7 +10,7 @@ impl Plugin for AssetPlugin {
   fn build(&self, app: &mut App) {
     app.add_system(animate_enemy_sprite)
        // Load assets before the startup stage, so we can use them in the game
-       .add_startup_system_to_stage(StartupStage::PreStartup, load_assets);
+       .add_startup_system(load_assets.in_base_set(StartupSet::PreStartup));
   }
 }
 
@@ -276,10 +276,10 @@ fn load_assets(
 
 // Slime sprite animation
 
-#[derive(Component, Deref, DerefMut, Serialize, Deserialize, Clone)]
+#[derive(Component, Deref, DerefMut, Serialize, Deserialize, Debug, Clone)]
 pub struct AnimationTimer(pub Timer);
 
-#[derive(Component, Serialize, Deserialize, Clone)]
+#[derive(Component, Serialize, Deserialize, Debug, Clone)]
 pub struct AnimationIndices {
   pub first: usize,
   pub last: usize
