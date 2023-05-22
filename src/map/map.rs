@@ -98,7 +98,7 @@ impl Map {
           last_point.y as f32 - point.y as f32,
         )
         .length();
-        length >= 0.9 && length <= 1.1
+        (0.9..=1.1).contains(&length)
       });
       if let Some(next_point_position) = next_point_position {
         let next_point = path_tiles.remove(next_point_position);

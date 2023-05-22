@@ -35,7 +35,7 @@ impl EnemyType {
     enemy_bundle.path = path;
     enemy_bundle.movement.direction = direction;
 
-    return enemy_bundle;
+    enemy_bundle
   }
 
   pub fn get_sprite_sheet_bundle(&self, assets: &GameAssets, position: Vec3) -> SpriteSheetBundle {
@@ -50,11 +50,11 @@ impl EnemyType {
       EnemyType::Red => TextureAtlasSprite::new(70),
     };
 
-    return SpriteSheetBundle {
+    SpriteSheetBundle {
       texture_atlas: assets.enemy.clone(),
       transform: Transform::from_translation(position),
       sprite: texture_atlas_sprite,
       ..default()
-    };
+    }
   }
 }

@@ -250,7 +250,7 @@ pub fn spawn_tower_ui(
             },
             ..default()
           },
-          image: assets.get_tower_icon(tower_type).clone().into(),
+          image: assets.get_tower_icon(tower_type).into(),
           ..default()
         })
         .insert(TowerUI)

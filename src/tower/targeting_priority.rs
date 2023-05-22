@@ -98,5 +98,5 @@ pub fn get_enemy_direction(
     // return direction
     return Option::from(enemy.translation() - bullet_spawn_pos);
   }
-  return None;
+  None
 }

@@ -48,19 +48,13 @@ impl Waves {
 }
 
 #[derive(Component, Deserialize)]
+#[derive(Default)]
 pub struct Wave {
   pub enemies: Vec<(EnemyType, Duration)>,
   pub current: usize, // Current enemy
 }
 
-impl Default for Wave {
-  fn default() -> Self {
-    Self {
-      enemies: vec![],
-      current: 0,
-    }
-  }
-}
+
 
 #[derive(Resource)]
 pub struct WaveState {
@@ -125,7 +119,7 @@ fn spawn_waves(
 
   spawn_enemy(
     &mut commands,
-    &map_path,
+    map_path,
     current_wave.enemies[index].0,
     &assets,
     map_path.checkpoints[0],

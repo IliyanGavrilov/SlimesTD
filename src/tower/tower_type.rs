@@ -28,7 +28,7 @@ pub struct TowerTypeStats {
 
 impl TowerType {
   pub fn get_tower(&self, tower_stats: &TowerTypeStats) -> TowerBundle {
-    return tower_stats.tower[self].clone();
+    tower_stats.tower[self].clone()
   }
 
   pub fn get_sprite_sheet_bundle(&self, assets: &GameAssets, position: Vec3) -> SpriteBundle {
@@ -41,11 +41,11 @@ impl TowerType {
       TowerType::Archmage => assets.wizard_archmage.clone(),
     };
 
-    return SpriteBundle {
+    SpriteBundle {
       texture,
       transform: Transform::from_translation(position),
       ..default()
-    };
+    }
   }
 
   pub fn get_bullet(&self, damage: u32, assets: &GameAssets, position: Transform) -> BulletBundle {

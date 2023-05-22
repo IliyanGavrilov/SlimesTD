@@ -61,7 +61,7 @@ impl Tower {
       range,
       price,
       total_spent: price,
-      sell_price: (price / 3) as u32,
+      sell_price: (price / 3),
       first_enemy_appeared: false,
       shooting_timer: Timer::new(
         Duration::from_millis((1000. * attack_speed) as u64),
@@ -80,7 +80,7 @@ impl Tower {
   ) {
     // Update total spent and sell price of tower
     self.total_spent += upgrade.cost as u32;
-    self.sell_price = (self.total_spent / 3) as u32;
+    self.sell_price = self.total_spent / 3;
 
     for (k, v) in &upgrade.upgrade {
       match *k {
@@ -95,7 +95,7 @@ impl Tower {
         TowerStat::Range => {
           self.range += *v as u32;
           for mut radius in tower_range_radius.iter_mut() {
-            (*radius).0 = meshes.add(shape::Circle::new(self.range as f32).into());
+            radius.0 = meshes.add(shape::Circle::new(self.range as f32).into());
           }
         }
       }
@@ -207,5 +207,5 @@ fn enemy_in_range(
     }
   }
 
-  return false;
+  false
 }

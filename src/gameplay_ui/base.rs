@@ -25,7 +25,7 @@ pub fn damage_base(commands: &mut Commands, entity: &Entity, enemy_health: i32, 
   commands.entity(*entity).despawn_recursive();
 
   if base.health > enemy_health {
-    base.health -= enemy_health as i32;
+    base.health -= enemy_health;
   } else {
     base.health = 0;
     info!("GAME OVER");

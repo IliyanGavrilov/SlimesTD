@@ -50,10 +50,8 @@ fn lock_tower_buttons(
         if button_tower_type == tower_type {
           image.texture = assets.get_button_asset(*tower_type);
         }
-      } else {
-        if button_tower_type == tower_type {
-          image.texture = assets.get_button_locked_asset(*tower_type);
-        }
+      } else if button_tower_type == tower_type {
+        image.texture = assets.get_button_locked_asset(*tower_type);
       }
     }
   }
@@ -67,7 +65,7 @@ pub fn window_to_world_pos(
   camera_transform: &GlobalTransform,
 ) -> Vec3 {
   // get the size of the window
-  let window_size = Vec2::new(window.width() as f32, window.height() as f32);
+  let window_size = Vec2::new(window.width(), window.height());
 
   // convert screen position [0..resolution] to ndc [-1..1] (gpu coordinates)
   // Normalized device coordinates
@@ -81,7 +79,7 @@ pub fn window_to_world_pos(
 
   world_pos.z = 0.5;
 
-  return world_pos;
+  world_pos
 }
 
 #[derive(Resource)]
@@ -106,7 +104,7 @@ pub fn cursor_above_ui<T: Component>(
       }
     }
   }
-  return false;
+  false
 }
 
 fn place_tower(
@@ -151,7 +149,7 @@ fn place_tower(
     }
     // Sprite follows mouse until tower is placed or discarded
     if let Some(position) = window.cursor_position() {
-      if !cursor_above_ui(&window, &node_query) {
+      if !cursor_above_ui(window, &node_query) {
         cursor_exited_ui.0 = true;
       }
 
@@ -196,7 +194,7 @@ fn place_tower(
     }
 
     // Spawn the tower if user clicks with mouse button in a valid tower placement zone!!!
-    if mouse.just_pressed(MouseButton::Left) && !cursor_above_ui(&window, &node_query) {
+    if mouse.just_pressed(MouseButton::Left) && !cursor_above_ui(window, &node_query) {
       if let Some(screen_pos) = window.cursor_position() {
         cursor_exited_ui.0 = false;
         let mouse_click_pos = window_to_world_pos(window, screen_pos, camera, camera_transform);
@@ -218,7 +216,7 @@ fn place_tower(
             mouse_click_pos,
             &mut meshes,
             &mut materials,
-            &tower_stats,
+            tower_stats,
           );
         }
       }
@@ -226,7 +224,7 @@ fn place_tower(
     // Discard tower
     else if mouse.just_pressed(MouseButton::Right)
       || window.cursor_position().is_none()
-      || (cursor_exited_ui.0 && cursor_above_ui(&window, &node_query))
+      || (cursor_exited_ui.0 && cursor_above_ui(window, &node_query))
     {
       cursor_exited_ui.0 = false;
       commands.entity(entity).despawn_recursive();
@@ -249,7 +247,7 @@ fn place_tower(
         &mut meshes,
         &mut materials,
         &assets,
-        &tower_stats,
+        tower_stats,
       );
     }
   }
@@ -285,7 +283,7 @@ fn spawn_sprite_follower(
       .insert(spawn_tower_range(
         meshes,
         materials,
-        tower_stats.tower[&tower_type].tower.range,
+        tower_stats.tower[tower_type].tower.range,
       ))
       .insert(SpriteFollower)
       .insert(*tower_type)
@@ -324,14 +322,14 @@ fn tower_button_interaction(
     tower_spawn_from_keyboard_input(
       &mut commands,
       &keys,
-      &player,
+      player,
       window,
       camera,
       camera_transform,
       &mut meshes,
       &mut materials,
       &assets,
-      &tower_stats,
+      tower_stats,
     );
   }
 
@@ -358,7 +356,7 @@ fn tower_button_interaction(
               &mut materials,
               tower_type,
               &assets,
-              &tower_stats,
+              tower_stats,
             );
           }
         }
@@ -407,7 +405,7 @@ fn tower_spawn_from_keyboard_input(
       materials,
       &TowerType::Nature,
       assets,
-      &tower_stats,
+      tower_stats,
     );
   } else if keys.just_pressed(KeyCode::Key2)
     && player.money >= tower_stats.tower[&TowerType::Fire].tower.price as usize
@@ -421,7 +419,7 @@ fn tower_spawn_from_keyboard_input(
       materials,
       &TowerType::Fire,
       assets,
-      &tower_stats,
+      tower_stats,
     );
   } else if keys.just_pressed(KeyCode::Key3)
     && player.money >= tower_stats.tower[&TowerType::Ice].tower.price as usize
@@ -435,7 +433,7 @@ fn tower_spawn_from_keyboard_input(
       materials,
       &TowerType::Ice,
       assets,
-      &tower_stats,
+      tower_stats,
     );
   } else if keys.just_pressed(KeyCode::Key4)
     && player.money >= tower_stats.tower[&TowerType::Dark].tower.price as usize
@@ -449,7 +447,7 @@ fn tower_spawn_from_keyboard_input(
       materials,
       &TowerType::Dark,
       assets,
-      &tower_stats,
+      tower_stats,
     );
   } else if keys.just_pressed(KeyCode::Key5)
     && player.money >= tower_stats.tower[&TowerType::Mage].tower.price as usize
@@ -463,7 +461,7 @@ fn tower_spawn_from_keyboard_input(
       materials,
       &TowerType::Mage,
       assets,
-      &tower_stats,
+      tower_stats,
     );
   } else if keys.just_pressed(KeyCode::Key6)
     && player.money >= tower_stats.tower[&TowerType::Archmage].tower.price as usize
@@ -477,7 +475,7 @@ fn tower_spawn_from_keyboard_input(
       materials,
       &TowerType::Archmage,
       assets,
-      &tower_stats,
+      tower_stats,
     );
   }
 }
@@ -492,7 +490,7 @@ fn generate_ui(
   let Some(tower_stats) = tower_stats.get(&game_data.tower_type_stats)
     else { return; };
 
-  commands.insert_resource(CursorExitedUI { 0: false });
+  commands.insert_resource(CursorExitedUI(false));
   commands
     .spawn(NodeBundle {
       background_color: BackgroundColor(Color::GOLD),

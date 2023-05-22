@@ -46,7 +46,7 @@ fn update_gameplay_ui(
   *money = Text::from_section(format!("{}", player.money), money.sections[0].style.clone());
   *health = Text::from_section(format!("{}", base.health), health.sections[0].style.clone());
 
-  if waves.current + 1 <= waves.waves.len() {
+  if waves.current < waves.waves.len() {
     *round = Text::from_section(
       format!("{}/{}", waves.current + 1, waves.waves.len()),
       round.sections[0].style.clone(),

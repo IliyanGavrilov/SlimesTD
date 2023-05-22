@@ -66,7 +66,7 @@ fn mouse_click_interaction(
   if let Some(position) = window.cursor_position() {
     let mouse_click_pos = window_to_world_pos(window, position, camera, camera_transform);
 
-    if !clicked_tower.is_empty() && !cursor_above_ui(&window, node_query) {
+    if !clicked_tower.is_empty() && !cursor_above_ui(window, node_query) {
       for entity in clicked_tower.iter() {
         commands.entity(entity).despawn_recursive();
       }
@@ -74,7 +74,7 @@ fn mouse_click_interaction(
 
     for (tower_entity, tower, tower_type, transform) in towers.iter() {
       if Vec3::distance(mouse_click_pos, transform.translation) <= 25.
-        && !cursor_above_ui(&window, node_query)
+        && !cursor_above_ui(window, node_query)
       {
         commands.entity(tower_entity).with_children(|commands| {
           commands
@@ -83,7 +83,7 @@ fn mouse_click_interaction(
             .insert(TowerUpgradeUI);
         });
 
-        spawn_tower_ui(commands, assets, &tower, *tower_type, transform.translation);
+        spawn_tower_ui(commands, assets, tower, *tower_type, transform.translation);
       }
     }
   }
