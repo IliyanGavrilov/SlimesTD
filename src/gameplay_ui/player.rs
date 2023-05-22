@@ -11,7 +11,7 @@ impl Plugin for PlayerPlugin {
       .add_system(spawn_player.in_schedule(OnEnter(GameState::Gameplay)))
       .add_systems(
         (give_money_on_enemy_death, give_money_on_wave_cleared)
-          .in_set(OnUpdate(GameState::Gameplay))
+          .in_set(OnUpdate(GameState::Gameplay)),
       );
   }
 }

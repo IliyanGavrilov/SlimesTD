@@ -180,7 +180,7 @@ fn tower_shooting(
             commands.spawn(tower_type.get_bullet(
               tower.damage,
               &assets,
-              Transform::from_translation(tower.bullet_spawn_offset)
+              Transform::from_translation(tower.bullet_spawn_offset),
             ));
           });
         }

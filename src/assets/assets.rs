@@ -202,14 +202,10 @@ fn load_assets(
     // Tower buttons
     wizard_nature_button: assets_server
       .load("textures/tower_buttons/buttons/wizard_nature_button.png"),
-    wizard_fire_button: assets_server
-      .load("textures/tower_buttons/buttons/wizard_fire_button.png"),
-    wizard_ice_button: assets_server
-      .load("textures/tower_buttons/buttons/wizard_ice_button.png"),
-    wizard_dark_button: assets_server
-      .load("textures/tower_buttons/buttons/wizard_dark_button.png"),
-    wizard_mage_button: assets_server
-      .load("textures/tower_buttons/buttons/wizard_mage_button.png"),
+    wizard_fire_button: assets_server.load("textures/tower_buttons/buttons/wizard_fire_button.png"),
+    wizard_ice_button: assets_server.load("textures/tower_buttons/buttons/wizard_ice_button.png"),
+    wizard_dark_button: assets_server.load("textures/tower_buttons/buttons/wizard_dark_button.png"),
+    wizard_mage_button: assets_server.load("textures/tower_buttons/buttons/wizard_mage_button.png"),
     wizard_archmage_button: assets_server
       .load("textures/tower_buttons/buttons/wizard_archmage_button.png"),
 

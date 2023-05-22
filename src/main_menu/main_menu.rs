@@ -10,7 +10,7 @@ impl Plugin for MainMenuPlugin {
     app
       .add_system(spawn_main_menu.in_schedule(OnEnter(GameState::MainMenu)))
       .add_systems(
-        (start_button_clicked, exit_button_clicked).in_set(OnUpdate(GameState::MainMenu))
+        (start_button_clicked, exit_button_clicked).in_set(OnUpdate(GameState::MainMenu)),
       );
   }
 }

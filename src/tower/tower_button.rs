@@ -18,7 +18,7 @@ impl Plugin for TowerButtonPlugin {
           place_tower,
           lock_tower_buttons.after(generate_ui),
         )
-          .in_set(OnUpdate(GameState::Gameplay))
+          .in_set(OnUpdate(GameState::Gameplay)),
       );
   }
 }
