@@ -76,7 +76,7 @@ fn mouse_click_interaction(
               .insert(TowerUpgradeUI);
           });
   
-        spawn_tower_ui(commands, assets,  &tower, *tower_type);
+        spawn_tower_ui(commands, assets,  &tower, *tower_type, transform.translation);
       }
     }
   }
@@ -102,7 +102,7 @@ fn tower_ui_interaction (
   sell_button_interaction: Query<&Interaction,
     (Changed<Interaction>, With<Button>, With<SellButton>)>,
   upgrade_button_interaction: Query<(&Interaction, &TowerUpgradeButton),
-    (Changed<Interaction>, With<Button>)>,
+    (Changed<Interaction>, With<Button>)>
 ) {
   let Some(upgrades) = upgrades.get(&game_data.tower_upgrades)
     else { return; };

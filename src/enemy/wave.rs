@@ -152,5 +152,5 @@ fn load_waves(
     enemy_spawn_timer: Timer::new(Duration::from_millis(1),
                                   TimerMode::Repeating),
     remaining: num_enemies
-  })
+  });
 }

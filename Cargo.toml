@@ -19,7 +19,6 @@ bevy-inspector-egui = "0.18.3"
 bevy_asset_loader = "0.16.0"
 bevy_common_assets = {version = "0.6.0", features = ["ron"]}
 bevy_ecs_tilemap = "0.10.0"
-bevy_editor_pls = {git = "https://github.com/PhaestusFox/bevy_editor_pls"}
 rand = "0.8.5"
 ron = "0.8.0"
 serde = {version = "1.0.152", features = ["derive"] }

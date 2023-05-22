@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::assets::*;
 use crate::gameplay_ui::*;
-use crate::GameState;
+use crate::{GameData, GameState, Waves};
 
 #[derive(Component)]
 pub struct GameplayUIRoot;
@@ -12,6 +12,9 @@ pub struct HealthUI;
 
 #[derive(Component)]
 pub struct MoneyUI;
+
+#[derive(Component)]
+pub struct RoundUI;
 
 pub struct GameplayUIPlugin;
 
@@ -25,13 +28,19 @@ impl Plugin for GameplayUIPlugin {
 fn update_gameplay_ui(
   player: Query<&Player>,
   base: Query<&Base>,
-  mut money_ui: Query<&mut Text, (With<MoneyUI>, Without<HealthUI>)>,
-  mut health_ui: Query<&mut Text, With<HealthUI>>,
+  game_data: Res<GameData>,
+  waves: Res<Assets<Waves>>,
+  mut money_ui: Query<&mut Text, (With<MoneyUI>, Without<HealthUI>, Without<RoundUI>)>,
+  mut health_ui: Query<&mut Text, (With<HealthUI>, Without<RoundUI>)>,
+  mut round_ui: Query<&mut Text, With<RoundUI>>
 ) {
   let player = player.single();
   let base = base.single();
+  let Some(waves) = waves.get(&game_data.enemy_waves)
+    else { return; };
   let mut money = money_ui.single_mut();
   let mut health = health_ui.single_mut();
+  let mut round = round_ui.single_mut();
   
   *money = Text::from_section(
     format!("{}", player.money),
@@ -41,6 +50,13 @@ fn update_gameplay_ui(
     format!("{}", base.health),
     health.sections[0].style.clone(),
   );
+  
+  if waves.current + 1 <= waves.waves.len() {
+    *round = Text::from_section(
+      format!("{}/{}", waves.current + 1, waves.waves.len()),
+      round.sections[0].style.clone(),
+    );
+  }
 }
 
 fn spawn_gameplay_ui(
@@ -105,7 +121,7 @@ fn spawn_gameplay_ui(
                 "",
                 TextStyle {
                   font: assets.font.clone(),
-                  font_size: 36.0,
+                  font_size: 36.,
                   color: Color::WHITE,
                 },
               ),
@@ -144,7 +160,7 @@ fn spawn_gameplay_ui(
                 "",
                 TextStyle {
                   font: assets.font.clone(),
-                  font_size: 36.0,
+                  font_size: 36.,
                   color: Color::WHITE,
                 },
               ),
@@ -152,7 +168,32 @@ fn spawn_gameplay_ui(
             })
             .insert(MoneyUI)
             .insert(Name::new("Money"));
+  
+          commands
+            .spawn(TextBundle {
+              style: Style {
+                position_type: PositionType::Absolute,
+                margin: UiRect {
+                  left: Val::Percent(92.5),
+                  right: Val::Percent(4.5),
+                  top: Val::Percent(1.5),
+                  bottom: Val::Percent(2.5),
+                },
+                ..default()
+              },
+              text: Text::from_section(
+                "",
+                TextStyle {
+                  font: assets.font.clone(),
+                  font_size: 50.,
+                  color: Color::WHITE,
+                },
+              ),
+              ..default()
+            })
+            .insert(RoundUI)
+            .insert(Name::new("Round"));
         });
     })
-    .insert(Name::new("MoneyAndHealthUI"));
+    .insert(Name::new("GameplayUI"));
 }

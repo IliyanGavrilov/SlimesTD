@@ -82,7 +82,7 @@ impl Tower {
       match *k {
         TowerStat::Damage => {self.damage += *v as u32}
         TowerStat::AttackSpeed => {
-          self.attack_speed -= (*v as f32 )* 0.01 * self.attack_speed;
+          self.attack_speed -= (*v as f32 ) * 0.01 * self.attack_speed;
           self.shooting_timer.reset();
           self.shooting_timer.set_duration(Duration::from_millis(
             (1000. * self.attack_speed) as u64));
@@ -119,7 +119,7 @@ pub fn spawn_tower(
     });
   
   // Spawn Tower UI - Targeting priority, Selling & Upgrades
-  spawn_tower_ui(commands, assets, &tower_stats.tower[&tower_type].tower, tower_type);
+  spawn_tower_ui(commands, assets, &tower_stats.tower[&tower_type].tower, tower_type, position);
 }
 
 fn tower_shooting(
