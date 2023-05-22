@@ -20,7 +20,8 @@ pub struct GameplayUIPlugin;
 
 impl Plugin for GameplayUIPlugin {
   fn build(&self, app: &mut App) {
-    app.add_system(spawn_gameplay_ui.in_schedule(OnEnter(GameState::Gameplay)))
+    app
+      .add_system(spawn_gameplay_ui.in_schedule(OnEnter(GameState::Gameplay)))
       .add_system(update_gameplay_ui.in_set(OnUpdate(GameState::Gameplay)));
   }
 }
@@ -32,7 +33,7 @@ fn update_gameplay_ui(
   waves: Res<Assets<Waves>>,
   mut money_ui: Query<&mut Text, (With<MoneyUI>, Without<HealthUI>, Without<RoundUI>)>,
   mut health_ui: Query<&mut Text, (With<HealthUI>, Without<RoundUI>)>,
-  mut round_ui: Query<&mut Text, With<RoundUI>>
+  mut round_ui: Query<&mut Text, With<RoundUI>>,
 ) {
   let player = player.single();
   let base = base.single();
@@ -41,16 +42,10 @@ fn update_gameplay_ui(
   let mut money = money_ui.single_mut();
   let mut health = health_ui.single_mut();
   let mut round = round_ui.single_mut();
-  
-  *money = Text::from_section(
-    format!("{}", player.money),
-    money.sections[0].style.clone(),
-  );
-  *health = Text::from_section(
-    format!("{}", base.health),
-    health.sections[0].style.clone(),
-  );
-  
+
+  *money = Text::from_section(format!("{}", player.money), money.sections[0].style.clone());
+  *health = Text::from_section(format!("{}", base.health), health.sections[0].style.clone());
+
   if waves.current + 1 <= waves.waves.len() {
     *round = Text::from_section(
       format!("{}/{}", waves.current + 1, waves.waves.len()),
@@ -59,9 +54,7 @@ fn update_gameplay_ui(
   }
 }
 
-fn spawn_gameplay_ui(
-  mut commands: Commands,
-  assets: Res<GameAssets>) {
+fn spawn_gameplay_ui(mut commands: Commands, assets: Res<GameAssets>) {
   commands
     .spawn(NodeBundle {
       style: Style {
@@ -88,7 +81,8 @@ fn spawn_gameplay_ui(
             ..default()
           },
           ..default()
-        }).insert(GameplayUIRoot)
+        })
+        .insert(GameplayUIRoot)
         .with_children(|commands| {
           commands
             .spawn(ImageBundle {
@@ -105,7 +99,7 @@ fn spawn_gameplay_ui(
               ..default()
             })
             .insert(Name::new("HeartImage"));
-          
+
           commands
             .spawn(TextBundle {
               style: Style {
@@ -129,7 +123,7 @@ fn spawn_gameplay_ui(
             })
             .insert(HealthUI)
             .insert(Name::new("Health"));
-          
+
           commands
             .spawn(ImageBundle {
               style: Style {
@@ -168,7 +162,7 @@ fn spawn_gameplay_ui(
             })
             .insert(MoneyUI)
             .insert(Name::new("Money"));
-  
+
           commands
             .spawn(TextBundle {
               style: Style {

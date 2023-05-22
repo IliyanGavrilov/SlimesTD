@@ -1,22 +1,25 @@
 use bevy::prelude::*;
 
-use crate::{GameState, EnemyDeathEvent, WaveClearedEvent};
+use crate::{EnemyDeathEvent, GameState, WaveClearedEvent};
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
   fn build(&self, app: &mut App) {
-    app.register_type::<Player>()
+    app
+      .register_type::<Player>()
       .add_system(spawn_player.in_schedule(OnEnter(GameState::Gameplay)))
-      .add_systems((give_money_on_enemy_death, give_money_on_wave_cleared)
-        .in_set(OnUpdate(GameState::Gameplay)));
+      .add_systems(
+        (give_money_on_enemy_death, give_money_on_wave_cleared)
+          .in_set(OnUpdate(GameState::Gameplay))
+      );
   }
 }
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct Player {
-    pub money: usize,
+  pub money: usize,
 }
 
 fn spawn_player(mut commands: Commands) {

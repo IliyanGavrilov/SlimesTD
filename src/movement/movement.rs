@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::{Bullet, GameState};
 
@@ -7,7 +7,8 @@ pub struct MovementPlugin;
 
 impl Plugin for MovementPlugin {
   fn build(&self, app: &mut App) {
-    app.register_type::<Movement>()
+    app
+      .register_type::<Movement>()
       .add_system(basic_movement.in_set(OnUpdate(GameState::Gameplay)));
   }
 }
@@ -17,7 +18,7 @@ impl Plugin for MovementPlugin {
 pub struct Movement {
   pub direction: Vec3,
   pub speed: f32,
-  pub distance_travelled: f32
+  pub distance_travelled: f32,
 }
 
 impl Movement {
@@ -25,14 +26,14 @@ impl Movement {
     Self {
       direction,
       speed,
-      distance_travelled: 0.
+      distance_travelled: 0.,
     }
   }
 }
 
 fn basic_movement(
   mut entities: Query<(&mut Movement, &mut Transform), With<Bullet>>,
-  time: Res<Time>
+  time: Res<Time>,
 ) {
   for (mut movement, mut transform) in &mut entities {
     let distance = movement.direction.normalize() * movement.speed * time.delta_seconds();

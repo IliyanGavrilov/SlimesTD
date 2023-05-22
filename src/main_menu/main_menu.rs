@@ -9,8 +9,9 @@ impl Plugin for MainMenuPlugin {
   fn build(&self, app: &mut App) {
     app
       .add_system(spawn_main_menu.in_schedule(OnEnter(GameState::MainMenu)))
-      .add_systems((start_button_clicked, exit_button_clicked)
-        .in_set(OnUpdate(GameState::MainMenu)));
+      .add_systems(
+        (start_button_clicked, exit_button_clicked).in_set(OnUpdate(GameState::MainMenu))
+      );
   }
 }
 
@@ -33,7 +34,7 @@ fn start_button_clicked(
     if matches!(interaction, Interaction::Clicked) {
       let root_entity = menu_root.single();
       commands.entity(root_entity).despawn_recursive();
-      
+
       game_state.set(GameState::Gameplay);
     }
   }
@@ -50,25 +51,25 @@ fn exit_button_clicked(
   }
 }
 
-fn spawn_main_menu(
-  mut commands: Commands, assets: Res<GameAssets>
-) {
+fn spawn_main_menu(mut commands: Commands, assets: Res<GameAssets>) {
   let start_button = commands
     .spawn(ButtonBundle {
       style: spawn_button_style(),
       image: assets.start_button.clone().into(),
       ..default()
-    }).id();
+    })
+    .id();
   commands.entity(start_button).insert(StartButton);
-  
+
   let exit_button = commands
     .spawn(ButtonBundle {
       style: spawn_button_style(),
       image: assets.exit_button.clone().into(),
       ..default()
-    }).id();
+    })
+    .id();
   commands.entity(exit_button).insert(ExitButton);
-  
+
   commands
     .spawn(NodeBundle {
       style: Style {

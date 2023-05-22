@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::assets::*;
 use crate::enemy::*;
@@ -10,7 +10,8 @@ pub struct EnemyPlugin;
 
 impl Plugin for EnemyPlugin {
   fn build(&self, app: &mut App) {
-    app.register_type::<Enemy>()
+    app
+      .register_type::<Enemy>()
       .register_type::<Path>()
       .add_event::<EnemyDeathEvent>()
       //.add_startup_system(load_enemy_type_stats)
@@ -28,7 +29,7 @@ pub struct EnemyBundle {
   pub animation_indices: AnimationIndices,
   pub animation_timer: AnimationTimer,
   pub path: Path,
-  pub name: Name
+  pub name: Name,
 }
 
 impl Default for EnemyBundle {
@@ -36,11 +37,14 @@ impl Default for EnemyBundle {
     Self {
       enemy_type: EnemyType::Green,
       enemy: Enemy::new(1),
-      movement: Movement { speed: 50. , ..default()},
-      animation_indices: AnimationIndices {first: 0, last: 9},
+      movement: Movement {
+        speed: 50.,
+        ..default()
+      },
+      animation_indices: AnimationIndices { first: 0, last: 9 },
       animation_timer: AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
-      path: Path {index: 0},
-      name: Name::new("GreenEnemy")
+      path: Path { index: 0 },
+      name: Name::new("GreenEnemy"),
     }
   }
 }
@@ -48,20 +52,18 @@ impl Default for EnemyBundle {
 #[derive(Reflect, Debug, Component, Default, Clone, Serialize, Deserialize)]
 #[reflect(Component)]
 pub struct Enemy {
-  pub health: i32
+  pub health: i32,
 }
 
 #[derive(Reflect, Component, Default, Clone, Serialize, Debug, Deserialize)]
 #[reflect(Component)]
 pub struct Path {
-  pub index: usize
+  pub index: usize,
 }
 
 impl Enemy {
   pub fn new(health: i32) -> Self {
-    Self {
-      health
-    }
+    Self { health }
   }
 }
 
@@ -72,9 +74,10 @@ pub fn spawn_enemy(
   assets: &GameAssets,
   position: Vec3,
   path: Path,
-  enemy_stats: &EnemyTypeStats
+  enemy_stats: &EnemyTypeStats,
 ) {
-  commands.spawn(enemy_type.get_enemy(map_path, path, enemy_stats))
+  commands
+    .spawn(enemy_type.get_enemy(map_path, path, enemy_stats))
     .insert(enemy_type.get_sprite_sheet_bundle(assets, position));
 }
 
@@ -82,7 +85,7 @@ pub fn spawn_enemy(
 fn despawn_enemy_on_death(
   mut commands: Commands,
   enemies: Query<(Entity, &mut Enemy)>,
-  mut death_event_writer: EventWriter<EnemyDeathEvent>
+  mut death_event_writer: EventWriter<EnemyDeathEvent>,
 ) {
   for (entity, enemy) in &enemies {
     if enemy.health <= 0 {

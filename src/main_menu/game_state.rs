@@ -5,5 +5,5 @@ pub enum GameState {
   #[default]
   AssetLoading,
   MainMenu,
-  Gameplay
+  Gameplay,
 }

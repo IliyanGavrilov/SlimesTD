@@ -4,7 +4,7 @@ use strum::IntoEnumIterator;
 
 use crate::assets::*;
 use crate::tower::*;
-use crate::{GameData, GameplayUIRoot, GameState, MainCamera, Player};
+use crate::{GameData, GameState, GameplayUIRoot, MainCamera, Player};
 
 pub struct TowerButtonPlugin;
 
@@ -12,8 +12,14 @@ impl Plugin for TowerButtonPlugin {
   fn build(&self, app: &mut App) {
     app
       .add_system(generate_ui.in_schedule(OnEnter(GameState::Gameplay)))
-      .add_systems((tower_button_interaction, place_tower, lock_tower_buttons.after(generate_ui))
-        .in_set(OnUpdate(GameState::Gameplay)));
+      .add_systems(
+        (
+          tower_button_interaction,
+          place_tower,
+          lock_tower_buttons.after(generate_ui),
+        )
+          .in_set(OnUpdate(GameState::Gameplay))
+      );
   }
 }
 
@@ -27,25 +33,24 @@ pub struct SpriteFollower;
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct TowerButtonState {
-  price: u32
+  price: u32,
 }
 
 fn lock_tower_buttons(
   mut buttons: Query<(&mut TowerButtonState, &TowerType)>,
   mut button_images: Query<(&mut UiImage, &TowerType)>,
   player: Query<&Player>,
-  assets: Res<GameAssets>
+  assets: Res<GameAssets>,
 ) {
   let player = player.single();
-  
+
   for (state, tower_type) in &mut buttons {
     for (mut image, button_tower_type) in button_images.iter_mut() {
       if player.money >= state.price as usize {
         if button_tower_type == tower_type {
           image.texture = assets.get_button_asset(*tower_type);
         }
-      }
-      else {
+      } else {
         if button_tower_type == tower_type {
           image.texture = assets.get_button_locked_asset(*tower_type);
         }
@@ -59,23 +64,23 @@ pub fn window_to_world_pos(
   window: &Window,
   cursor_pos: Vec2,
   camera: &Camera,
-  camera_transform: &GlobalTransform
+  camera_transform: &GlobalTransform,
 ) -> Vec3 {
   // get the size of the window
   let window_size = Vec2::new(window.width() as f32, window.height() as f32);
-  
+
   // convert screen position [0..resolution] to ndc [-1..1] (gpu coordinates)
   // Normalized device coordinates
   let ndc = (cursor_pos / window_size) * 2.0 - Vec2::ONE;
-  
+
   // matrix for undoing the projection and camera transform
   let ndc_to_world = camera_transform.compute_matrix() * camera.projection_matrix().inverse();
-  
+
   // use it to convert ndc to world-space coordinates
   let mut world_pos = ndc_to_world.project_point3(ndc.extend(-1.0));
-  
+
   world_pos.z = 0.5;
-  
+
   return world_pos;
 }
 
@@ -84,19 +89,18 @@ struct CursorExitedUI(bool);
 
 pub fn cursor_above_ui<T: Component>(
   window: &Window,
-  node_query: &Query<(&Node, &GlobalTransform, &Visibility), With<T>>
+  node_query: &Query<(&Node, &GlobalTransform, &Visibility), With<T>>,
 ) -> bool {
   if let Some(pointer_position) = window.cursor_position() {
-    for (node,
-      global_transform,
-      &visibility) in node_query.iter() {
+    for (node, global_transform, &visibility) in node_query.iter() {
       if visibility == Visibility::Inherited {
         let node_position = global_transform.translation().xy();
         let half_size = 0.5 * Vec2::new(node.size().x, window.height() * 0.20);
         let min = node_position - half_size;
         let max = node_position + half_size;
-        if (min.x .. max.x).contains(&pointer_position.x)
-          && (min.y .. max.y).contains(&pointer_position.y) {
+        if (min.x..max.x).contains(&pointer_position.x)
+          && (min.y..max.y).contains(&pointer_position.y)
+        {
           return true;
         }
       }
@@ -107,8 +111,15 @@ pub fn cursor_above_ui<T: Component>(
 
 fn place_tower(
   mut commands: Commands,
-  mut query: Query<(Entity, &mut Transform, &TowerType, &mut Handle<ColorMaterial>),
-    With<SpriteFollower>>,
+  mut query: Query<
+    (
+      Entity,
+      &mut Transform,
+      &TowerType,
+      &mut Handle<ColorMaterial>,
+    ),
+    With<SpriteFollower>,
+  >,
   assets: Res<GameAssets>,
   mouse: Res<Input<MouseButton>>,
   keys: Res<Input<KeyCode>>,
@@ -123,20 +134,16 @@ fn place_tower(
   tower_stats: Res<Assets<TowerTypeStats>>,
   node_query: Query<(&Node, &GlobalTransform, &Visibility), With<GameplayUIRoot>>,
   //tilemap: Res<Map>,
-  mut cursor_exited_ui: ResMut<CursorExitedUI> // Flag to check initial mouse exit from button UI
+  mut cursor_exited_ui: ResMut<CursorExitedUI>, // Flag to check initial mouse exit from button UI
 ) {
   let Some(tower_stats) = tower_stats.get(&game_data.tower_type_stats)
     else { return; };
-  
+
   let window = windows.get_single().unwrap();
   let (camera, camera_transform) = camera_query.single();
   let mut player = player.single_mut();
-  
-  for (entity,
-    mut transform,
-    tower_type,
-    mut color) in query.iter_mut() {
-    
+
+  for (entity, mut transform, tower_type, mut color) in query.iter_mut() {
     if !clicked_tower.is_empty() {
       for entity in clicked_tower.iter_mut() {
         commands.entity(entity).despawn_recursive();
@@ -147,60 +154,55 @@ fn place_tower(
       if !cursor_above_ui(&window, &node_query) {
         cursor_exited_ui.0 = true;
       }
-      
-      transform.translation =
-        window_to_world_pos(window, position, camera, camera_transform);
-      
-// Tower range becomes red when trying to place on path/invalid tile
-// for (y, row) in tilemap.tiles.iter().enumerate() {
-//   let mouse_on_path = row.iter().enumerate().filter(|(x, tile)| {
-//     if matches!(tile, Tile::Path(_)) &&
-//       position.x >= (*x as f32 * tilemap.tile_size as f32 -
-//        tilemap.tile_size as f32 / 2.) as f32 &&
-//       position.y >= (y as f32 * tilemap.tile_size as f32 -
-//        tilemap.tile_size as f32 / 2.) as f32 &&
-//       position.x <= (*x as f32 * tilemap.tile_size as f32 +
-//        tilemap.tile_size as f32 / 2.) as f32 &&
-//       position.y <= (y as f32 * tilemap.tile_size as f32 +
-//        tilemap.tile_size as f32 / 2.) as f32 {
-//       println!("{:?}, {:?}, {:?}", position, x, y);
-//       return true;
-//     }
-//     false
-//   }).last();
-//   if mouse_on_path.is_some() {
-//     println!("ON PATH");
-//     *color = materials.add(ColorMaterial::from(
-//       Color::rgba_u8(202, 0, 0, 150)));
-//   }
-// }
-      
-        let mouse_on_placed_tower = towers
-          .iter()
-          .filter(|tower_transform| {
-            Vec3::distance(transform.translation, tower_transform.translation) <= 50. })
-          .last();
-  
-        if mouse_on_placed_tower.is_some() {
-          *color = materials.add(ColorMaterial::from(
-            Color::rgba_u8(202, 0, 0, 150)));
-        }
-        else {
-          *color = materials.add(ColorMaterial::from(
-            Color::rgba_u8(0, 0, 0, 85)));
-        }
+
+      transform.translation = window_to_world_pos(window, position, camera, camera_transform);
+
+      // Tower range becomes red when trying to place on path/invalid tile
+      // for (y, row) in tilemap.tiles.iter().enumerate() {
+      //   let mouse_on_path = row.iter().enumerate().filter(|(x, tile)| {
+      //     if matches!(tile, Tile::Path(_)) &&
+      //       position.x >= (*x as f32 * tilemap.tile_size as f32 -
+      //        tilemap.tile_size as f32 / 2.) as f32 &&
+      //       position.y >= (y as f32 * tilemap.tile_size as f32 -
+      //        tilemap.tile_size as f32 / 2.) as f32 &&
+      //       position.x <= (*x as f32 * tilemap.tile_size as f32 +
+      //        tilemap.tile_size as f32 / 2.) as f32 &&
+      //       position.y <= (y as f32 * tilemap.tile_size as f32 +
+      //        tilemap.tile_size as f32 / 2.) as f32 {
+      //       println!("{:?}, {:?}, {:?}", position, x, y);
+      //       return true;
+      //     }
+      //     false
+      //   }).last();
+      //   if mouse_on_path.is_some() {
+      //     println!("ON PATH");
+      //     *color = materials.add(ColorMaterial::from(
+      //       Color::rgba_u8(202, 0, 0, 150)));
+      //   }
+      // }
+
+      let mouse_on_placed_tower = towers
+        .iter()
+        .filter(|tower_transform| {
+          Vec3::distance(transform.translation, tower_transform.translation) <= 50.
+        })
+        .last();
+
+      if mouse_on_placed_tower.is_some() {
+        *color = materials.add(ColorMaterial::from(Color::rgba_u8(202, 0, 0, 150)));
+      } else {
+        *color = materials.add(ColorMaterial::from(Color::rgba_u8(0, 0, 0, 85)));
+      }
     }
-    
+
     // Spawn the tower if user clicks with mouse button in a valid tower placement zone!!!
-    if mouse.just_pressed(MouseButton::Left) &&
-      !cursor_above_ui(&window, &node_query) {
+    if mouse.just_pressed(MouseButton::Left) && !cursor_above_ui(&window, &node_query) {
       if let Some(screen_pos) = window.cursor_position() {
         cursor_exited_ui.0 = false;
-        let mouse_click_pos =
-          window_to_world_pos(window, screen_pos, camera, camera_transform);
-        
+        let mouse_click_pos = window_to_world_pos(window, screen_pos, camera, camera_transform);
+
         let mut place_tower = true;
-        
+
         for tower_transform in towers.iter() {
           if Vec3::distance(mouse_click_pos, tower_transform.translation) <= 40. {
             place_tower = false;
@@ -209,26 +211,46 @@ fn place_tower(
         if place_tower {
           player.money -= tower_stats.tower[tower_type].tower.price as usize;
           commands.entity(entity).despawn_recursive();
-          spawn_tower(&mut commands,
-                      *tower_type,
-                      &assets,
-                      mouse_click_pos, &mut meshes, &mut materials, &tower_stats);
+          spawn_tower(
+            &mut commands,
+            *tower_type,
+            &assets,
+            mouse_click_pos,
+            &mut meshes,
+            &mut materials,
+            &tower_stats,
+          );
         }
       }
-    } // Discard tower
-    else if mouse.just_pressed(MouseButton::Right) || window.cursor_position().is_none() ||
-      (cursor_exited_ui.0 && cursor_above_ui(&window, &node_query)) {
-      cursor_exited_ui.0 = false;
-      commands.entity(entity).despawn_recursive();
     }
-    else if keys.just_pressed(KeyCode::Key1) || keys.just_pressed(KeyCode::Key2) ||
-      keys.just_pressed(KeyCode::Key3) || keys.just_pressed(KeyCode::Key4) ||
-      keys.just_pressed(KeyCode::Key5) || keys.just_pressed(KeyCode::Key6) {
+    // Discard tower
+    else if mouse.just_pressed(MouseButton::Right)
+      || window.cursor_position().is_none()
+      || (cursor_exited_ui.0 && cursor_above_ui(&window, &node_query))
+    {
       cursor_exited_ui.0 = false;
       commands.entity(entity).despawn_recursive();
-      tower_spawn_from_keyboard_input(&mut commands, &keys, &player, window,
-                                      camera, camera_transform, &mut meshes,
-                                      &mut materials, &assets, &tower_stats);
+    } else if keys.just_pressed(KeyCode::Key1)
+      || keys.just_pressed(KeyCode::Key2)
+      || keys.just_pressed(KeyCode::Key3)
+      || keys.just_pressed(KeyCode::Key4)
+      || keys.just_pressed(KeyCode::Key5)
+      || keys.just_pressed(KeyCode::Key6)
+    {
+      cursor_exited_ui.0 = false;
+      commands.entity(entity).despawn_recursive();
+      tower_spawn_from_keyboard_input(
+        &mut commands,
+        &keys,
+        &player,
+        window,
+        camera,
+        camera_transform,
+        &mut meshes,
+        &mut materials,
+        &assets,
+        &tower_stats,
+      );
     }
   }
 }
@@ -242,25 +264,29 @@ fn spawn_sprite_follower(
   materials: &mut Assets<ColorMaterial>,
   tower_type: &TowerType,
   assets: &GameAssets,
-  tower_stats: &TowerTypeStats
+  tower_stats: &TowerTypeStats,
 ) {
   // Spawn component that alerts the place_tower() system that a button has been pressed
   // and it starts moving a sprite with the cursor until the tower is placed
   if let Some(position) = window.cursor_position() {
     let transform = window_to_world_pos(window, position, camera, camera_transform);
-    commands.spawn(SpriteBundle {
-      texture: assets.get_tower_asset(*tower_type),
-      transform: Transform::from_translation(transform),
-      ..default()
-    })
+    commands
+      .spawn(SpriteBundle {
+        texture: assets.get_tower_asset(*tower_type),
+        transform: Transform::from_translation(transform),
+        ..default()
+      })
       // .with_children(|commands| {
       //   commands.spawn(spawn_tower_range(meshes, materials,
       //                                    tower_stats.tower[&tower_type].tower.range))
       //     .insert(SpriteFollower)
       //     .insert(Name::new("Tower Range"));
       // })
-      .insert(spawn_tower_range(meshes, materials,
-                                tower_stats.tower[&tower_type].tower.range))
+      .insert(spawn_tower_range(
+        meshes,
+        materials,
+        tower_stats.tower[&tower_type].tower.range,
+      ))
       .insert(SpriteFollower)
       .insert(*tower_type)
       .insert(Name::new("SpriteFollower"));
@@ -270,8 +296,10 @@ fn spawn_sprite_follower(
 fn tower_button_interaction(
   mut commands: Commands,
   assets: Res<GameAssets>,
-  interaction: Query<(&Interaction, &TowerType, &TowerButtonState),
-    (Changed<Interaction>, With<Button>)>,
+  interaction: Query<
+    (&Interaction, &TowerType, &TowerButtonState),
+    (Changed<Interaction>, With<Button>),
+  >,
   mut images: Query<(&mut UiImage, &TowerType)>,
   windows: Query<&Window>,
   camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
@@ -279,39 +307,59 @@ fn tower_button_interaction(
   mut materials: ResMut<Assets<ColorMaterial>>,
   keys: Res<Input<KeyCode>>,
   query: Query<&SpriteFollower>,
-  player: Query<& Player>,
+  player: Query<&Player>,
   game_data: Res<GameData>,
   tower_stats: Res<Assets<TowerTypeStats>>,
 ) {
   let Some(tower_stats) = tower_stats.get(&game_data.tower_type_stats)
     else { return; };
-  
+
   let window = windows.get_single().unwrap();
   let (camera, camera_transform) = camera_query.single();
   let player = player.single();
-  
+
   // Keyboard shortcuts
-  if query.is_empty() { // Spawn one tower at a time
-    tower_spawn_from_keyboard_input(&mut commands, &keys, &player, window,
-                                    camera, camera_transform, &mut meshes,
-                                    &mut materials, &assets, &tower_stats);
+  if query.is_empty() {
+    // Spawn one tower at a time
+    tower_spawn_from_keyboard_input(
+      &mut commands,
+      &keys,
+      &player,
+      window,
+      camera,
+      camera_transform,
+      &mut meshes,
+      &mut materials,
+      &assets,
+      &tower_stats,
+    );
   }
-  
+
   for (interaction, tower_type, state) in &interaction {
     if player.money >= state.price as usize {
       match interaction {
         Interaction::Clicked => {
-          if query.is_empty() { // Spawn one tower at a time
+          if query.is_empty() {
+            // Spawn one tower at a time
             // Change button UI
             for (mut image, button_tower_type) in images.iter_mut() {
               if button_tower_type == tower_type {
                 image.texture = assets.get_button_pressed_asset(*tower_type);
               }
             }
-            
+
             // Spawn tower sprite following mouse
-            spawn_sprite_follower(&mut commands, window, camera, camera_transform, &mut meshes,
-                                  &mut materials, tower_type, &assets, &tower_stats);
+            spawn_sprite_follower(
+              &mut commands,
+              window,
+              camera,
+              camera_transform,
+              &mut meshes,
+              &mut materials,
+              tower_type,
+              &assets,
+              &tower_stats,
+            );
           }
         }
         Interaction::Hovered => {
@@ -345,43 +393,92 @@ fn tower_spawn_from_keyboard_input(
   meshes: &mut Assets<Mesh>,
   materials: &mut Assets<ColorMaterial>,
   assets: &GameAssets,
-  tower_stats: &TowerTypeStats
+  tower_stats: &TowerTypeStats,
 ) {
-  if keys.just_pressed(KeyCode::Key1) &&
-    player.money >= tower_stats.tower[&TowerType::Nature].tower.price as usize {
-    
-    spawn_sprite_follower(commands, window, camera, camera_transform, meshes,
-                          materials, &TowerType::Nature, assets, &tower_stats);
-  }
-  else if keys.just_pressed(KeyCode::Key2) &&
-    player.money >= tower_stats.tower[&TowerType::Fire].tower.price as usize {
-  
-    spawn_sprite_follower(commands, window, camera, camera_transform, meshes,
-                          materials, &TowerType::Fire, assets, &tower_stats);
-  }
-  else if keys.just_pressed(KeyCode::Key3) &&
-    player.money >= tower_stats.tower[&TowerType::Ice].tower.price as usize {
-  
-    spawn_sprite_follower(commands, window, camera, camera_transform, meshes,
-                          materials, &TowerType::Ice, assets, &tower_stats);
-  }
-  else if keys.just_pressed(KeyCode::Key4) &&
-    player.money >= tower_stats.tower[&TowerType::Dark].tower.price as usize {
-  
-    spawn_sprite_follower(commands, window, camera, camera_transform, meshes,
-                          materials, &TowerType::Dark, assets, &tower_stats);
-  }
-  else if keys.just_pressed(KeyCode::Key5) &&
-    player.money >= tower_stats.tower[&TowerType::Mage].tower.price as usize {
-  
-    spawn_sprite_follower(commands, window, camera, camera_transform, meshes,
-                          materials, &TowerType::Mage, assets, &tower_stats);
-  }
-  else if keys.just_pressed(KeyCode::Key6) &&
-    player.money >= tower_stats.tower[&TowerType::Archmage].tower.price as usize {
-  
-    spawn_sprite_follower(commands, window, camera, camera_transform, meshes,
-                          materials, &TowerType::Archmage, assets, &tower_stats);
+  if keys.just_pressed(KeyCode::Key1)
+    && player.money >= tower_stats.tower[&TowerType::Nature].tower.price as usize
+  {
+    spawn_sprite_follower(
+      commands,
+      window,
+      camera,
+      camera_transform,
+      meshes,
+      materials,
+      &TowerType::Nature,
+      assets,
+      &tower_stats,
+    );
+  } else if keys.just_pressed(KeyCode::Key2)
+    && player.money >= tower_stats.tower[&TowerType::Fire].tower.price as usize
+  {
+    spawn_sprite_follower(
+      commands,
+      window,
+      camera,
+      camera_transform,
+      meshes,
+      materials,
+      &TowerType::Fire,
+      assets,
+      &tower_stats,
+    );
+  } else if keys.just_pressed(KeyCode::Key3)
+    && player.money >= tower_stats.tower[&TowerType::Ice].tower.price as usize
+  {
+    spawn_sprite_follower(
+      commands,
+      window,
+      camera,
+      camera_transform,
+      meshes,
+      materials,
+      &TowerType::Ice,
+      assets,
+      &tower_stats,
+    );
+  } else if keys.just_pressed(KeyCode::Key4)
+    && player.money >= tower_stats.tower[&TowerType::Dark].tower.price as usize
+  {
+    spawn_sprite_follower(
+      commands,
+      window,
+      camera,
+      camera_transform,
+      meshes,
+      materials,
+      &TowerType::Dark,
+      assets,
+      &tower_stats,
+    );
+  } else if keys.just_pressed(KeyCode::Key5)
+    && player.money >= tower_stats.tower[&TowerType::Mage].tower.price as usize
+  {
+    spawn_sprite_follower(
+      commands,
+      window,
+      camera,
+      camera_transform,
+      meshes,
+      materials,
+      &TowerType::Mage,
+      assets,
+      &tower_stats,
+    );
+  } else if keys.just_pressed(KeyCode::Key6)
+    && player.money >= tower_stats.tower[&TowerType::Archmage].tower.price as usize
+  {
+    spawn_sprite_follower(
+      commands,
+      window,
+      camera,
+      camera_transform,
+      meshes,
+      materials,
+      &TowerType::Archmage,
+      assets,
+      &tower_stats,
+    );
   }
 }
 
@@ -390,14 +487,12 @@ fn generate_ui(
   mut commands: Commands,
   assets: Res<GameAssets>,
   game_data: Res<GameData>,
-  tower_stats: Res<Assets<TowerTypeStats>>
+  tower_stats: Res<Assets<TowerTypeStats>>,
 ) {
   let Some(tower_stats) = tower_stats.get(&game_data.tower_type_stats)
     else { return; };
-  
-  commands.insert_resource(CursorExitedUI {
-    0: false,
-  });
+
+  commands.insert_resource(CursorExitedUI { 0: false });
   commands
     .spawn(NodeBundle {
       background_color: BackgroundColor(Color::GOLD),
@@ -411,7 +506,8 @@ fn generate_ui(
     })
     .insert(TowerUIRoot) // Marker component
     .insert(Name::new("TowerButtons"))
-    .with_children(|commands| { // Make the buttons children of the menu
+    .with_children(|commands| {
+      // Make the buttons children of the menu
       for i in TowerType::iter() {
         commands
           .spawn(ButtonBundle {
@@ -447,7 +543,7 @@ fn generate_ui(
             });
           })
           .insert(TowerButtonState {
-            price: tower_stats.tower[&i].tower.price
+            price: tower_stats.tower[&i].tower.price,
           })
           .insert(i)
           .insert(Name::new("TowerButton"));

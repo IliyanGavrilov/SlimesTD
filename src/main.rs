@@ -25,36 +25,34 @@ fn main() {
   App::new()
     // Background of window. Set colour of screen on each refresh
     .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
-  
     // Add basic game functionality - window, game tick, renderer,
     // asset loading, UI system, input, startup systems, etc.
-    .add_plugins(DefaultPlugins
-      // Prevent blurry sprites
-      .set(ImagePlugin::default_nearest())
-      .set(WindowPlugin {
-        primary_window: Some(Window {
-          title: "Slimes Tower Defense".to_string(),
-          position: WindowPosition::Centered(MonitorSelection::Primary),
-          resizable: false,
+    .add_plugins(
+      DefaultPlugins
+        // Prevent blurry sprites
+        .set(ImagePlugin::default_nearest())
+        .set(WindowPlugin {
+          primary_window: Some(Window {
+            title: "Slimes Tower Defense".to_string(),
+            position: WindowPosition::Centered(MonitorSelection::Primary),
+            resizable: false,
+            ..default()
+          }),
           ..default()
         }),
-        ..default()
-      }))
-  
+    )
     // Game State
     .add_state::<GameState>()
-    
     // Asset loading
     .add_plugin(RonAssetPlugin::<EnemyTypeStats>::new(&["enemy_types.ron"]))
     .add_plugin(RonAssetPlugin::<Map>::new(&["map.ron"]))
     .add_plugin(RonAssetPlugin::<TowerTypeStats>::new(&["tower_stats.ron"]))
     .add_plugin(RonAssetPlugin::<Upgrades>::new(&["upgrades.ron"]))
     .add_plugin(RonAssetPlugin::<Waves>::new(&["waves.ron"]))
-    .add_loading_state(LoadingState::new(GameState::AssetLoading)
-        .continue_to_state(GameState::MainMenu),
+    .add_loading_state(
+      LoadingState::new(GameState::AssetLoading).continue_to_state(GameState::MainMenu),
     )
     .add_collection_to_loading_state::<_, GameData>(GameState::AssetLoading)
-    
     // Plugins
     .add_plugin(MainMenuPlugin)
     .add_plugin(GameplayUIPlugin)
@@ -72,7 +70,6 @@ fn main() {
     .add_plugin(WavePlugin)
     .add_plugin(BulletPlugin)
     .add_plugin(MovementPlugin)
-    
     // !!!Debugging
     .add_plugin(WorldInspectorPlugin::new())
     .add_plugin(bevy::diagnostic::LogDiagnosticsPlugin::default())
