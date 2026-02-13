@@ -67,7 +67,7 @@ pub fn window_to_world_pos(
   // get the size of the window
   let window_size = Vec2::new(window.width(), window.height());
 
-  // convert screen position [0..resolution] to ndc [-1..1] (gpu coordinates)
+  // convert screen position [0...<resolution>] to ndc [-1..1] (gpu coordinates)
   // Normalized device coordinates
   let ndc = (cursor_pos / window_size) * 2.0 - Vec2::ONE;
 
@@ -264,7 +264,7 @@ fn spawn_sprite_follower(
   assets: &GameAssets,
   tower_stats: &TowerTypeStats,
 ) {
-  // Spawn component that alerts the place_tower() system that a button has been pressed
+  // Spawn component that alerts the place_tower() system that a button has been pressed,
   // and it starts moving a sprite with the cursor until the tower is placed
   if let Some(position) = window.cursor_position() {
     let transform = window_to_world_pos(window, position, camera, camera_transform);

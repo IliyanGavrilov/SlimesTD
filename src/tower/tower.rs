@@ -61,7 +61,7 @@ impl Tower {
       range,
       price,
       total_spent: price,
-      sell_price: (price / 3),
+      sell_price: price / 3,
       first_enemy_appeared: false,
       shooting_timer: Timer::new(
         Duration::from_millis((1000. * attack_speed) as u64),

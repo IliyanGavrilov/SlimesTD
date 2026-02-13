@@ -32,7 +32,7 @@ pub struct Waves {
 
 impl Waves {
   pub fn current(&self) -> Option<&Wave> {
-    return self.waves.get(self.current);
+    self.waves.get(self.current)
   }
 
   pub fn advance(
@@ -43,7 +43,7 @@ impl Waves {
       index: self.current,
     });
     self.current += 1;
-    return self.current();
+    self.current()
   }
 }
 

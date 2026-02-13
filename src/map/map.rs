@@ -28,7 +28,7 @@ pub struct MapPath {
 #[derive(Component)]
 pub struct TileMap;
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct Point {
   pub x: usize,
   pub y: usize,
@@ -49,6 +49,22 @@ impl Coordinate {
 impl Point {
   pub fn to_vec3(&self) -> Vec3 {
     Vec3::new(self.x as f32, self.y as f32, 0.)
+  }
+  
+  pub fn to_coordinate(self, tile_size: usize, center_y: bool) -> Coordinate {
+    let y_offset = if center_y { tile_size / 2 } else { 0 };
+    Coordinate {
+      x: (self.x * tile_size) as f32,
+      y: (self.y * tile_size + y_offset) as f32,
+    }
+  }
+
+  pub fn is_adjacent_to(self, other: Point) -> bool {
+    let distance = Vec2::new(
+      self.x as f32 - other.x as f32,
+      self.y as f32 - other.y as f32,
+    ).length();
+    (0.9..=1.1).contains(&distance)
   }
 }
 
@@ -89,44 +105,17 @@ fn load_map(game_data: Res<GameData>, mut map: ResMut<Assets<Map>>) {
 
 impl Map {
   fn create_checkpoints(&mut self, mut path_tiles: Vec<Point>, spawn: Point, end: Point) {
+    self.checkpoints.push(spawn.to_coordinate(self.tile_size, false).to_vec3());
+
     let mut last_point = spawn;
 
-    loop {
-      let next_point_position = path_tiles.iter().position(|point| {
-        let length = Vec2::new(
-          last_point.x as f32 - point.x as f32,
-          last_point.y as f32 - point.y as f32,
-        )
-        .length();
-        (0.9..=1.1).contains(&length)
-      });
-      if let Some(next_point_position) = next_point_position {
-        let next_point = path_tiles.remove(next_point_position);
-        self.checkpoints.push(
-          Coordinate {
-            x: (next_point.x * self.tile_size) as f32,
-            y: (next_point.y * self.tile_size + self.tile_size / 2) as f32,
-          }
-          .to_vec3(),
-        );
-        last_point = next_point;
-      } else {
-        self.checkpoints.push(
-          Coordinate {
-            x: (end.x * self.tile_size) as f32,
-            y: (end.y * self.tile_size + self.tile_size / 2) as f32,
-          }
-          .to_vec3(),
-        );
-        self.checkpoints[0] = Coordinate {
-          x: self.checkpoints[0].x * self.tile_size as f32,
-          y: self.checkpoints[0].y * self.tile_size as f32,
-        }
-        .to_vec3();
-
-        return;
-      }
+    while let Some(next_idx) = path_tiles.iter().position(|p| last_point.is_adjacent_to(*p)) {
+      let next_point = path_tiles.remove(next_idx);
+      self.checkpoints.push(next_point.to_coordinate(self.tile_size, true).to_vec3());
+      last_point = next_point;
     }
+
+    self.checkpoints.push(end.to_coordinate(self.tile_size, true).to_vec3());
   }
 }
 

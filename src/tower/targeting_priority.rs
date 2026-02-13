@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::utils::FloatOrd;
 use rand::seq::IteratorRandom;
 use serde::{Deserialize, Serialize};
+use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 use crate::enemy::*;
@@ -22,28 +23,23 @@ pub enum TargetingPriority {
 }
 
 impl TargetingPriority {
+  fn as_index(&self) -> usize {
+    Self::iter().position(|v| v == *self).unwrap()
+  }
+
+  fn from_index(idx: usize) -> Self {
+    let count = Self::iter().count();
+    Self::iter().nth(idx % count).unwrap()
+  }
+
   pub fn next_target(&mut self) {
-    *self = match self {
-      TargetingPriority::FIRST => TargetingPriority::LAST,
-      TargetingPriority::LAST => TargetingPriority::CLOSE,
-      TargetingPriority::CLOSE => TargetingPriority::FAR,
-      TargetingPriority::FAR => TargetingPriority::STRONG,
-      TargetingPriority::STRONG => TargetingPriority::WEAK,
-      TargetingPriority::WEAK => TargetingPriority::RANDOM,
-      TargetingPriority::RANDOM => TargetingPriority::FIRST,
-    }
+    let count = Self::iter().count();
+    *self = Self::from_index((self.as_index() + 1) % count);
   }
 
   pub fn prev_target(&mut self) {
-    *self = match self {
-      TargetingPriority::FIRST => TargetingPriority::RANDOM,
-      TargetingPriority::LAST => TargetingPriority::FIRST,
-      TargetingPriority::CLOSE => TargetingPriority::LAST,
-      TargetingPriority::FAR => TargetingPriority::CLOSE,
-      TargetingPriority::STRONG => TargetingPriority::FAR,
-      TargetingPriority::WEAK => TargetingPriority::STRONG,
-      TargetingPriority::RANDOM => TargetingPriority::WEAK,
-    }
+    let count = Self::iter().count();
+    *self = Self::from_index((self.as_index() + count - 1) % count);
   }
 }
 
