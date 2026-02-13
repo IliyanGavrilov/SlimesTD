@@ -104,29 +104,70 @@ fn load_map(game_data: Res<GameData>, mut map: ResMut<Assets<Map>>) {
 }
 
 impl Map {
-  fn create_checkpoints(&mut self, mut path_tiles: Vec<Point>, spawn: Point, end: Point) {
+  fn create_checkpoints(&mut self, path_tiles: Vec<Point>, spawn: Point, end: Point) {
     let offset_distance = (self.tile_size * 2) as f32;
     let mut spawn_coord = spawn.to_coordinate(self.tile_size, false);
 
-    // Spawn location
-    if spawn.y == 0 { // Bottom
+    // Spawn point offset
+    if spawn.y == 0 {
       spawn_coord.y -= offset_distance;
-    } else if spawn.y == self.height - 1 { // Top
+    } else if spawn.y == self.height - 1 {
       spawn_coord.y += offset_distance;
-    } else if spawn.x == 0 { // Left
+    } else if spawn.x == 0 {
       spawn_coord.x -= offset_distance;
-    } else if spawn.x == self.width - 1 { // Right
+    } else if spawn.x == self.width - 1 {
       spawn_coord.x += offset_distance;
     }
 
     self.checkpoints.push(spawn_coord.to_vec3());
 
-    let mut last_point = spawn;
+    // Check if we have a numbered path or just Path([0])
+    let has_numbered_path = path_tiles.iter().any(|&point| {
+      if let Tile::Path(orders) = &self.tiles[point.y][point.x] {
+        orders.iter().any(|&order| order > 0)
+      } else {
+        false
+      }
+    });
 
-    while let Some(next_idx) = path_tiles.iter().position(|p| last_point.is_adjacent_to(*p)) {
-      let next_point = path_tiles.remove(next_idx);
-      self.checkpoints.push(next_point.to_coordinate(self.tile_size, true).to_vec3());
-      last_point = next_point;
+    if has_numbered_path {
+      // Use numbered pathfinding for loops/complex paths
+      let max_order = path_tiles.iter()
+          .filter_map(|&point| {
+            if let Tile::Path(orders) = &self.tiles[point.y][point.x] {
+              orders.iter().max().copied()
+            } else {
+              None
+            }
+          })
+          .max()
+          .unwrap_or(0);
+
+      for i in 0..=max_order {
+        if let Some(&point) = path_tiles.iter().find(|&&p| {
+          if let Tile::Path(orders) = &self.tiles[p.y][p.x] {
+            orders.contains(&i)
+          } else {
+            false
+          }
+        }) {
+          self.checkpoints.push(point.to_coordinate(self.tile_size, true).to_vec3());
+        }
+      }
+    } else {
+      // Use adjacency-based pathfinding for simple paths
+      let mut remaining_tiles = path_tiles;
+      let mut last_point = spawn;
+
+      while !remaining_tiles.is_empty() {
+        if let Some(next_idx) = remaining_tiles.iter().position(|p| last_point.is_adjacent_to(*p)) {
+          let next_point = remaining_tiles.remove(next_idx);
+          self.checkpoints.push(next_point.to_coordinate(self.tile_size, true).to_vec3());
+          last_point = next_point;
+        } else {
+          break;
+        }
+      }
     }
 
     self.checkpoints.push(end.to_coordinate(self.tile_size, true).to_vec3());
