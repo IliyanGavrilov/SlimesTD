@@ -10,7 +10,7 @@ struct EnemyTypeStatsHandle(Handle<EnemyTypeStats>);
 pub struct GameData {
   #[asset(path = "data/stats.enemy_types.ron")]
   pub enemy_type_stats: Handle<EnemyTypeStats>,
-  #[asset(path = "data/level1.map.ron")]
+  #[asset(path = "data/level2.map.ron")]
   pub map: Handle<Map>,
   #[asset(path = "data/stats.tower_stats.ron")]
   pub tower_type_stats: Handle<TowerTypeStats>,

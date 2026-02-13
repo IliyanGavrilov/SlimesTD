@@ -1,0 +1,17 @@
+(
+    width: 16,
+    height: 9,
+    tiles: [
+        /*[0]*/ [Grass, Grass, Grass, Grass, Path([0]), Path([0]), Path([0]), Grass, Grass, Grass, Grass, Grass, Grass, Grass, Grass, Grass],
+        /*[1]*/ [Grass, Grass, Grass, Grass, Path([0]), Grass, Path([0]), Grass, Grass, Grass, Path([0]), Path([0]), Path([0]), Grass, Grass, Grass],
+        /*[2]*/ [Spawn, Path([0]), Path([0]), Path([0]), Path([0]), Path([0]), Path([0]), Grass, Grass, Grass, Path([0]), Grass, Path([0]), Grass, Grass, Grass],
+        /*[3]*/ [Grass, Grass, Grass, Grass, Path([0]), Grass, Grass, Grass, Grass, Grass, Path([0]), Grass, Path([0]), Grass, Grass, Grass],
+        /*[4]*/ [Grass, Grass, Path([0]), Path([0]), Path([0]), Path([0]), Path([0]), Path([0]), Path([0]), Path([0]), Path([0]), Grass, Path([0]), Grass, Grass, Grass],
+        /*[5]*/ [Grass, Grass, Path([0]), Grass, Path([0]), Grass, Grass, Grass, Grass, Grass, Grass, Grass, Path([0]), Grass, Grass, Grass],
+        /*[6]*/ [Grass, Grass, Path([0]), Path([0]), Path([0]), Grass, Grass, Path([0]), Path([0]), Path([0]), Path([0]), Path([0]), Path([0]), Grass, Grass, Grass],
+        /*[7]*/ [Grass, Grass, Grass, Grass, Grass, Grass, Grass, End, Grass, Grass, Grass, Grass, Grass, Grass, Grass, Grass],
+        /*[8]*/ [Grass, Grass, Grass, Grass, Grass, Grass, Grass, Grass, Grass, Grass, Grass, Grass, Grass, Grass, Grass, Grass],
+        ],
+    tile_size: 80,
+    checkpoints: [],
+)

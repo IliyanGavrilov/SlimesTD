@@ -14,17 +14,20 @@ opt-level = 3
 
 
 [dependencies]
+# Bevy crates
 bevy = {version = "0.10.1", features = ["serialize"]}
 bevy-inspector-egui = "0.18.3"
 bevy_asset_loader = "0.16.0"
 bevy_common_assets = {version = "0.6.0", features = ["ron"]}
 bevy_ecs_tilemap = "0.10.0"
-rand = "0.8.5"
-ron = "0.8.0"
+
+# Rust crates
+rand = "0.10.0"
+ron = "0.12.0"
 serde = {version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.93"
-strum = "0.24.1"
-strum_macros = "0.24.3"
+strum = "0.27.2"
+strum_macros = "0.27.2"
 
 [build-dependencies]
-embed-resource = "2.1.1"
+embed-resource = "3.0.6"

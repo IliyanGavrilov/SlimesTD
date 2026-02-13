@@ -50,7 +50,7 @@ impl Point {
   pub fn to_vec3(&self) -> Vec3 {
     Vec3::new(self.x as f32, self.y as f32, 0.)
   }
-  
+
   pub fn to_coordinate(self, tile_size: usize, center_y: bool) -> Coordinate {
     let y_offset = if center_y { tile_size / 2 } else { 0 };
     Coordinate {

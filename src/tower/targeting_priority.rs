@@ -87,7 +87,7 @@ pub fn get_enemy_direction(
       .min_by_key(|(_, enemy, ..)| FloatOrd(enemy.health as f32)),
     TargetingPriority::RANDOM => enemy_filtered_query
       // Choose a random enemy
-      .choose(&mut rand::thread_rng()),
+      .choose(&mut rand::rng())
   };
 
   if let Some((enemy, ..)) = enemy {
