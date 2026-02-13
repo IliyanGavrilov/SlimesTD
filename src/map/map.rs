@@ -34,18 +34,6 @@ pub struct Point {
   pub y: usize,
 }
 
-#[derive(Default, Debug, Clone, PartialEq)]
-pub struct Coordinate {
-  pub x: f32,
-  pub y: f32,
-}
-
-impl Coordinate {
-  pub fn to_vec3(&self) -> Vec3 {
-    Vec3::new(self.x, self.y, 0.)
-  }
-}
-
 impl Point {
   pub fn to_vec3(&self) -> Vec3 {
     Vec3::new(self.x as f32, self.y as f32, 0.)
@@ -68,6 +56,18 @@ impl Point {
   }
 }
 
+#[derive(Default, Debug, Clone, PartialEq)]
+pub struct Coordinate {
+  pub x: f32,
+  pub y: f32,
+}
+
+impl Coordinate {
+  pub fn to_vec3(&self) -> Vec3 {
+    Vec3::new(self.x, self.y, 0.)
+  }
+}
+
 #[derive(Resource, Serialize, Deserialize, TypeUuid, Default)]
 #[uuid = "58d181c2-39f7-4ac7-8ae7-b3cee0667ce2"]
 pub struct Map {
@@ -80,7 +80,7 @@ pub struct Map {
 
 fn load_map(game_data: Res<GameData>, mut map: ResMut<Assets<Map>>) {
   let Some(map) = map.get_mut(&game_data.map)
-    else { return; };
+  else { return; };
 
   let mut path_tiles = vec![];
   let mut spawn: Point = Default::default();
@@ -99,13 +99,27 @@ fn load_map(game_data: Res<GameData>, mut map: ResMut<Assets<Map>>) {
     }
   }
 
-  map.checkpoints.push(spawn.to_vec3());
+  map.checkpoints.clear();
   map.create_checkpoints(path_tiles, spawn, end);
 }
 
 impl Map {
   fn create_checkpoints(&mut self, mut path_tiles: Vec<Point>, spawn: Point, end: Point) {
-    self.checkpoints.push(spawn.to_coordinate(self.tile_size, false).to_vec3());
+    let offset_distance = (self.tile_size * 2) as f32;
+    let mut spawn_coord = spawn.to_coordinate(self.tile_size, false);
+
+    // Spawn location
+    if spawn.y == 0 { // Bottom
+      spawn_coord.y -= offset_distance;
+    } else if spawn.y == self.height - 1 { // Top
+      spawn_coord.y += offset_distance;
+    } else if spawn.x == 0 { // Left
+      spawn_coord.x -= offset_distance;
+    } else if spawn.x == self.width - 1 { // Right
+      spawn_coord.x += offset_distance;
+    }
+
+    self.checkpoints.push(spawn_coord.to_vec3());
 
     let mut last_point = spawn;
 
