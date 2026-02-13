@@ -96,3 +96,7 @@ pub fn get_enemy_direction(
   }
   None
 }
+
+#[cfg(test)]
+#[path = "tower/targeting_tests.rs"]
+mod tests;

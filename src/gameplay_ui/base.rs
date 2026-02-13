@@ -31,3 +31,7 @@ pub fn damage_base(commands: &mut Commands, entity: &Entity, enemy_health: i32, 
     info!("GAME OVER");
   }
 }
+
+#[cfg(test)]
+#[path = "gameplay_ui/base_tests.rs"]
+mod tests;

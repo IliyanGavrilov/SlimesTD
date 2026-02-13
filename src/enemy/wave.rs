@@ -145,3 +145,7 @@ fn load_waves(mut commands: Commands, game_data: Res<GameData>, waves: Res<Asset
     remaining: num_enemies,
   });
 }
+
+#[cfg(test)]
+#[path = "enemy/wave_tests.rs"]
+mod tests;

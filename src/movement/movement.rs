@@ -41,3 +41,5 @@ fn basic_movement(
     transform.translation += distance;
   }
 }
+
+mod tests;

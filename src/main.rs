@@ -1,4 +1,4 @@
-#![windows_subsystem = "windows"] // Disable console
+#![cfg_attr(not(test), windows_subsystem = "windows")] // Disable console
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;

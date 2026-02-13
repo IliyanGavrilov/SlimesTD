@@ -284,3 +284,7 @@ fn tower_ui_interaction(
     }
   }
 }
+
+#[cfg(test)]
+#[path = "tower/selection_tests.rs"]
+mod tests;

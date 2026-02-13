@@ -209,3 +209,7 @@ fn enemy_in_range(
 
   false
 }
+
+#[cfg(test)]
+#[path = "tower/tower_tests.rs"]
+mod tests;

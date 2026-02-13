@@ -68,7 +68,7 @@ impl Point {
   }
 }
 
-#[derive(Resource, Serialize, Deserialize, TypeUuid)]
+#[derive(Resource, Serialize, Deserialize, TypeUuid, Default)]
 #[uuid = "58d181c2-39f7-4ac7-8ae7-b3cee0667ce2"]
 pub struct Map {
   pub width: usize,
@@ -241,3 +241,5 @@ fn update_enemy_checkpoint(
     }
   }
 }
+
+mod tests;

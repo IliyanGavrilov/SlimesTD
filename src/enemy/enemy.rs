@@ -81,7 +81,6 @@ pub fn spawn_enemy(
     .insert(enemy_type.get_sprite_sheet_bundle(assets, position));
 }
 
-// !!! Spawn weaker enemy?
 fn despawn_enemy_on_death(
   mut commands: Commands,
   enemies: Query<(Entity, &mut Enemy)>,

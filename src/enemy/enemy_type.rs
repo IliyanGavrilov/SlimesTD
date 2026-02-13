@@ -58,3 +58,7 @@ impl EnemyType {
     }
   }
 }
+
+#[cfg(test)]
+#[path = "enemy/type_tests.rs"]
+mod tests;
