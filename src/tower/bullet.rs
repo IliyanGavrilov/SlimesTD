@@ -77,7 +77,3 @@ fn bullet_enemy_collision(
     }
   }
 }
-
-#[cfg(test)]
-#[path = "tower/bullet_tests.rs"]
-mod tests;

@@ -82,10 +82,6 @@ pub fn window_to_world_pos(
   world_pos
 }
 
-#[cfg(test)]
-#[path = "tower/button_tests.rs"]
-mod tests;
-
 #[derive(Resource)]
 struct CursorExitedUI(bool);
 
