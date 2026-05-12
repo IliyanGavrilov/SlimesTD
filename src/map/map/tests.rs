@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use bevy::math::Vec3;
-    use crate::{Coordinate, Map, Point};
+    use crate::{Map, Point, Tile};
 
     fn make_map(tile_size: usize) -> Map {
         Map {
@@ -12,6 +12,21 @@ mod tests {
             checkpoints: vec![],
         }
     }
+
+    fn make_map_with_tiles(tile_size: usize, width: usize, height: usize, path_points: &[Point]) -> Map {
+        let mut tiles = vec![vec![Tile::Grass; width]; height];
+        for &p in path_points {
+            tiles[p.y][p.x] = Tile::Path(vec![0]);
+        }
+        Map {
+            width,
+            height,
+            tiles,
+            tile_size,
+            checkpoints: vec![],
+        }
+    }
+
 
     #[test]
     fn test_point_to_coordinate_no_center() {
@@ -55,76 +70,76 @@ mod tests {
 
     #[test]
     fn test_create_checkpoints_straight_path() {
-        let mut map = make_map(80);
-        let spawn = Point { x: 0, y: 0 };
-        let end = Point { x: 4, y: 0 };
         let path_tiles = vec![
-            Point { x: 1, y: 0 },
-            Point { x: 2, y: 0 },
-            Point { x: 3, y: 0 },
+            Point { x: 2, y: 1 },
+            Point { x: 3, y: 1 },
+            Point { x: 4, y: 1 },
         ];
+        let mut map = make_map_with_tiles(80, 7, 4, &path_tiles);
+        let spawn = Point { x: 1, y: 1 };
+        let end = Point { x: 5, y: 1 };
         map.create_checkpoints(path_tiles, spawn, end);
         assert_eq!(map.checkpoints.len(), 5);
-        assert_eq!(map.checkpoints[0], Vec3::new(0.0, 0.0, 0.0));
-        assert_eq!(map.checkpoints[1], Vec3::new(80.0, 40.0, 0.0));
-        assert_eq!(map.checkpoints[4], Vec3::new(320.0, 40.0, 0.0));
+        assert_eq!(map.checkpoints[0], Vec3::new(80.0, 80.0, 0.0));
+        assert_eq!(map.checkpoints[1], Vec3::new(160.0, 120.0, 0.0));
+        assert_eq!(map.checkpoints[4], Vec3::new(400.0, 120.0, 0.0));
     }
 
     #[test]
     fn test_create_checkpoints_no_path_tiles() {
-        let mut map = make_map(80);
-        let spawn = Point { x: 0, y: 0 };
-        let end = Point { x: 1, y: 0 };
+        let mut map = make_map_with_tiles(80, 4, 4, &[]);
+        let spawn = Point { x: 1, y: 1 };
+        let end = Point { x: 2, y: 1 };
         map.create_checkpoints(vec![], spawn, end);
         assert_eq!(map.checkpoints.len(), 2);
-        assert_eq!(map.checkpoints[0], Vec3::new(0.0, 0.0, 0.0));
-        assert_eq!(map.checkpoints[1], Vec3::new(80.0, 40.0, 0.0));
+        assert_eq!(map.checkpoints[0], Vec3::new(80.0, 80.0, 0.0));
+        assert_eq!(map.checkpoints[1], Vec3::new(160.0, 120.0, 0.0));
     }
 
     #[test]
     fn test_create_checkpoints_unordered_path_tiles() {
-        let mut map = make_map(80);
-        let spawn = Point { x: 0, y: 0 };
-        let end = Point { x: 3, y: 0 };
         let path_tiles = vec![
-            Point { x: 2, y: 0 },
-            Point { x: 1, y: 0 },
+            Point { x: 3, y: 1 },
+            Point { x: 2, y: 1 },
         ];
+        let mut map = make_map_with_tiles(80, 6, 4, &path_tiles);
+        let spawn = Point { x: 1, y: 1 };
+        let end = Point { x: 4, y: 1 };
         map.create_checkpoints(path_tiles, spawn, end);
         assert_eq!(map.checkpoints.len(), 4);
-        assert_eq!(map.checkpoints[1], Vec3::new(80.0, 40.0, 0.0));
-        assert_eq!(map.checkpoints[2], Vec3::new(160.0, 40.0, 0.0));
+        assert_eq!(map.checkpoints[1], Vec3::new(160.0, 120.0, 0.0));
+        assert_eq!(map.checkpoints[2], Vec3::new(240.0, 120.0, 0.0));
     }
 
     #[test]
     fn test_create_checkpoints_with_turn() {
-        let mut map = make_map(80);
-        let spawn = Point { x: 0, y: 0 };
-        let end = Point { x: 1, y: 2 };
         let path_tiles = vec![
-            Point { x: 1, y: 0 },
-            Point { x: 1, y: 1 },
+            Point { x: 2, y: 1 },
+            Point { x: 2, y: 2 },
         ];
+        let mut map = make_map_with_tiles(80, 5, 5, &path_tiles);
+        let spawn = Point { x: 1, y: 1 };
+        let end = Point { x: 2, y: 3 };
         map.create_checkpoints(path_tiles, spawn, end);
         assert_eq!(map.checkpoints.len(), 4);
-        assert_eq!(map.checkpoints[0], Vec3::new(0.0, 0.0, 0.0));
-        assert_eq!(map.checkpoints[1], Vec3::new(80.0, 40.0, 0.0));
-        assert_eq!(map.checkpoints[2], Vec3::new(80.0, 120.0, 0.0));
-        assert_eq!(map.checkpoints[3], Vec3::new(80.0, 200.0, 0.0));
+        assert_eq!(map.checkpoints[0], Vec3::new(80.0, 80.0, 0.0));
+        assert_eq!(map.checkpoints[1], Vec3::new(160.0, 120.0, 0.0));
+        assert_eq!(map.checkpoints[2], Vec3::new(160.0, 200.0, 0.0));
+        assert_eq!(map.checkpoints[3], Vec3::new(160.0, 280.0, 0.0));
     }
 
     #[test]
     fn test_create_checkpoints_different_tile_size() {
-        let mut map = Map { tile_size: 10, ..Default::default() };
-        let spawn = Point { x: 0, y: 0 };
-        let end = Point { x: 2, y: 1 };
         let path_tiles = vec![
-            Point { x: 1, y: 0 },
-            Point { x: 1, y: 1 },
+            Point { x: 2, y: 1 },
+            Point { x: 2, y: 2 },
         ];
+        let mut map = make_map_with_tiles(10, 5, 5, &path_tiles);
+        let spawn = Point { x: 1, y: 1 };
+        let end = Point { x: 3, y: 2 };
         map.create_checkpoints(path_tiles, spawn, end);
         assert_eq!(map.checkpoints.len(), 4);
-        assert_eq!(map.checkpoints[1], Vec3::new(10.0, 5.0, 0.0));
-        assert_eq!(map.checkpoints[3], Vec3::new(20.0, 15.0, 0.0));
+        assert_eq!(map.checkpoints[1], Vec3::new(20.0, 15.0, 0.0));
+        assert_eq!(map.checkpoints[3], Vec3::new(30.0, 25.0, 0.0));
     }
 }
