@@ -5,17 +5,18 @@ use serde::{Deserialize, Serialize};
 
 use crate::gameplay_ui::*;
 use crate::movement::*;
-use crate::{Enemy, GameAssets, GameData, GameState, Path};
+use crate::{Enemy, GameAssets, GameData, GameState, Path, SelectedMap};
 
 pub struct MapPlugin;
 
 impl Plugin for MapPlugin {
   fn build(&self, app: &mut App) {
     app
+      .add_system(setup_camera.in_schedule(OnExit(GameState::AssetLoading)))
       .add_systems(
-        (load_map, setup_camera.after(load_map)).in_schedule(OnExit(GameState::AssetLoading)),
+        (initialize_selected_map, render_map.after(initialize_selected_map))
+          .in_schedule(OnEnter(GameState::Gameplay)),
       )
-      .add_system(render_map.in_schedule(OnEnter(GameState::Gameplay)))
       .add_systems((update_enemy_checkpoint, despawn_enemy).in_set(OnUpdate(GameState::Gameplay)))
       .add_system(cleanup_map.in_schedule(OnExit(GameState::Gameplay)));
   }
@@ -77,17 +78,23 @@ pub struct Map {
   pub tiles: Vec<Vec<Tile>>,
   pub tile_size: usize,
   pub checkpoints: Vec<Vec3>,
+  // Tracks whether tiles have been Y-flipped for Bevy's coordinate system
+  #[serde(default)]
+  pub initialized: bool,
 }
 
-fn load_map(game_data: Res<GameData>, mut map: ResMut<Assets<Map>>) {
-  let Some(map) = map.get_mut(&game_data.map)
-  else { return; };
+fn initialize_selected_map(selected_map: Res<SelectedMap>, mut maps: ResMut<Assets<Map>>) {
+  let Some(map) = maps.get_mut(&selected_map.0) else { return; };
+  if map.initialized {
+    return;
+  }
+
+  map.tiles.reverse();
+  map.initialized = true;
 
   let mut path_tiles = vec![];
   let mut spawn: Point = Default::default();
   let mut end: Point = Default::default();
-
-  map.tiles.reverse();
 
   for (y, row) in map.tiles.iter().enumerate() {
     for (x, tile) in row.iter().enumerate() {
@@ -179,8 +186,9 @@ impl Map {
 #[derive(Component)]
 pub struct MainCamera;
 
-fn setup_camera(mut commands: Commands, game_data: Res<GameData>, map: Res<Assets<Map>>) {
-  let Some(map) = map.get(&game_data.map)
+fn setup_camera(mut commands: Commands, game_data: Res<GameData>, maps: Res<Assets<Map>>) {
+  // Use map1 for camera dimensions (both maps are the same size)
+  let Some(map) = maps.get(&game_data.map)
     else { return; };
   let mut camera = Camera2dBundle::default();
   camera.transform.translation.x = (map.width as f32 / 2. - 0.5) * map.tile_size as f32;
@@ -194,11 +202,11 @@ fn setup_camera(mut commands: Commands, game_data: Res<GameData>, map: Res<Asset
 
 fn render_map(
   mut commands: Commands,
-  game_data: Res<GameData>,
-  map: Res<Assets<Map>>,
+  selected_map: Res<SelectedMap>,
+  maps: Res<Assets<Map>>,
   assets: Res<GameAssets>,
 ) {
-  let Some(map) = map.get(&game_data.map)
+  let Some(map) = maps.get(&selected_map.0)
     else { return; };
 
   commands
@@ -255,10 +263,10 @@ fn despawn_enemy(
   mut commands: Commands,
   mut enemies: Query<(Entity, &Enemy, &mut Path)>,
   mut base: Query<&mut Base>,
-  game_data: Res<GameData>,
-  map: Res<Assets<Map>>,
+  selected_map: Res<SelectedMap>,
+  maps: Res<Assets<Map>>,
 ) {
-  let Some(map) = map.get(&game_data.map)
+  let Some(map) = maps.get(&selected_map.0)
     else { return; };
 
   let mut base = base.single_mut();
@@ -272,11 +280,11 @@ fn despawn_enemy(
 
 fn update_enemy_checkpoint(
   mut enemies: Query<(&mut Movement, &mut Transform, &mut Path)>,
-  game_data: Res<GameData>,
-  map: Res<Assets<Map>>,
+  selected_map: Res<SelectedMap>,
+  maps: Res<Assets<Map>>,
   time: Res<Time>,
 ) {
-  let Some(map) = map.get(&game_data.map)
+  let Some(map) = maps.get(&selected_map.0)
     else { return; };
 
   for (mut movement, mut transform, mut path) in &mut enemies {

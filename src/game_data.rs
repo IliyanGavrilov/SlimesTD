@@ -12,6 +12,8 @@ pub struct GameData {
   pub enemy_type_stats: Handle<EnemyTypeStats>,
   #[asset(path = "data/level1.map.ron")]
   pub map: Handle<Map>,
+  #[asset(path = "data/level2.map.ron")]
+  pub map2: Handle<Map>,
   #[asset(path = "data/stats.tower_stats.ron")]
   pub tower_type_stats: Handle<TowerTypeStats>,
   #[asset(path = "data/tower.upgrades.ron")]

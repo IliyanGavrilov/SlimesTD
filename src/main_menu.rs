@@ -12,3 +12,6 @@ pub use game_over::*;
 
 mod victory;
 pub use victory::*;
+
+mod map_selection;
+pub use map_selection::*;

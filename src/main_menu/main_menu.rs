@@ -35,7 +35,7 @@ fn start_button_clicked(
       let root_entity = menu_root.single();
       commands.entity(root_entity).despawn_recursive();
 
-      game_state.set(GameState::Gameplay);
+      game_state.set(GameState::MapSelection);
     }
   }
 }

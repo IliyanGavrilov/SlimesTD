@@ -6,7 +6,7 @@ use std::time::Duration;
 use crate::assets::*;
 use crate::enemy::*;
 use crate::map::*;
-use crate::{GameData, GameState};
+use crate::{GameData, GameState, SelectedMap};
 
 pub struct WavePlugin;
 
@@ -81,16 +81,17 @@ impl From<(&Wave, usize)> for WaveState {
 
 fn spawn_waves(
   mut commands: Commands,
-  assets: Res<GameAssets>, // Tower and enemy assets
+  assets: Res<GameAssets>,
   game_data: Res<GameData>,
-  map: Res<Assets<Map>>,
+  selected_map: Res<SelectedMap>,
+  maps: Res<Assets<Map>>,
   mut waves: ResMut<Assets<Waves>>,
   mut wave_state: ResMut<WaveState>,
   enemy_type_assets: Res<Assets<EnemyTypeStats>>,
   time: Res<Time>,
   mut wave_cleared_writer: EventWriter<WaveClearedEvent>,
 ) {
-  let Some(map_path) = map.get(&game_data.map)
+  let Some(map_path) = maps.get(&selected_map.0)
     else { return; };
   let Some(waves) = waves.get_mut(&game_data.enemy_waves)
     else { return; };

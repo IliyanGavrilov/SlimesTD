@@ -5,6 +5,7 @@ pub enum GameState {
   #[default]
   AssetLoading,
   MainMenu,
+  MapSelection,
   Gameplay,
   GameOver,
   Victory,

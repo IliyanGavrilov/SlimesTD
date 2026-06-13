@@ -55,6 +55,7 @@ fn main() {
     .add_collection_to_loading_state::<_, GameData>(GameState::AssetLoading)
     // Plugins
     .add_plugin(MainMenuPlugin)
+    .add_plugin(MapSelectionPlugin)
     .add_plugin(GameOverPlugin)
     .add_plugin(VictoryPlugin)
     .add_plugin(GameplayUIPlugin)

@@ -10,6 +10,7 @@ mod tests {
             tiles: vec![],
             tile_size,
             checkpoints: vec![],
+            initialized: false,
         }
     }
 
@@ -24,6 +25,7 @@ mod tests {
             tiles,
             tile_size,
             checkpoints: vec![],
+            initialized: false,
         }
     }
 
