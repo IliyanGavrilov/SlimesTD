@@ -14,10 +14,16 @@ impl Plugin for WavePlugin {
   fn build(&self, app: &mut App) {
     app
       .add_event::<WaveClearedEvent>()
-      .add_system(load_waves.in_schedule(OnExit(GameState::AssetLoading)))
-      .add_system(spawn_waves.in_set(OnUpdate(GameState::Gameplay)));
+      .add_system(load_waves.in_schedule(OnEnter(GameState::Gameplay)))
+      .add_systems(
+        (spawn_waves, check_victory).in_set(OnUpdate(GameState::Gameplay)),
+      )
+      .add_system(cleanup_waves.in_schedule(OnExit(GameState::Gameplay)));
   }
 }
+
+#[derive(Resource)]
+pub struct WavesComplete;
 
 pub struct WaveClearedEvent {
   pub index: usize,
@@ -97,8 +103,10 @@ fn spawn_waves(
       return;
     }
     if let Some(next_wave) = waves.advance(&mut wave_cleared_writer) {
-      wave_state.remaining = next_wave.enemies.len(); // !!!
+      wave_state.remaining = next_wave.enemies.len();
       commands.insert_resource(WaveState::from((next_wave, next_wave.enemies.len())));
+    } else {
+      commands.insert_resource(WavesComplete);
     }
   }
 
@@ -133,10 +141,11 @@ fn spawn_waves(
   //}
 }
 
-fn load_waves(mut commands: Commands, game_data: Res<GameData>, waves: Res<Assets<Waves>>) {
-  let Some(waves) = waves.get(&game_data.enemy_waves)
+fn load_waves(mut commands: Commands, game_data: Res<GameData>, mut waves: ResMut<Assets<Waves>>) {
+  let Some(waves) = waves.get_mut(&game_data.enemy_waves)
     else { return; };
 
+  waves.current = 0;
   let num_enemies = waves.waves[0].enemies.len();
 
   commands.insert_resource(WaveState {
@@ -144,6 +153,23 @@ fn load_waves(mut commands: Commands, game_data: Res<GameData>, waves: Res<Asset
     enemy_spawn_timer: Timer::new(Duration::from_millis(1), TimerMode::Repeating),
     remaining: num_enemies,
   });
+}
+
+fn check_victory(
+  enemies: Query<Entity, With<Enemy>>,
+  waves_complete: Option<Res<WavesComplete>>,
+  mut next_state: ResMut<NextState<GameState>>,
+) {
+  if waves_complete.is_some() && enemies.is_empty() {
+    next_state.set(GameState::Victory);
+  }
+}
+
+fn cleanup_waves(mut commands: Commands, game_data: Res<GameData>, mut waves: ResMut<Assets<Waves>>) {
+  if let Some(waves) = waves.get_mut(&game_data.enemy_waves) {
+    waves.current = 0;
+  }
+  commands.remove_resource::<WavesComplete>();
 }
 
 #[cfg(test)]

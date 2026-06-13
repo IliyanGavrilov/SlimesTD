@@ -55,9 +55,10 @@ fn main() {
     .add_collection_to_loading_state::<_, GameData>(GameState::AssetLoading)
     // Plugins
     .add_plugin(MainMenuPlugin)
+    .add_plugin(GameOverPlugin)
+    .add_plugin(VictoryPlugin)
     .add_plugin(GameplayUIPlugin)
     .add_plugin(MapPlugin)
-    //.add_plugin(SpawnScenePlugin)
     .add_plugin(SettingsPlugin)
     .add_plugin(AssetPlugin)
     .add_plugin(PlayerPlugin)
@@ -70,10 +71,7 @@ fn main() {
     .add_plugin(WavePlugin)
     .add_plugin(BulletPlugin)
     .add_plugin(MovementPlugin)
-    // !!!Debugging
+    // Debug-only tools
     .add_plugin(WorldInspectorPlugin::new())
-    .add_plugin(bevy::diagnostic::LogDiagnosticsPlugin::default())
-    .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin::default())
-    .add_plugin(bevy::diagnostic::EntityCountDiagnosticsPlugin)
     .run();
 }

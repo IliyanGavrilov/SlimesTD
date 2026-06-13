@@ -12,7 +12,8 @@ impl Plugin for PlayerPlugin {
       .add_systems(
         (give_money_on_enemy_death, give_money_on_wave_cleared)
           .in_set(OnUpdate(GameState::Gameplay)),
-      );
+      )
+      .add_system(cleanup_player.in_schedule(OnExit(GameState::Gameplay)));
   }
 }
 
@@ -24,6 +25,12 @@ pub struct Player {
 
 fn spawn_player(mut commands: Commands) {
   commands.spawn((Player { money: 100 }, Name::new("Player")));
+}
+
+fn cleanup_player(mut commands: Commands, players: Query<Entity, With<Player>>) {
+  for entity in &players {
+    commands.entity(entity).despawn_recursive();
+  }
 }
 
 fn give_money_on_enemy_death(

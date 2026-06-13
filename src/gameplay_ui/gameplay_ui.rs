@@ -22,7 +22,8 @@ impl Plugin for GameplayUIPlugin {
   fn build(&self, app: &mut App) {
     app
       .add_system(spawn_gameplay_ui.in_schedule(OnEnter(GameState::Gameplay)))
-      .add_system(update_gameplay_ui.in_set(OnUpdate(GameState::Gameplay)));
+      .add_system(update_gameplay_ui.in_set(OnUpdate(GameState::Gameplay)))
+      .add_system(cleanup_gameplay_ui.in_schedule(OnExit(GameState::Gameplay)));
   }
 }
 
@@ -51,6 +52,12 @@ fn update_gameplay_ui(
       format!("{}/{}", waves.current + 1, waves.waves.len()),
       round.sections[0].style.clone(),
     );
+  }
+}
+
+fn cleanup_gameplay_ui(mut commands: Commands, roots: Query<Entity, With<GameplayUIRoot>>) {
+  for entity in &roots {
+    commands.entity(entity).despawn_recursive();
   }
 }
 

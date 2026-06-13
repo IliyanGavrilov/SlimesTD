@@ -6,3 +6,9 @@ pub use main_menu::*;
 
 mod settings;
 pub use settings::*;
+
+mod game_over;
+pub use game_over::*;
+
+mod victory;
+pub use victory::*;

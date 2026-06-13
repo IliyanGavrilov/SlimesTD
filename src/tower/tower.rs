@@ -16,7 +16,8 @@ impl Plugin for TowerPlugin {
     app
       .register_type::<Tower>()
       .register_type::<TargetingPriority>()
-      .add_system(tower_shooting.in_set(OnUpdate(GameState::Gameplay)));
+      .add_system(tower_shooting.in_set(OnUpdate(GameState::Gameplay)))
+      .add_system(cleanup_towers.in_schedule(OnExit(GameState::Gameplay)));
   }
 }
 
@@ -136,6 +137,12 @@ pub fn spawn_tower(
     tower_type,
     position,
   );
+}
+
+fn cleanup_towers(mut commands: Commands, towers: Query<Entity, With<Tower>>) {
+  for entity in &towers {
+    commands.entity(entity).despawn_recursive();
+  }
 }
 
 fn tower_shooting(

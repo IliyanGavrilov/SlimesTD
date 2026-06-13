@@ -14,8 +14,8 @@ impl Plugin for EnemyPlugin {
       .register_type::<Enemy>()
       .register_type::<Path>()
       .add_event::<EnemyDeathEvent>()
-      //.add_startup_system(load_enemy_type_stats)
-      .add_system(despawn_enemy_on_death.in_set(OnUpdate(GameState::Gameplay)));
+      .add_system(despawn_enemy_on_death.in_set(OnUpdate(GameState::Gameplay)))
+      .add_system(cleanup_enemies.in_schedule(OnExit(GameState::Gameplay)));
   }
 }
 
@@ -79,6 +79,12 @@ pub fn spawn_enemy(
   commands
     .spawn(enemy_type.get_enemy(map_path, path, enemy_stats))
     .insert(enemy_type.get_sprite_sheet_bundle(assets, position));
+}
+
+fn cleanup_enemies(mut commands: Commands, enemies: Query<Entity, With<Enemy>>) {
+  for entity in &enemies {
+    commands.entity(entity).despawn_recursive();
+  }
 }
 
 fn despawn_enemy_on_death(

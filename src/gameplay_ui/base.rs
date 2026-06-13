@@ -7,7 +7,9 @@ impl Plugin for BasePlugin {
   fn build(&self, app: &mut App) {
     app
       .register_type::<Base>()
-      .add_system(spawn_base.in_schedule(OnEnter(GameState::Gameplay)));
+      .add_system(spawn_base.in_schedule(OnEnter(GameState::Gameplay)))
+      .add_system(check_game_over.in_set(OnUpdate(GameState::Gameplay)))
+      .add_system(cleanup_base.in_schedule(OnExit(GameState::Gameplay)));
   }
 }
 
@@ -28,7 +30,20 @@ pub fn damage_base(commands: &mut Commands, entity: &Entity, enemy_health: i32, 
     base.health -= enemy_health;
   } else {
     base.health = 0;
-    info!("GAME OVER");
+  }
+}
+
+fn check_game_over(base: Query<&Base>, mut next_state: ResMut<NextState<GameState>>) {
+  if let Ok(base) = base.get_single() {
+    if base.health <= 0 {
+      next_state.set(GameState::GameOver);
+    }
+  }
+}
+
+fn cleanup_base(mut commands: Commands, bases: Query<Entity, With<Base>>) {
+  for entity in &bases {
+    commands.entity(entity).despawn_recursive();
   }
 }
 

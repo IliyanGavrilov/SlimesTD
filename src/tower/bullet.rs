@@ -11,7 +11,8 @@ impl Plugin for BulletPlugin {
   fn build(&self, app: &mut App) {
     app
       .register_type::<Bullet>()
-      .add_systems((despawn_bullets, bullet_enemy_collision).in_set(OnUpdate(GameState::Gameplay)));
+      .add_systems((despawn_bullets, bullet_enemy_collision).in_set(OnUpdate(GameState::Gameplay)))
+      .add_system(cleanup_bullets.in_schedule(OnExit(GameState::Gameplay)));
   }
 }
 
@@ -28,6 +29,12 @@ pub struct BulletBundle {
 pub struct Bullet {
   pub damage: u32,
   pub lifetime: Timer, // !!! fix?
+}
+
+fn cleanup_bullets(mut commands: Commands, bullets: Query<Entity, With<Bullet>>) {
+  for entity in &bullets {
+    commands.entity(entity).despawn_recursive();
+  }
 }
 
 fn despawn_bullets(

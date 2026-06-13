@@ -6,4 +6,6 @@ pub enum GameState {
   AssetLoading,
   MainMenu,
   Gameplay,
+  GameOver,
+  Victory,
 }

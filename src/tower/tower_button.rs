@@ -19,7 +19,8 @@ impl Plugin for TowerButtonPlugin {
           lock_tower_buttons.after(generate_ui),
         )
           .in_set(OnUpdate(GameState::Gameplay)),
-      );
+      )
+      .add_system(cleanup_tower_ui.in_schedule(OnExit(GameState::Gameplay)));
   }
 }
 
@@ -481,6 +482,19 @@ fn tower_spawn_from_keyboard_input(
 }
 
 // Creating a UI menu on the whole screen with buttons
+fn cleanup_tower_ui(
+  mut commands: Commands,
+  roots: Query<Entity, With<TowerUIRoot>>,
+  followers: Query<Entity, With<SpriteFollower>>,
+) {
+  for entity in &roots {
+    commands.entity(entity).despawn_recursive();
+  }
+  for entity in &followers {
+    commands.entity(entity).despawn_recursive();
+  }
+}
+
 fn generate_ui(
   mut commands: Commands,
   assets: Res<GameAssets>,

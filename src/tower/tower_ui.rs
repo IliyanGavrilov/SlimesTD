@@ -9,7 +9,9 @@ pub struct TowerUIPlugin;
 
 impl Plugin for TowerUIPlugin {
   fn build(&self, app: &mut App) {
-    app.add_system(update_tower_ui.in_set(OnUpdate(GameState::Gameplay)));
+    app
+      .add_system(update_tower_ui.in_set(OnUpdate(GameState::Gameplay)))
+      .add_system(cleanup_tower_panel.in_schedule(OnExit(GameState::Gameplay)));
   }
 }
 
@@ -55,6 +57,12 @@ pub struct TowerUpgradeIndex {
 #[derive(Component)]
 pub struct UpgradeStats {
   pub path_index: usize,
+}
+
+fn cleanup_tower_panel(mut commands: Commands, panels: Query<Entity, With<TowerUI>>) {
+  for entity in &panels {
+    commands.entity(entity).despawn_recursive();
+  }
 }
 
 fn update_tower_ui(

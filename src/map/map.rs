@@ -16,7 +16,8 @@ impl Plugin for MapPlugin {
         (load_map, setup_camera.after(load_map)).in_schedule(OnExit(GameState::AssetLoading)),
       )
       .add_system(render_map.in_schedule(OnEnter(GameState::Gameplay)))
-      .add_systems((update_enemy_checkpoint, despawn_enemy).in_set(OnUpdate(GameState::Gameplay)));
+      .add_systems((update_enemy_checkpoint, despawn_enemy).in_set(OnUpdate(GameState::Gameplay)))
+      .add_system(cleanup_map.in_schedule(OnExit(GameState::Gameplay)));
   }
 }
 
@@ -242,6 +243,12 @@ pub enum Tile {
 pub struct MapTile {
   pub coordinate: Point,
   pub tile: Tile,
+}
+
+fn cleanup_map(mut commands: Commands, tilemaps: Query<Entity, With<TileMap>>) {
+  for entity in &tilemaps {
+    commands.entity(entity).despawn_recursive();
+  }
 }
 
 fn despawn_enemy(
