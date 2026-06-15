@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::gameplay_ui::*;
 use crate::movement::*;
-use crate::{Enemy, GameAssets, GameData, GameState, Path, SelectedMap};
+use crate::{Enemy, GameAssets, GameData, GameState, Path, SelectedMap, game_not_paused};
 
 pub struct MapPlugin;
 
@@ -17,7 +17,13 @@ impl Plugin for MapPlugin {
         (initialize_selected_map, render_map.after(initialize_selected_map))
           .in_schedule(OnEnter(GameState::Gameplay)),
       )
-      .add_systems((update_enemy_checkpoint, despawn_enemy).in_set(OnUpdate(GameState::Gameplay)))
+      .add_systems(
+        (
+          update_enemy_checkpoint.run_if(game_not_paused),
+          despawn_enemy.run_if(game_not_paused),
+        )
+          .in_set(OnUpdate(GameState::Gameplay)),
+      )
       .add_system(cleanup_map.in_schedule(OnExit(GameState::Gameplay)));
   }
 }

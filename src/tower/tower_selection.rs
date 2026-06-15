@@ -3,13 +3,19 @@ use bevy::sprite::Mesh2dHandle;
 
 use crate::assets::*;
 use crate::tower::*;
-use crate::{GameData, GameState, MainCamera, Player};
+use crate::{GameData, GameState, MainCamera, Player, game_not_paused};
 
 pub struct TowerSelectionPlugin;
 
 impl Plugin for TowerSelectionPlugin {
   fn build(&self, app: &mut App) {
-    app.add_systems((mouse_click, tower_ui_interaction).in_set(OnUpdate(GameState::Gameplay)));
+    app.add_systems(
+      (
+        mouse_click.run_if(game_not_paused),
+        tower_ui_interaction.run_if(game_not_paused),
+      )
+        .in_set(OnUpdate(GameState::Gameplay)),
+    );
   }
 }
 

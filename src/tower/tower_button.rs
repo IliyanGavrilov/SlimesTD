@@ -4,7 +4,7 @@ use strum::IntoEnumIterator;
 
 use crate::assets::*;
 use crate::tower::*;
-use crate::{GameData, GameState, GameplayUIRoot, MainCamera, Player};
+use crate::{GameData, GameState, GameplayUIRoot, MainCamera, Player, game_not_paused};
 
 pub struct TowerButtonPlugin;
 
@@ -14,9 +14,9 @@ impl Plugin for TowerButtonPlugin {
       .add_system(generate_ui.in_schedule(OnEnter(GameState::Gameplay)))
       .add_systems(
         (
-          tower_button_interaction,
-          place_tower,
-          lock_tower_buttons.after(generate_ui),
+          tower_button_interaction.run_if(game_not_paused),
+          place_tower.run_if(game_not_paused),
+          lock_tower_buttons.after(generate_ui).run_if(game_not_paused),
         )
           .in_set(OnUpdate(GameState::Gameplay)),
       )

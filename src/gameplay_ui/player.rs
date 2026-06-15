@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{EnemyDeathEvent, GameState, WaveClearedEvent};
+use crate::{EnemyDeathEvent, GameState, WaveClearedEvent, game_not_paused};
 
 pub struct PlayerPlugin;
 
@@ -10,7 +10,10 @@ impl Plugin for PlayerPlugin {
       .register_type::<Player>()
       .add_system(spawn_player.in_schedule(OnEnter(GameState::Gameplay)))
       .add_systems(
-        (give_money_on_enemy_death, give_money_on_wave_cleared)
+        (
+          give_money_on_enemy_death.run_if(game_not_paused),
+          give_money_on_wave_cleared.run_if(game_not_paused),
+        )
           .in_set(OnUpdate(GameState::Gameplay)),
       )
       .add_system(cleanup_player.in_schedule(OnExit(GameState::Gameplay)));

@@ -7,7 +7,7 @@ use crate::assets::*;
 use crate::enemy::*;
 use crate::movement::*;
 use crate::tower::*;
-use crate::GameState;
+use crate::{GameState, game_not_paused};
 
 pub struct TowerPlugin;
 
@@ -16,7 +16,7 @@ impl Plugin for TowerPlugin {
     app
       .register_type::<Tower>()
       .register_type::<TargetingPriority>()
-      .add_system(tower_shooting.in_set(OnUpdate(GameState::Gameplay)))
+      .add_system(tower_shooting.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused))
       .add_system(cleanup_towers.in_schedule(OnExit(GameState::Gameplay)));
   }
 }

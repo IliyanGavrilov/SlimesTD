@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::assets::*;
 use crate::enemy::*;
 use crate::movement::*;
-use crate::{GameState, Map};
+use crate::{GameState, Map, game_not_paused};
 
 pub struct EnemyPlugin;
 
@@ -14,7 +14,7 @@ impl Plugin for EnemyPlugin {
       .register_type::<Enemy>()
       .register_type::<Path>()
       .add_event::<EnemyDeathEvent>()
-      .add_system(despawn_enemy_on_death.in_set(OnUpdate(GameState::Gameplay)))
+      .add_system(despawn_enemy_on_death.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused))
       .add_system(cleanup_enemies.in_schedule(OnExit(GameState::Gameplay)));
   }
 }

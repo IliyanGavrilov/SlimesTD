@@ -2,14 +2,14 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::movement::*;
-use crate::{Tile, TowerType};
+use crate::{GameState, Tile, TowerType, game_not_paused};
 
 pub struct AssetPlugin;
 
 impl Plugin for AssetPlugin {
   fn build(&self, app: &mut App) {
     app
-      .add_system(animate_enemy_sprite)
+      .add_system(animate_enemy_sprite.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused))
       // Load assets before the startup stage, so we can use them in the game
       .add_startup_system(load_assets.in_base_set(StartupSet::PreStartup));
   }
@@ -21,8 +21,9 @@ impl Plugin for AssetPlugin {
 pub struct GameAssets {
   // Fonts
   pub font: Handle<Font>,
-  // Main menu buttons - Start Game & Exit
+  // Main menu buttons
   pub start_button: Handle<Image>,
+  pub settings_button: Handle<Image>,
   pub exit_button: Handle<Image>,
   // Map tiles
   pub grass_tile: Handle<Image>,
@@ -178,8 +179,9 @@ fn load_assets(
     // Fonts
     font: assets_server.load("fonts/FiraSans-Bold.ttf"),
 
-    // Main menu buttons - Start Game & Exit
+    // Main menu buttons
     start_button: assets_server.load("textures/start_menu/start_button.png"),
+    settings_button: assets_server.load("textures/start_menu/settings_button.png"),
     exit_button: assets_server.load("textures/start_menu/exit_button.png"),
 
     // Map tiles

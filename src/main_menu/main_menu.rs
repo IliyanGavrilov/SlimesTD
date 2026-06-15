@@ -9,8 +9,10 @@ impl Plugin for MainMenuPlugin {
   fn build(&self, app: &mut App) {
     app
       .add_system(spawn_main_menu.in_schedule(OnEnter(GameState::MainMenu)))
+      .add_system(cleanup_main_menu.in_schedule(OnExit(GameState::MainMenu)))
       .add_systems(
-        (start_button_clicked, exit_button_clicked).in_set(OnUpdate(GameState::MainMenu)),
+        (start_button_clicked, settings_button_clicked, exit_button_clicked)
+          .in_set(OnUpdate(GameState::MainMenu)),
       );
   }
 }
@@ -19,23 +21,40 @@ impl Plugin for MainMenuPlugin {
 pub struct MenuUIRoot;
 
 #[derive(Component)]
-pub struct StartButton;
+struct StartButton;
 
 #[derive(Component)]
-pub struct ExitButton;
+struct SettingsButton;
+
+#[derive(Component)]
+struct ExitButton;
+
+fn cleanup_main_menu(mut commands: Commands, roots: Query<Entity, With<MenuUIRoot>>) {
+  for entity in &roots {
+    commands.entity(entity).despawn_recursive();
+  }
+}
 
 fn start_button_clicked(
-  mut commands: Commands,
   interactions: Query<&Interaction, (With<StartButton>, Changed<Interaction>)>,
-  menu_root: Query<Entity, With<MenuUIRoot>>,
-  mut game_state: ResMut<NextState<GameState>>,
+  mut next_state: ResMut<NextState<GameState>>,
 ) {
   for interaction in &interactions {
     if matches!(interaction, Interaction::Clicked) {
-      let root_entity = menu_root.single();
-      commands.entity(root_entity).despawn_recursive();
+      next_state.set(GameState::MapSelection);
+    }
+  }
+}
 
-      game_state.set(GameState::MapSelection);
+fn settings_button_clicked(
+  interactions: Query<&Interaction, (With<SettingsButton>, Changed<Interaction>)>,
+  mut next_state: ResMut<NextState<GameState>>,
+  mut return_state: ResMut<SettingsReturnState>,
+) {
+  for interaction in &interactions {
+    if matches!(interaction, Interaction::Clicked) {
+      return_state.0 = GameState::MainMenu;
+      next_state.set(GameState::Settings);
     }
   }
 }
@@ -54,21 +73,30 @@ fn exit_button_clicked(
 fn spawn_main_menu(mut commands: Commands, assets: Res<GameAssets>) {
   let start_button = commands
     .spawn(ButtonBundle {
-      style: spawn_button_style(),
+      style: image_button_style(),
       image: assets.start_button.clone().into(),
       ..default()
     })
+    .insert(StartButton)
     .id();
-  commands.entity(start_button).insert(StartButton);
+
+  let settings_button = commands
+    .spawn(ButtonBundle {
+      style: image_button_style(),
+      image: assets.settings_button.clone().into(),
+      ..default()
+    })
+    .insert(SettingsButton)
+    .id();
 
   let exit_button = commands
     .spawn(ButtonBundle {
-      style: spawn_button_style(),
+      style: image_button_style(),
       image: assets.exit_button.clone().into(),
       ..default()
     })
+    .insert(ExitButton)
     .id();
-  commands.entity(exit_button).insert(ExitButton);
 
   commands
     .spawn(NodeBundle {
@@ -100,10 +128,11 @@ fn spawn_main_menu(mut commands: Commands, assets: Res<GameAssets>) {
       });
     })
     .add_child(start_button)
+    .add_child(settings_button)
     .add_child(exit_button);
 }
 
-fn spawn_button_style() -> Style {
+fn image_button_style() -> Style {
   Style {
     size: Size::new(Val::Px(570.), Val::Px(147.)),
     align_self: AlignSelf::Center,

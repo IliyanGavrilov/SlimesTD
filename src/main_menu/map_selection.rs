@@ -11,7 +11,9 @@ impl Plugin for MapSelectionPlugin {
     app
       .add_system(init_selected_map.in_schedule(OnExit(GameState::AssetLoading)))
       .add_system(spawn_map_selection.in_schedule(OnEnter(GameState::MapSelection)))
-      .add_system(select_button_clicked.in_set(OnUpdate(GameState::MapSelection)))
+      .add_systems(
+        (select_button_clicked, back_button_clicked).in_set(OnUpdate(GameState::MapSelection)),
+      )
       .add_system(cleanup_map_selection.in_schedule(OnExit(GameState::MapSelection)));
   }
 }
@@ -24,6 +26,9 @@ struct MapSelectionRoot;
 
 #[derive(Component)]
 struct SelectMapButton(Handle<Map>);
+
+#[derive(Component)]
+struct BackButton;
 
 fn init_selected_map(mut commands: Commands, game_data: Res<GameData>) {
   commands.insert_resource(SelectedMap(game_data.map.clone()));
@@ -38,6 +43,17 @@ fn select_button_clicked(
     if matches!(interaction, Interaction::Clicked) {
       commands.insert_resource(SelectedMap(button.0.clone()));
       next_state.set(GameState::Gameplay);
+    }
+  }
+}
+
+fn back_button_clicked(
+  interactions: Query<&Interaction, (With<BackButton>, Changed<Interaction>)>,
+  mut next_state: ResMut<NextState<GameState>>,
+) {
+  for interaction in &interactions {
+    if matches!(interaction, Interaction::Clicked) {
+      next_state.set(GameState::MainMenu);
     }
   }
 }
@@ -109,6 +125,33 @@ fn spawn_map_selection(
             game_data.map2.clone(),
             "Level 2",
           );
+        });
+
+      commands
+        .spawn(ButtonBundle {
+          style: Style {
+            size: Size::new(Val::Px(220.), Val::Px(65.)),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            margin: UiRect::top(Val::Percent(4.)),
+            ..default()
+          },
+          background_color: Color::DARK_GRAY.into(),
+          ..default()
+        })
+        .insert(BackButton)
+        .with_children(|commands| {
+          commands.spawn(TextBundle {
+            text: Text::from_section(
+              "Back",
+              TextStyle {
+                font: assets.font.clone(),
+                font_size: 36.,
+                color: Color::WHITE,
+              },
+            ),
+            ..default()
+          });
         });
     });
 }

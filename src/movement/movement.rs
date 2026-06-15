@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{Bullet, GameState};
+use crate::{Bullet, GameState, game_not_paused};
 
 pub struct MovementPlugin;
 
@@ -9,7 +9,7 @@ impl Plugin for MovementPlugin {
   fn build(&self, app: &mut App) {
     app
       .register_type::<Movement>()
-      .add_system(basic_movement.in_set(OnUpdate(GameState::Gameplay)));
+      .add_system(basic_movement.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused));
   }
 }
 

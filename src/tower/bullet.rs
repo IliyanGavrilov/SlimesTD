@@ -3,7 +3,7 @@ use bevy::sprite::collide_aabb::collide;
 
 use crate::enemy::*;
 use crate::movement::*;
-use crate::{GameState, Tower};
+use crate::{GameState, Tower, game_not_paused};
 
 pub struct BulletPlugin;
 
@@ -11,7 +11,13 @@ impl Plugin for BulletPlugin {
   fn build(&self, app: &mut App) {
     app
       .register_type::<Bullet>()
-      .add_systems((despawn_bullets, bullet_enemy_collision).in_set(OnUpdate(GameState::Gameplay)))
+      .add_systems(
+        (
+          despawn_bullets.run_if(game_not_paused),
+          bullet_enemy_collision.run_if(game_not_paused),
+        )
+          .in_set(OnUpdate(GameState::Gameplay)),
+      )
       .add_system(cleanup_bullets.in_schedule(OnExit(GameState::Gameplay)));
   }
 }

@@ -6,7 +6,7 @@ use std::time::Duration;
 use crate::assets::*;
 use crate::enemy::*;
 use crate::map::*;
-use crate::{GameData, GameState, SelectedMap};
+use crate::{GameData, GameState, SelectedMap, game_not_paused};
 
 pub struct WavePlugin;
 
@@ -16,7 +16,11 @@ impl Plugin for WavePlugin {
       .add_event::<WaveClearedEvent>()
       .add_system(load_waves.in_schedule(OnEnter(GameState::Gameplay)))
       .add_systems(
-        (spawn_waves, check_victory).in_set(OnUpdate(GameState::Gameplay)),
+        (
+          spawn_waves.run_if(game_not_paused),
+          check_victory.run_if(game_not_paused),
+        )
+          .in_set(OnUpdate(GameState::Gameplay)),
       )
       .add_system(cleanup_waves.in_schedule(OnExit(GameState::Gameplay)));
   }

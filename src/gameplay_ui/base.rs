@@ -1,4 +1,4 @@
-use crate::GameState;
+use crate::{GameState, game_not_paused};
 use bevy::prelude::*;
 
 pub struct BasePlugin;
@@ -8,7 +8,7 @@ impl Plugin for BasePlugin {
     app
       .register_type::<Base>()
       .add_system(spawn_base.in_schedule(OnEnter(GameState::Gameplay)))
-      .add_system(check_game_over.in_set(OnUpdate(GameState::Gameplay)))
+      .add_system(check_game_over.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused))
       .add_system(cleanup_base.in_schedule(OnExit(GameState::Gameplay)));
   }
 }
