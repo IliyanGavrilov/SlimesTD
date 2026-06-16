@@ -1,6 +1,7 @@
 use bevy::math::Vec3Swizzles;
 use bevy::ecs::system::ParamSet;
 use bevy::prelude::*;
+use bevy::sprite::MaterialMesh2dBundle;
 use strum::IntoEnumIterator;
 
 use crate::assets::*;
@@ -14,6 +15,8 @@ impl Plugin for TowerButtonPlugin {
   fn build(&self, app: &mut App) {
     app
       .add_system(generate_ui.in_schedule(OnEnter(GameState::Gameplay)))
+      .add_system(spawn_render_warmup.in_schedule(OnEnter(GameState::Gameplay)))
+      .add_system(despawn_render_warmup.in_schedule(OnExit(GameState::Gameplay)))
       .add_systems(
         (
           tower_button_interaction.run_if(game_not_paused),
@@ -55,10 +58,62 @@ pub struct SpriteFollower;
 
 /// Marker on the translucent range circle that is a CHILD of the preview sprite.
 /// Kept on a separate entity (not the sprite) so the sprite pipeline and the
-/// mesh2d pipeline never share one entity — that hybrid caused a one-frame flash
+/// mesh2d pipeline never share one entity - that hybrid caused a one-frame flash
 /// where the range mesh sampled the tower texture across the whole map.
 #[derive(Component)]
 pub struct SpriteFollowerRange;
+
+/// Marker on the invisible warm-up entities. See `spawn_render_warmup`.
+#[derive(Component)]
+pub struct RenderWarmup;
+
+// The first frame a given tower texture (or the range mesh2d material) enters the
+// render batch, Bevy 0.10 can mis-bind for a single frame - tiles briefly show the
+// tower sprite on the very first selection after launch. Spawning fully transparent
+// copies of every tower texture and one range mesh when gameplay begins forces those
+// GPU resources to be uploaded and batched ahead of time, so the first real preview
+// is already warm. The entities are alpha 0 and scaled to ~nothing, so they are never
+// visible; they live for the gameplay session and are removed on exit.
+fn spawn_render_warmup(
+  mut commands: Commands,
+  assets: Res<GameAssets>,
+  mut meshes: ResMut<Assets<Mesh>>,
+  mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+  for tower_type in TowerType::iter() {
+    commands.spawn((
+      SpriteBundle {
+        texture: assets.get_tower_asset(tower_type),
+        sprite: Sprite { color: Color::rgba(1.0, 1.0, 1.0, 0.0), ..default() },
+        // Centered (so it is inside the camera frustum and actually gets rendered),
+        // but alpha 0 and effectively zero-size, so it is imperceptible.
+        transform: Transform::from_translation(Vec3::new(0.0, 0.0, -20.0))
+          .with_scale(Vec3::splat(0.001)),
+        ..default()
+      },
+      RenderWarmup,
+      Name::new("RenderWarmup Sprite"),
+    ));
+  }
+
+  // Warm the mesh2d + ColorMaterial pipeline used by the preview range circle.
+  commands.spawn((
+    MaterialMesh2dBundle {
+      mesh: meshes.add(shape::Circle::new(1.0).into()).into(),
+      material: materials.add(ColorMaterial::from(Color::rgba(0.0, 0.0, 0.0, 0.0))),
+      transform: Transform::from_translation(Vec3::new(0.0, 0.0, -20.0)),
+      ..default()
+    },
+    RenderWarmup,
+    Name::new("RenderWarmup Mesh"),
+  ));
+}
+
+fn despawn_render_warmup(mut commands: Commands, warmups: Query<Entity, With<RenderWarmup>>) {
+  for entity in &warmups {
+    commands.entity(entity).despawn_recursive();
+  }
+}
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
@@ -210,7 +265,7 @@ fn find_nearest_valid(
     // First ring containing any valid point holds the nearest valid spot. The ring
     // point itself sits on a discrete grid, which makes the preview hop as the cursor
     // moves. Refine by walking from that point back toward the cursor to the exact
-    // obstacle boundary — that boundary point slides smoothly and removes the jitter.
+    // obstacle boundary - that boundary point slides smoothly and removes the jitter.
     if let Some((_, p)) = best {
       return refine_toward_cursor(cursor, p, new_radius, tower_data, allowed_terrain, tiles);
     }
@@ -367,7 +422,7 @@ fn place_tower(
 
       let raw_pos = window_to_world_pos(window, position, camera, camera_transform).truncate();
 
-      // Collect tower data once — releases p0 borrow before we need p1.
+      // Collect tower data once - releases p0 borrow before we need p1.
       let tower_data: Vec<(Vec2, f32)> = tower_tile_queries.p0()
         .iter()
         .map(|(t, tt)| (t.translation.truncate(), tt.placement_radius()))
@@ -424,7 +479,7 @@ fn place_tower(
           raw_click
         };
 
-        // Same overlap rule as the preview above — snap and normal mode are identical.
+        // Same overlap rule as the preview above - snap and normal mode are identical.
         let tile_occupied = tower_data.iter().any(|&(tp, r)| {
           tp.distance(final_click) <= new_radius + r
         });
