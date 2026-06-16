@@ -67,6 +67,18 @@ impl TowerType {
     }
   }
 
+  pub fn sprite_scale(&self) -> f32 {
+    match self {
+      TowerType::FarmSelfKill => 1.5,
+      TowerType::FarmWave     => 0.75,
+      _                       => 1.0,
+    }
+  }
+
+  pub fn placement_radius(&self) -> f32 {
+    self.sprite_scale() * 20.0
+  }
+
   pub fn get_sprite_sheet_bundle(&self, assets: &GameAssets, position: Vec3) -> SpriteBundle {
     let texture = match self {
       TowerType::Nature => assets.wizard_nature.clone(),
@@ -82,7 +94,8 @@ impl TowerType {
 
     SpriteBundle {
       texture,
-      transform: Transform::from_translation(position),
+      transform: Transform::from_translation(position)
+        .with_scale(Vec3::splat(self.sprite_scale())),
       ..default()
     }
   }

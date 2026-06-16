@@ -84,6 +84,7 @@ Prevent slimes from reaching your base. You start with a set amount of gold and 
 | Right click                | Cancel placement |
 | `1` - `0`                  | Keyboard shortcut for each tower (same order as the button bar) |
 | Left click on placed tower | Open upgrade / sell panel |
+| `G` | Toggle snap mode (aligns to tower axes and tile edges) |
 
 ### Maps
 

@@ -20,6 +20,8 @@ impl Plugin for TowerButtonPlugin {
           place_tower.run_if(game_not_paused),
           close_upgrade_ui_while_placing.run_if(game_not_paused),
           tick_placement_error,
+          snap_button_clicked,
+          update_snap_button,
           lock_tower_buttons.after(generate_ui).run_if(game_not_paused),
           update_tooltip_position,
         )
@@ -51,11 +53,24 @@ pub struct TooltipMaxes;
 #[derive(Component)]
 pub struct SpriteFollower;
 
+/// Marker on the translucent range circle that is a CHILD of the preview sprite.
+/// Kept on a separate entity (not the sprite) so the sprite pipeline and the
+/// mesh2d pipeline never share one entity — that hybrid caused a one-frame flash
+/// where the range mesh sampled the tower texture across the whole map.
+#[derive(Component)]
+pub struct SpriteFollowerRange;
+
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct TowerButtonState {
   price: u32,
 }
+
+#[derive(Component)]
+pub struct SnapButton;
+
+#[derive(Component)]
+pub struct SnapButtonText;
 
 #[derive(Component)]
 pub struct PlacementErrorPanel;
@@ -115,8 +130,11 @@ pub fn window_to_world_pos(
   world_pos
 }
 
-#[derive(Resource)]
-struct CursorExitedUI(bool);
+#[derive(Resource, Default)]
+struct PlacementState {
+  cursor_exited_ui: bool,
+  snap_mode: bool,
+}
 
 pub fn cursor_above_ui<T: Component>(
   window: &Window,
@@ -138,6 +156,93 @@ pub fn cursor_above_ui<T: Component>(
     }
   }
   false
+}
+
+// How far the auto-nudge will search outward from the cursor for a valid spot.
+const NUDGE_MAX_RADIUS: f32 = 160.0;
+const NUDGE_STEP: f32 = 5.0;
+
+// Is `pos` a fully legal placement: allowed terrain AND clear of every tower's radius?
+fn placement_is_valid(
+  pos: Vec2,
+  new_radius: f32,
+  tower_data: &[(Vec2, f32)],
+  allowed_terrain: &[TerrainType],
+  tiles: &Query<&MapTile>,
+) -> bool {
+  let terrain_ok = tile_at_world_pos(pos, tiles)
+    .and_then(|t| t.terrain_type())
+    .map(|t| allowed_terrain.contains(&t))
+    .unwrap_or(false);
+  terrain_ok && !tower_data.iter().any(|&(tp, r)| tp.distance(pos) <= new_radius + r)
+}
+
+// BTD6-style auto-nudge: if the cursor itself is a legal spot, return it unchanged
+// (so the preview tracks the cursor smoothly). Otherwise search outward in growing
+// rings and return the closest legal position found. If nothing legal is within
+// NUDGE_MAX_RADIUS, return the cursor unchanged (placement stays invalid / red).
+fn find_nearest_valid(
+  cursor: Vec2,
+  new_radius: f32,
+  tower_data: &[(Vec2, f32)],
+  allowed_terrain: &[TerrainType],
+  tiles: &Query<&MapTile>,
+) -> Vec2 {
+  if placement_is_valid(cursor, new_radius, tower_data, allowed_terrain, tiles) {
+    return cursor;
+  }
+
+  let mut radius = NUDGE_STEP;
+  while radius <= NUDGE_MAX_RADIUS {
+    // More angular samples on bigger rings keeps the search density roughly even.
+    let samples = ((std::f32::consts::TAU * radius / NUDGE_STEP).ceil() as usize).max(8);
+    let mut best: Option<(f32, Vec2)> = None;
+    for i in 0..samples {
+      let angle = i as f32 / samples as f32 * std::f32::consts::TAU;
+      let p = cursor + Vec2::new(angle.cos(), angle.sin()) * radius;
+      if placement_is_valid(p, new_radius, tower_data, allowed_terrain, tiles) {
+        let d = cursor.distance_squared(p);
+        if best.map_or(true, |(bd, _)| d < bd) {
+          best = Some((d, p));
+        }
+      }
+    }
+    // First ring containing any valid point holds the nearest valid spot. The ring
+    // point itself sits on a discrete grid, which makes the preview hop as the cursor
+    // moves. Refine by walking from that point back toward the cursor to the exact
+    // obstacle boundary — that boundary point slides smoothly and removes the jitter.
+    if let Some((_, p)) = best {
+      return refine_toward_cursor(cursor, p, new_radius, tower_data, allowed_terrain, tiles);
+    }
+    radius += NUDGE_STEP;
+  }
+
+  cursor
+}
+
+// `valid` is a legal spot, `cursor` is not. Binary-search the segment between them for
+// the legal point closest to the cursor (i.e. right on the obstacle boundary). This
+// makes the nudged position vary continuously with the cursor instead of snapping to
+// the discrete ring-search grid.
+fn refine_toward_cursor(
+  cursor: Vec2,
+  valid: Vec2,
+  new_radius: f32,
+  tower_data: &[(Vec2, f32)],
+  allowed_terrain: &[TerrainType],
+  tiles: &Query<&MapTile>,
+) -> Vec2 {
+  let mut lo = 0.0; // cursor end (invalid)
+  let mut hi = 1.0; // valid end
+  for _ in 0..16 {
+    let mid = 0.5 * (lo + hi);
+    if placement_is_valid(cursor.lerp(valid, mid), new_radius, tower_data, allowed_terrain, tiles) {
+      hi = mid;
+    } else {
+      lo = mid;
+    }
+  }
+  cursor.lerp(valid, hi)
 }
 
 // Tiles are centered at (col*80, row*80), so a half-tile offset is needed.
@@ -211,13 +316,8 @@ fn close_upgrade_ui_while_placing(
 fn place_tower(
   mut commands: Commands,
   mut query: Query<
-    (
-      Entity,
-      &mut Transform,
-      &TowerType,
-      &mut Handle<ColorMaterial>,
-    ),
-    With<SpriteFollower>,
+    (Entity, &mut Transform, &TowerType, &mut Visibility),
+    (With<SpriteFollower>, Without<GameplayUIRoot>),
   >,
   assets: Res<GameAssets>,
   mouse: Res<Input<MouseButton>>,
@@ -226,15 +326,16 @@ fn place_tower(
   camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
   mut player: Query<&mut Player>,
   mut tower_tile_queries: ParamSet<(
-    Query<&Transform, (With<Tower>, Without<SpriteFollower>)>,
+    Query<(&Transform, &TowerType), (With<Tower>, Without<SpriteFollower>)>,
     Query<&MapTile>,
+    Query<&mut Handle<ColorMaterial>, With<SpriteFollowerRange>>,
   )>,
   mut meshes: ResMut<Assets<Mesh>>,
   mut materials: ResMut<Assets<ColorMaterial>>,
   game_data: Res<GameData>,
   tower_stats: Res<Assets<TowerTypeStats>>,
   node_query: Query<(&Node, &GlobalTransform, &Visibility), With<GameplayUIRoot>>,
-  mut cursor_exited_ui: ResMut<CursorExitedUI>,
+  mut state: ResMut<PlacementState>,
   mut placement_error: ResMut<PlacementError>,
 ) {
   let Some(tower_stats) = tower_stats.get(&game_data.tower_type_stats)
@@ -244,48 +345,93 @@ fn place_tower(
   let (camera, camera_transform) = camera_query.single();
   let mut player = player.single_mut();
 
-  for (entity, mut transform, tower_type, mut color) in query.iter_mut() {
+  // G toggles snap mode - works even before entering the entity loop.
+  if keys.just_pressed(KeyCode::G) {
+    state.snap_mode = !state.snap_mode;
+    placement_error.message = if state.snap_mode {
+      "Auto-nudge ON  - snaps to nearest valid spot  (G to toggle)".to_string()
+    } else {
+      "Auto-nudge OFF".to_string()
+    };
+    placement_error.timer = 2.0;
+  }
+
+  for (entity, mut transform, tower_type, mut vis) in query.iter_mut() {
+    *vis = Visibility::Inherited; // un-hide after spawn frame; prevents 1-frame flash at world origin
     let allowed_terrain = &tower_stats.tower[tower_type].allowed_terrain.terrain;
 
     if let Some(position) = window.cursor_position() {
       if !cursor_above_ui(window, &node_query) {
-        cursor_exited_ui.0 = true;
+        state.cursor_exited_ui = true;
       }
 
-      transform.translation = window_to_world_pos(window, position, camera, camera_transform);
-      let world_pos_2d = transform.translation.truncate();
+      let raw_pos = window_to_world_pos(window, position, camera, camera_transform).truncate();
 
-      let tower_close = tower_tile_queries.p0()
+      // Collect tower data once — releases p0 borrow before we need p1.
+      let tower_data: Vec<(Vec2, f32)> = tower_tile_queries.p0()
         .iter()
-        .any(|t| Vec3::distance(transform.translation, t.translation) <= 50.);
+        .map(|(t, tt)| (t.translation.truncate(), tt.placement_radius()))
+        .collect();
+
+      let new_radius = tower_type.placement_radius();
+      let final_pos = if state.snap_mode {
+        let tiles = tower_tile_queries.p1();
+        find_nearest_valid(raw_pos, new_radius, &tower_data, allowed_terrain, &tiles)
+      } else {
+        raw_pos
+      };
+      transform.translation = final_pos.extend(0.5);
+
+      // Overlap rule is IDENTICAL in snap and normal mode: each tower's radius counts.
+      let tile_occupied = tower_data.iter().any(|&(tp, r)| {
+        tp.distance(final_pos) <= new_radius + r
+      });
 
       let terrain_ok = {
         let tiles = tower_tile_queries.p1();
-        tile_at_world_pos(world_pos_2d, &tiles)
+        tile_at_world_pos(final_pos, &tiles)
           .and_then(|t| t.terrain_type())
           .map(|t| allowed_terrain.contains(&t))
           .unwrap_or(false)
       };
 
-      if tower_close || !terrain_ok {
-        *color = materials.add(ColorMaterial::from(Color::rgba_u8(202, 0, 0, 150)));
-      } else {
-        *color = materials.add(ColorMaterial::from(Color::rgba_u8(0, 0, 0, 85)));
+      let tint = match (tile_occupied || !terrain_ok, state.snap_mode) {
+        (true, _)      => Color::rgba_u8(202, 0, 0, 150),   // invalid - red
+        (false, true)  => Color::rgba_u8(0, 120, 220, 110), // snap + valid - blue
+        (false, false) => Color::rgba_u8(0, 0, 0, 85),      // normal valid - dark
+      };
+      let new_material = materials.add(ColorMaterial::from(tint));
+      for mut handle in tower_tile_queries.p2().iter_mut() {
+        *handle = new_material.clone();
       }
     }
 
     if mouse.just_pressed(MouseButton::Left) && !cursor_above_ui(window, &node_query) {
       if let Some(screen_pos) = window.cursor_position() {
-        cursor_exited_ui.0 = false;
-        let click_pos = window_to_world_pos(window, screen_pos, camera, camera_transform);
+        state.cursor_exited_ui = false;
+        let raw_click = window_to_world_pos(window, screen_pos, camera, camera_transform).truncate();
 
-        let tower_overlap = tower_tile_queries.p0()
+        let tower_data: Vec<(Vec2, f32)> = tower_tile_queries.p0()
           .iter()
-          .any(|t| Vec3::distance(click_pos, t.translation) <= 40.);
+          .map(|(t, tt)| (t.translation.truncate(), tt.placement_radius()))
+          .collect();
+
+        let new_radius = tower_type.placement_radius();
+        let final_click = if state.snap_mode {
+          let tiles = tower_tile_queries.p1();
+          find_nearest_valid(raw_click, new_radius, &tower_data, allowed_terrain, &tiles)
+        } else {
+          raw_click
+        };
+
+        // Same overlap rule as the preview above — snap and normal mode are identical.
+        let tile_occupied = tower_data.iter().any(|&(tp, r)| {
+          tp.distance(final_click) <= new_radius + r
+        });
 
         let error = {
           let tiles = tower_tile_queries.p1();
-          placement_error_reason(click_pos.truncate(), allowed_terrain, tower_overlap, &tiles)
+          placement_error_reason(final_click, allowed_terrain, tile_occupied, &tiles)
         };
 
         if let Some(msg) = error {
@@ -298,7 +444,7 @@ fn place_tower(
             &mut commands,
             *tower_type,
             &assets,
-            click_pos,
+            final_click.extend(0.5),
             &mut meshes,
             &mut materials,
             tower_stats,
@@ -307,9 +453,9 @@ fn place_tower(
       }
     } else if mouse.just_pressed(MouseButton::Right)
       || window.cursor_position().is_none()
-      || (cursor_exited_ui.0 && cursor_above_ui(window, &node_query))
+      || (state.cursor_exited_ui && cursor_above_ui(window, &node_query))
     {
-      cursor_exited_ui.0 = false;
+      state.cursor_exited_ui = false;
       commands.entity(entity).despawn_recursive();
     } else if keys.just_pressed(KeyCode::Key1)
       || keys.just_pressed(KeyCode::Key2)
@@ -322,7 +468,7 @@ fn place_tower(
       || keys.just_pressed(KeyCode::Key9)
       || keys.just_pressed(KeyCode::Key0)
     {
-      cursor_exited_ui.0 = false;
+      state.cursor_exited_ui = false;
       commands.entity(entity).despawn_recursive();
       tower_spawn_from_keyboard_input(
         &mut commands,
@@ -354,27 +500,32 @@ fn spawn_sprite_follower(
   // Spawn component that alerts the place_tower() system that a button has been pressed,
   // and it starts moving a sprite with the cursor until the tower is placed
   if let Some(position) = window.cursor_position() {
-    let transform = window_to_world_pos(window, position, camera, camera_transform);
+    let world_pos = window_to_world_pos(window, position, camera, camera_transform);
+    let initial_transform = Transform::from_translation(world_pos)
+      .with_scale(Vec3::splat(tower_type.sprite_scale()));
+    // Range circle is spawned as a CHILD (matches spawn_tower) so the mesh2d entity
+    // is separate from the sprite entity. A combined sprite+mesh2d entity flashed the
+    // tower texture across the whole map on the first frame.
+    let range = spawn_tower_range(meshes, materials, tower_stats.tower[tower_type].tower.range);
     commands
       .spawn(SpriteBundle {
         texture: assets.get_tower_asset(*tower_type),
-        transform: Transform::from_translation(transform),
+        transform: initial_transform,
+        // Hidden on spawn so GlobalTransform (identity until propagation runs) never
+        // reaches the renderer. place_tower makes it visible on its first tick; the
+        // child range inherits this visibility.
+        visibility: Visibility::Hidden,
         ..default()
       })
-      // .with_children(|commands| {
-      //   commands.spawn(spawn_tower_range(meshes, materials,
-      //                                    tower_stats.tower[&tower_type].tower.range))
-      //     .insert(SpriteFollower)
-      //     .insert(Name::new("Tower Range"));
-      // })
-      .insert(spawn_tower_range(
-        meshes,
-        materials,
-        tower_stats.tower[tower_type].tower.range,
-      ))
       .insert(SpriteFollower)
       .insert(*tower_type)
-      .insert(Name::new("SpriteFollower"));
+      .insert(Name::new("SpriteFollower"))
+      .with_children(|parent| {
+        parent
+          .spawn(range)
+          .insert(SpriteFollowerRange)
+          .insert(Name::new("SpriteFollower Range"));
+      });
   }
 }
 
@@ -711,6 +862,43 @@ fn tower_spawn_from_keyboard_input(
   }
 }
 
+fn snap_button_clicked(
+  interactions: Query<&Interaction, (With<SnapButton>, Changed<Interaction>)>,
+  mut state: ResMut<PlacementState>,
+  mut placement_error: ResMut<PlacementError>,
+) {
+  for interaction in &interactions {
+    if matches!(interaction, Interaction::Clicked) {
+      state.snap_mode = !state.snap_mode;
+      placement_error.message = if state.snap_mode {
+        "Auto-nudge ON  - snaps to nearest valid spot  (G to toggle)".to_string()
+      } else {
+        "Auto-nudge OFF".to_string()
+      };
+      placement_error.timer = 2.0;
+    }
+  }
+}
+
+fn update_snap_button(
+  state: Res<PlacementState>,
+  mut buttons: Query<&mut BackgroundColor, With<SnapButton>>,
+  mut texts: Query<&mut Text, With<SnapButtonText>>,
+) {
+  let (bg, label, text_color) = if state.snap_mode {
+    (Color::rgba(0.0, 0.47, 0.87, 0.92), "Nudge: ON  [G]", Color::WHITE)
+  } else {
+    (Color::rgba(0.08, 0.08, 0.08, 0.80), "Nudge: OFF [G]", Color::rgb(0.55, 0.55, 0.55))
+  };
+  for mut bg_color in &mut buttons {
+    *bg_color = BackgroundColor(bg);
+  }
+  for mut text in &mut texts {
+    text.sections[0].value = label.to_string();
+    text.sections[0].style.color = text_color;
+  }
+}
+
 // Creating a UI menu on the whole screen with buttons
 fn cleanup_tower_ui(
   mut commands: Commands,
@@ -734,7 +922,7 @@ fn generate_ui(
   let Some(tower_stats) = tower_stats.get(&game_data.tower_type_stats)
     else { return; };
 
-  commands.insert_resource(CursorExitedUI(false));
+  commands.insert_resource(PlacementState::default());
   commands.insert_resource(PlacementError::default());
 
   // Error message = full-width row at top that flex-centers the dark panel
@@ -834,6 +1022,32 @@ fn generate_ui(
           .insert(i)
           .insert(Name::new("TowerButton"));
       }
+    });
+
+  // Snap toggle button = bottom-right corner, always visible
+  commands
+    .spawn(ButtonBundle {
+      style: Style {
+        position_type: PositionType::Absolute,
+        position: UiRect { right: Val::Px(12.), bottom: Val::Px(12.), ..default() },
+        padding: UiRect { left: Val::Px(10.), right: Val::Px(10.), top: Val::Px(6.), bottom: Val::Px(6.) },
+        ..default()
+      },
+      background_color: BackgroundColor(Color::rgba(0.08, 0.08, 0.08, 0.80)),
+      ..default()
+    })
+    .insert(TowerUIRoot)
+    .insert(SnapButton)
+    .insert(Name::new("SnapButton"))
+    .with_children(|c| {
+      c.spawn(TextBundle {
+        text: Text::from_section(
+          "Nudge: OFF [G]",
+          TextStyle { font: assets.font.clone(), font_size: 15.0, color: Color::rgb(0.55, 0.55, 0.55) },
+        ),
+        ..default()
+      })
+      .insert(SnapButtonText);
     });
 
   // Tooltip panel = hidden until a button is hovered; position updated by update_tooltip_position
