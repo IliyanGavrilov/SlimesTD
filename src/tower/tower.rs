@@ -9,6 +9,11 @@ use crate::movement::*;
 use crate::tower::*;
 use crate::{GameState, game_not_paused};
 
+/// Marker placed on farm towers that don't shoot (Passive, Kill, Wave).
+/// `tower_shooting` excludes entities with this component.
+#[derive(Component)]
+pub struct NonShootingTower;
+
 pub struct TowerPlugin;
 
 impl Plugin for TowerPlugin {
@@ -28,6 +33,10 @@ pub struct TowerBundle {
   pub name: Name,
 }
 
+fn default_projectile_speed() -> f32 {
+  1500.0
+}
+
 //#[derive(Component)] // !!!Debugging
 #[derive(Reflect, Clone, Component, Default, Serialize, Deserialize)]
 #[reflect(Component)]
@@ -36,6 +45,10 @@ pub struct Tower {
   pub damage: u32,
   pub attack_speed: f32,
   pub range: u32,
+  #[serde(default)]
+  pub pierce: u32,
+  #[serde(default = "default_projectile_speed")]
+  pub projectile_speed: f32,
   pub price: u32,
   pub sell_price: u32,
   pub upgrades: TowerUpgrades,
@@ -43,7 +56,6 @@ pub struct Tower {
   pub shooting_timer: Timer,
   pub total_spent: u32,
   pub total_damage: u32,
-  // Flag to stop timer from counting when there are no enemies
   pub first_enemy_appeared: bool,
 }
 
@@ -78,8 +90,8 @@ impl Tower {
     path_index: usize,
     meshes: &mut Assets<Mesh>,
     tower_range_radius: &mut Query<&mut Mesh2dHandle>,
+    mut farm_tower: Option<&mut FarmTower>,
   ) {
-    // Update total spent and sell price of tower
     self.total_spent += upgrade.cost as u32;
     self.sell_price = self.total_spent / 3;
 
@@ -99,6 +111,13 @@ impl Tower {
             radius.0 = meshes.add(shape::Circle::new(self.range as f32).into());
           }
         }
+        TowerStat::Pierce => self.pierce += *v as u32,
+        TowerStat::ProjectileSpeed => self.projectile_speed += *v as f32,
+        TowerStat::Income => {
+          if let Some(ref mut farm) = farm_tower {
+            farm.apply_income_upgrade(*v as u32);
+          }
+        }
       }
     }
 
@@ -115,19 +134,26 @@ pub fn spawn_tower(
   materials: &mut Assets<ColorMaterial>,
   tower_stats: &TowerTypeStats,
 ) {
-  commands
-    .spawn(tower_type.get_tower(tower_stats))
-    .insert(tower_type.get_sprite_sheet_bundle(assets, position))
-    .with_children(|commands| {
-      commands
-        .spawn(spawn_tower_range(
-          meshes,
-          materials,
-          tower_stats.tower[&tower_type].tower.range,
-        ))
-        .insert(Name::new("Tower Range"))
-        .insert(TowerUpgradeUI);
-    });
+  let mut entity = commands.spawn(tower_type.get_tower(tower_stats));
+  entity.insert(tower_type.get_sprite_sheet_bundle(assets, position));
+
+  if let Some(farm) = tower_type.get_farm_tower() {
+    entity.insert(farm);
+    if !matches!(tower_type, TowerType::FarmSelfKill) {
+      entity.insert(NonShootingTower);
+    }
+  }
+
+  entity.with_children(|commands| {
+    commands
+      .spawn(spawn_tower_range(
+        meshes,
+        materials,
+        tower_stats.tower[&tower_type].tower.range,
+      ))
+      .insert(Name::new("Tower Range"))
+      .insert(TowerUpgradeUI);
+  });
 
   // Spawn Tower UI - Targeting priority, Selling & Upgrades
   spawn_tower_ui(
@@ -147,14 +173,14 @@ fn cleanup_towers(mut commands: Commands, towers: Query<Entity, With<Tower>>) {
 
 fn tower_shooting(
   mut commands: Commands,
-  assets: Res<GameAssets>, // Bullet assets
+  assets: Res<GameAssets>,
   mut towers: Query<(
     Entity,
     &mut Tower,
     &TowerType,
     &mut Transform,
     &GlobalTransform,
-  )>,
+  ), Without<NonShootingTower>>,
   enemies: Query<(&GlobalTransform, &Enemy, &Movement)>,
   time: Res<Time>,
 ) {
@@ -186,6 +212,8 @@ fn tower_shooting(
           commands.entity(tower_entity).with_children(|commands| {
             commands.spawn(tower_type.get_bullet(
               tower.damage,
+              tower.pierce,
+              tower.projectile_speed,
               &assets,
               Transform::from_translation(tower.bullet_spawn_offset),
             ));

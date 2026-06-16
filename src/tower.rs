@@ -1,6 +1,9 @@
 mod tower;
 pub use tower::*;
 
+mod farm_tower;
+pub use farm_tower::*;
+
 mod bullet;
 pub use bullet::*;
 

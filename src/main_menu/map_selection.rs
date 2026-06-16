@@ -9,6 +9,7 @@ pub struct MapSelectionPlugin;
 impl Plugin for MapSelectionPlugin {
   fn build(&self, app: &mut App) {
     app
+      .init_resource::<GameDifficulty>()
       .add_system(init_selected_map.in_schedule(OnExit(GameState::AssetLoading)))
       .add_system(spawn_map_selection.in_schedule(OnEnter(GameState::MapSelection)))
       .add_systems(
@@ -18,6 +19,14 @@ impl Plugin for MapSelectionPlugin {
   }
 }
 
+#[derive(Resource, Default, Clone, Copy, PartialEq, Eq, Debug)]
+pub enum GameDifficulty {
+  #[default]
+  Normal,
+  /// Reduced game speed — 5000 starting gold, all enemies have 1 HP.
+  Test,
+}
+
 #[derive(Resource)]
 pub struct SelectedMap(pub Handle<Map>);
 
@@ -25,7 +34,7 @@ pub struct SelectedMap(pub Handle<Map>);
 struct MapSelectionRoot;
 
 #[derive(Component)]
-struct SelectMapButton(Handle<Map>);
+struct SelectMapButton(Handle<Map>, GameDifficulty);
 
 #[derive(Component)]
 struct BackButton;
@@ -42,6 +51,7 @@ fn select_button_clicked(
   for (interaction, button) in &interactions {
     if matches!(interaction, Interaction::Clicked) {
       commands.insert_resource(SelectedMap(button.0.clone()));
+      commands.insert_resource(button.1);
       next_state.set(GameState::Gameplay);
     }
   }
@@ -170,7 +180,7 @@ fn spawn_map_card(
         align_items: AlignItems::Center,
         padding: UiRect::all(Val::Px(16.)),
         margin: UiRect::all(Val::Px(24.)),
-        size: Size::new(Val::Px(220.), Val::Auto),
+        size: Size::new(Val::Px(240.), Val::Auto),
         ..default()
       },
       background_color: Color::rgb(0.2, 0.2, 0.2).into(),
@@ -198,31 +208,69 @@ fn spawn_map_card(
       }
 
       commands
-        .spawn(ButtonBundle {
+        .spawn(NodeBundle {
           style: Style {
-            size: Size::new(Val::Px(160.), Val::Px(50.)),
+            flex_direction: FlexDirection::Row,
             justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
             margin: UiRect::top(Val::Px(14.)),
             ..default()
           },
-          background_color: Color::rgb(0.25, 0.55, 0.25).into(),
           ..default()
         })
-        .insert(SelectMapButton(map_handle))
         .with_children(|commands| {
-          commands.spawn(TextBundle {
-            text: Text::from_section(
-              "Play",
-              TextStyle {
-                font: assets.font.clone(),
-                font_size: 28.,
-                color: Color::WHITE,
-              },
-            ),
-            ..default()
-          });
+          spawn_difficulty_button(
+            commands,
+            assets,
+            map_handle.clone(),
+            GameDifficulty::Normal,
+            "Normal",
+            Color::rgb(0.25, 0.55, 0.25),
+          );
+          spawn_difficulty_button(
+            commands,
+            assets,
+            map_handle,
+            GameDifficulty::Test,
+            "Test",
+            Color::rgb(0.55, 0.35, 0.10),
+          );
         });
+    });
+}
+
+fn spawn_difficulty_button(
+  commands: &mut ChildBuilder,
+  assets: &GameAssets,
+  map_handle: Handle<Map>,
+  difficulty: GameDifficulty,
+  label: &str,
+  color: Color,
+) {
+  commands
+    .spawn(ButtonBundle {
+      style: Style {
+        size: Size::new(Val::Px(100.), Val::Px(46.)),
+        justify_content: JustifyContent::Center,
+        align_items: AlignItems::Center,
+        margin: UiRect::horizontal(Val::Px(4.)),
+        ..default()
+      },
+      background_color: color.into(),
+      ..default()
+    })
+    .insert(SelectMapButton(map_handle, difficulty))
+    .with_children(|commands| {
+      commands.spawn(TextBundle {
+        text: Text::from_section(
+          label,
+          TextStyle {
+            font: assets.font.clone(),
+            font_size: 22.,
+            color: Color::WHITE,
+          },
+        ),
+        ..default()
+      });
     });
 }
 

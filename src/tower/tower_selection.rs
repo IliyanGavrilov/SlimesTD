@@ -98,7 +98,7 @@ fn mouse_click_interaction(
 fn tower_ui_interaction(
   //assets: Res<GameAssets>,
   mut commands: Commands,
-  mut towers: Query<(Entity, &mut Tower, &TowerType, &Children)>,
+  mut towers: Query<(Entity, &mut Tower, &TowerType, &Children, Option<&mut FarmTower>)>,
   clicked_tower: Query<Entity, With<TowerUpgradeUI>>,
   keys: Res<Input<KeyCode>>,
   mut player: Query<&mut Player>,
@@ -140,7 +140,7 @@ fn tower_ui_interaction(
     let mut player = player.single_mut();
 
     // Keyboard shortcuts
-    for (entity, mut tower, tower_type, children) in towers.iter_mut() {
+    for (entity, mut tower, tower_type, children, mut farm_tower) in towers.iter_mut() {
       for _ in clicked_tower.iter_many(children) {
         let mut upgrade_path_index: Option<usize> = None;
 
@@ -189,6 +189,7 @@ fn tower_ui_interaction(
               path_index,
               &mut meshes,
               &mut tower_range_radius,
+              farm_tower.as_deref_mut(),
             );
           }
         }
@@ -275,6 +276,7 @@ fn tower_ui_interaction(
                   state.path_index,
                   &mut meshes,
                   &mut tower_range_radius,
+                  farm_tower.as_deref_mut(),
                 );
               }
               Interaction::Hovered => {

@@ -65,6 +65,7 @@ fn main() {
     .add_plugin(PlayerPlugin)
     .add_plugin(BasePlugin)
     .add_plugin(TowerPlugin)
+    .add_plugin(FarmPlugin)
     .add_plugin(TowerButtonPlugin)
     .add_plugin(TowerSelectionPlugin)
     .add_plugin(TowerUIPlugin)

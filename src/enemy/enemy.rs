@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::assets::*;
 use crate::enemy::*;
 use crate::movement::*;
-use crate::{GameState, Map, game_not_paused};
+use crate::{GameDifficulty, GameState, Map, game_not_paused};
 
 pub struct EnemyPlugin;
 
@@ -14,6 +14,7 @@ impl Plugin for EnemyPlugin {
       .register_type::<Enemy>()
       .register_type::<Path>()
       .add_event::<EnemyDeathEvent>()
+      .add_system(scale_hp_for_difficulty.in_set(OnUpdate(GameState::Gameplay)))
       .add_system(despawn_enemy_on_death.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused))
       .add_system(cleanup_enemies.in_schedule(OnExit(GameState::Gameplay)));
   }
@@ -79,6 +80,17 @@ pub fn spawn_enemy(
   commands
     .spawn(enemy_type.get_enemy(map_path, path, enemy_stats))
     .insert(enemy_type.get_sprite_sheet_bundle(assets, position));
+}
+
+fn scale_hp_for_difficulty(
+  difficulty: Res<GameDifficulty>,
+  mut new_enemies: Query<&mut Enemy, Added<Enemy>>,
+) {
+  if *difficulty == GameDifficulty::Test {
+    for mut enemy in &mut new_enemies {
+      enemy.health = 1;
+    }
+  }
 }
 
 fn cleanup_enemies(mut commands: Commands, enemies: Query<Entity, With<Enemy>>) {

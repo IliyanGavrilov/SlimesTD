@@ -3,7 +3,7 @@ use bevy::sprite::collide_aabb::collide;
 
 use crate::enemy::*;
 use crate::movement::*;
-use crate::{GameState, Tower, game_not_paused};
+use crate::{FarmBehavior, FarmTower, GameState, Player, Tower, game_not_paused};
 
 pub struct BulletPlugin;
 
@@ -34,7 +34,8 @@ pub struct BulletBundle {
 #[reflect(Component)]
 pub struct Bullet {
   pub damage: u32,
-  pub lifetime: Timer, // !!! fix?
+  pub pierce_remaining: u32,
+  pub lifetime: Timer,
 }
 
 fn cleanup_bullets(mut commands: Commands, bullets: Query<Entity, With<Bullet>>) {
@@ -60,11 +61,13 @@ fn despawn_bullets(
 
 fn bullet_enemy_collision(
   mut commands: Commands,
-  bullets: Query<(Entity, &Bullet, &Parent, &GlobalTransform)>,
+  mut bullets: Query<(Entity, &mut Bullet, &Parent, &GlobalTransform)>,
   mut enemies: Query<(&mut Enemy, &Transform)>,
   mut towers: Query<&mut Tower>,
+  farm_towers: Query<&FarmTower>,
+  mut player: Query<&mut Player>,
 ) {
-  for (bullet_entity, bullet, tower_parent, bullet_transform) in &bullets {
+  for (bullet_entity, mut bullet, tower_parent, bullet_transform) in &mut bullets {
     for (mut enemy, enemy_transform) in &mut enemies {
       if collide(
         bullet_transform.translation(),
@@ -74,17 +77,30 @@ fn bullet_enemy_collision(
       )
       .is_some()
       {
-        // Update tower's total damage
         let mut tower = towers.get_mut(tower_parent.get()).unwrap();
         if enemy.health >= bullet.damage as i32 {
           tower.total_damage += bullet.damage;
         } else {
-          tower.total_damage += enemy.health as u32;
+          tower.total_damage += enemy.health.max(0) as u32;
         }
 
-        // Despawn bullet upon hit and damage enemy
-        commands.entity(bullet_entity).despawn_recursive();
         enemy.health -= bullet.damage as i32;
+
+        if enemy.health <= 0 {
+          if let Ok(farm) = farm_towers.get(tower_parent.get()) {
+            if let FarmBehavior::SelfKill { income_per_kill } = &farm.behavior {
+              if let Ok(mut p) = player.get_single_mut() {
+                p.money += *income_per_kill as usize;
+              }
+            }
+          }
+        }
+
+        if bullet.pierce_remaining > 0 {
+          bullet.pierce_remaining -= 1;
+        } else {
+          commands.entity(bullet_entity).despawn_recursive();
+        }
         break;
       }
     }

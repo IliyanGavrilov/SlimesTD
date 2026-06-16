@@ -32,8 +32,10 @@ pub struct Upgrade {
 
 #[derive(Hash, Eq, PartialEq, Reflect, FromReflect, Clone, Deserialize, Debug)]
 pub enum TowerStat {
-  // Projectile speed, pierce !!!
   Damage,
   AttackSpeed,
   Range,
+  Pierce,
+  ProjectileSpeed,
+  Income,
 }

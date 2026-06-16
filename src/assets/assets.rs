@@ -102,6 +102,9 @@ impl GameAssets {
       TowerType::Dark => self.wizard_dark.clone(),
       TowerType::Mage => self.wizard_mage.clone(),
       TowerType::Archmage => self.wizard_archmage.clone(),
+      TowerType::FarmPassive | TowerType::FarmKill | TowerType::FarmWave | TowerType::FarmSelfKill => {
+        self.wizard_nature.clone()
+      }
     }
   }
 
@@ -113,6 +116,9 @@ impl GameAssets {
       TowerType::Dark => self.wizard_dark_icon.clone(),
       TowerType::Mage => self.wizard_mage_icon.clone(),
       TowerType::Archmage => self.wizard_archmage_icon.clone(),
+      TowerType::FarmPassive | TowerType::FarmKill | TowerType::FarmWave | TowerType::FarmSelfKill => {
+        self.wizard_nature_icon.clone()
+      }
     }
   }
 
@@ -124,6 +130,9 @@ impl GameAssets {
       TowerType::Dark => self.wizard_dark_button.clone(),
       TowerType::Mage => self.wizard_mage_button.clone(),
       TowerType::Archmage => self.wizard_archmage_button.clone(),
+      TowerType::FarmPassive | TowerType::FarmKill | TowerType::FarmWave | TowerType::FarmSelfKill => {
+        self.wizard_nature_button.clone()
+      }
     }
   }
 
@@ -135,6 +144,9 @@ impl GameAssets {
       TowerType::Dark => self.wizard_dark_button_hover.clone(),
       TowerType::Mage => self.wizard_mage_button_hover.clone(),
       TowerType::Archmage => self.wizard_archmage_button_hover.clone(),
+      TowerType::FarmPassive | TowerType::FarmKill | TowerType::FarmWave | TowerType::FarmSelfKill => {
+        self.wizard_nature_button_hover.clone()
+      }
     }
   }
 
@@ -146,6 +158,9 @@ impl GameAssets {
       TowerType::Dark => self.wizard_dark_button_press.clone(),
       TowerType::Mage => self.wizard_mage_button_press.clone(),
       TowerType::Archmage => self.wizard_archmage_button_press.clone(),
+      TowerType::FarmPassive | TowerType::FarmKill | TowerType::FarmWave | TowerType::FarmSelfKill => {
+        self.wizard_nature_button_press.clone()
+      }
     }
   }
 
@@ -157,6 +172,9 @@ impl GameAssets {
       TowerType::Dark => self.wizard_dark_button_lock.clone(),
       TowerType::Mage => self.wizard_mage_button_lock.clone(),
       TowerType::Archmage => self.wizard_archmage_button_lock.clone(),
+      TowerType::FarmPassive | TowerType::FarmKill | TowerType::FarmWave | TowerType::FarmSelfKill => {
+        self.wizard_nature_button_lock.clone()
+      }
     }
   }
 

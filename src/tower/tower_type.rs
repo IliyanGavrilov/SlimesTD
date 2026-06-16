@@ -18,6 +18,14 @@ pub enum TowerType {
   Dark,
   Mage,
   Archmage,
+  /// Earns gold passively every 15 seconds.
+  FarmPassive,
+  /// Earns gold for every enemy killed on the map by any tower.
+  FarmKill,
+  /// Earns a large bonus when each wave is cleared.
+  FarmWave,
+  /// Shoots enemies and earns gold for every enemy it personally kills.
+  FarmSelfKill,
 }
 
 #[derive(Resource, Serialize, Deserialize, Clone, TypeUuid)]
@@ -27,8 +35,36 @@ pub struct TowerTypeStats {
 }
 
 impl TowerType {
+  pub fn description(&self) -> &'static str {
+    match self {
+      TowerType::Nature      => "Balanced all-rounder, good starter",
+      TowerType::Fire        => "High damage, fast projectiles",
+      TowerType::Ice         => "Rapid-fire, low per-shot damage",
+      TowerType::Dark        => "Pierces through multiple enemies",
+      TowerType::Mage        => "Slow but hits extremely hard",
+      TowerType::Archmage    => "Ultimate power, pierce, and range",
+      TowerType::FarmPassive => "Earns gold passively over time",
+      TowerType::FarmKill    => "Gold for any kill on the map",
+      TowerType::FarmWave    => "Big bonus gold each wave cleared",
+      TowerType::FarmSelfKill=> "Shoots; earns gold per own kill",
+    }
+  }
+
   pub fn get_tower(&self, tower_stats: &TowerTypeStats) -> TowerBundle {
     tower_stats.tower[self].clone()
+  }
+
+  pub fn get_farm_tower(&self) -> Option<FarmTower> {
+    match self {
+      TowerType::FarmPassive => Some(FarmTower::new(FarmBehavior::Passive {
+        income: 50,
+        timer: Timer::from_seconds(15.0, TimerMode::Repeating),
+      })),
+      TowerType::FarmKill => Some(FarmTower::new(FarmBehavior::Kill { income_per_kill: 5 })),
+      TowerType::FarmWave => Some(FarmTower::new(FarmBehavior::Wave { income_per_wave: 75 })),
+      TowerType::FarmSelfKill => Some(FarmTower::new(FarmBehavior::SelfKill { income_per_kill: 3 })),
+      _ => None,
+    }
   }
 
   pub fn get_sprite_sheet_bundle(&self, assets: &GameAssets, position: Vec3) -> SpriteBundle {
@@ -39,6 +75,9 @@ impl TowerType {
       TowerType::Dark => assets.wizard_dark.clone(),
       TowerType::Mage => assets.wizard_mage.clone(),
       TowerType::Archmage => assets.wizard_archmage.clone(),
+      TowerType::FarmPassive | TowerType::FarmKill | TowerType::FarmWave | TowerType::FarmSelfKill => {
+        assets.wizard_nature.clone()
+      }
     };
 
     SpriteBundle {
@@ -48,86 +87,39 @@ impl TowerType {
     }
   }
 
-  pub fn get_bullet(&self, damage: u32, assets: &GameAssets, position: Transform) -> BulletBundle {
-    match self {
-      TowerType::Nature => BulletBundle {
-        bullet: Bullet {
-          damage,
-          lifetime: Timer::from_seconds(1.25, TimerMode::Once),
-        },
-        movement: Movement::new(Vec3::new(0.00000001, 0., 0.), 1500.),
-        sprite: SpriteBundle {
-          texture: assets.wizard_nature_bullet.clone(),
-          transform: position,
-          ..default()
-        },
-        name: Name::new("Bullet"),
+  pub fn get_bullet(
+    &self,
+    damage: u32,
+    pierce: u32,
+    projectile_speed: f32,
+    assets: &GameAssets,
+    position: Transform,
+  ) -> BulletBundle {
+    let texture = match self {
+      TowerType::Nature => assets.wizard_nature_bullet.clone(),
+      TowerType::Fire => assets.wizard_fire_bullet.clone(),
+      TowerType::Ice => assets.wizard_ice_bullet.clone(),
+      TowerType::Dark => assets.wizard_dark_bullet.clone(),
+      TowerType::Mage => assets.wizard_mage_bullet.clone(),
+      TowerType::Archmage => assets.wizard_archmage_bullet.clone(),
+      TowerType::FarmSelfKill => assets.wizard_nature_bullet.clone(),
+      TowerType::FarmPassive | TowerType::FarmKill | TowerType::FarmWave => {
+        unreachable!("Passive farm towers do not shoot")
+      }
+    };
+    BulletBundle {
+      bullet: Bullet {
+        damage,
+        pierce_remaining: pierce,
+        lifetime: Timer::from_seconds(1.25, TimerMode::Once),
       },
-      TowerType::Fire => BulletBundle {
-        bullet: Bullet {
-          damage,
-          lifetime: Timer::from_seconds(1.25, TimerMode::Once),
-        },
-        movement: Movement::new(Vec3::new(0.00000001, 0., 0.), 1500.),
-        sprite: SpriteBundle {
-          texture: assets.wizard_fire_bullet.clone(),
-          transform: position,
-          ..default()
-        },
-        name: Name::new("Bullet"),
+      movement: Movement::new(Vec3::new(0.00000001, 0., 0.), projectile_speed),
+      sprite: SpriteBundle {
+        texture,
+        transform: position,
+        ..default()
       },
-      TowerType::Ice => BulletBundle {
-        bullet: Bullet {
-          damage,
-          lifetime: Timer::from_seconds(1.25, TimerMode::Once),
-        },
-        movement: Movement::new(Vec3::new(0.00000001, 0., 0.), 1500.),
-        sprite: SpriteBundle {
-          texture: assets.wizard_ice_bullet.clone(),
-          transform: position,
-          ..default()
-        },
-        name: Name::new("Bullet"),
-      },
-      TowerType::Dark => BulletBundle {
-        bullet: Bullet {
-          damage,
-          lifetime: Timer::from_seconds(1.25, TimerMode::Once),
-        },
-        movement: Movement::new(Vec3::new(0.00000001, 0., 0.), 1500.),
-        sprite: SpriteBundle {
-          texture: assets.wizard_dark_bullet.clone(),
-          transform: position,
-          ..default()
-        },
-        name: Name::new("Bullet"),
-      },
-      TowerType::Mage => BulletBundle {
-        bullet: Bullet {
-          damage,
-          lifetime: Timer::from_seconds(1.25, TimerMode::Once),
-        },
-        movement: Movement::new(Vec3::new(0.00000001, 0., 0.), 1500.),
-        sprite: SpriteBundle {
-          texture: assets.wizard_mage_bullet.clone(),
-          transform: position,
-          ..default()
-        },
-        name: Name::new("Bullet"),
-      },
-      TowerType::Archmage => BulletBundle {
-        bullet: Bullet {
-          damage,
-          lifetime: Timer::from_seconds(1.25, TimerMode::Once),
-        },
-        movement: Movement::new(Vec3::new(0.00000001, 0., 0.), 1500.),
-        sprite: SpriteBundle {
-          texture: assets.wizard_archmage_bullet.clone(),
-          transform: position,
-          ..default()
-        },
-        name: Name::new("Bullet"),
-      },
+      name: Name::new("Bullet"),
     }
   }
 }

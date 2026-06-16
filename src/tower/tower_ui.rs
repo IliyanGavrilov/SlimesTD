@@ -70,7 +70,7 @@ fn update_tower_ui(
   game_data: Res<GameData>,
   upgrades: Res<Assets<Upgrades>>,
   mut child_q: Query<&Parent, With<TowerUpgradeUI>>,
-  mut parent_q: Query<(&mut Tower, &TowerType)>,
+  mut parent_q: Query<(&mut Tower, &TowerType, Option<&FarmTower>)>,
   mut stats_ui: Query<&mut Text, With<TowerStatsUI>>,
   mut lifetime_stats_ui: Query<&mut Text, (With<TowerLifetimeStatsUI>, Without<TowerStatsUI>)>,
   mut targeting_priority_ui: Query<
@@ -115,17 +115,33 @@ fn update_tower_ui(
     else { return; };
 
   for parent in child_q.iter_mut() {
-    let (tower, tower_type) = parent_q.get_mut(parent.get()).unwrap();
+    let (tower, tower_type, farm_tower) = parent_q.get_mut(parent.get()).unwrap();
 
     // Update tower stats
     for mut stats in stats_ui.iter_mut() {
-      *stats = Text::from_section(
+      let stats_text = if let Some(farm) = farm_tower {
+        let income_desc = match &farm.behavior {
+          FarmBehavior::Passive { income, timer } => {
+            format!(" Income: ${}/tick\n Interval: {:.0}s", income, timer.duration().as_secs_f32())
+          }
+          FarmBehavior::Kill { income_per_kill } => {
+            format!(" Income: ${}/kill\n Per: enemy kill", income_per_kill)
+          }
+          FarmBehavior::Wave { income_per_wave } => {
+            format!(" Income: ${}/wave\n Per: wave clear", income_per_wave)
+          }
+          FarmBehavior::SelfKill { income_per_kill } => {
+            format!(" Income: ${}/kill\n Per: own kill only", income_per_kill)
+          }
+        };
+        income_desc
+      } else {
         format!(
-          " Damage: {}\n Attack Speed: {:.2}\n Range: {}\n Pierce: \n Projectile Speed: ",
-          tower.damage, tower.attack_speed, tower.range
-        ),
-        stats.sections[0].style.clone(),
-      );
+          " Damage: {}\n Attack Speed: {:.2}\n Range: {}\n Pierce: {}\n Proj. Speed: {:.0}",
+          tower.damage, tower.attack_speed, tower.range, tower.pierce, tower.projectile_speed
+        )
+      };
+      *stats = Text::from_section(stats_text, stats.sections[0].style.clone());
     }
 
     // Update tower lifetime stats
@@ -188,6 +204,11 @@ fn update_tower_ui(
             TowerStat::Damage => upgrade_stats_string += &format!("+ {} damage\n", v),
             TowerStat::AttackSpeed => upgrade_stats_string += &format!("- {}% attack speed\n", v),
             TowerStat::Range => upgrade_stats_string += &format!("+ {} range\n", v),
+            TowerStat::Pierce => upgrade_stats_string += &format!("+ {} pierce\n", v),
+            TowerStat::ProjectileSpeed => {
+              upgrade_stats_string += &format!("+ {:.0} proj. speed\n", v)
+            }
+            TowerStat::Income => upgrade_stats_string += &format!("+ ${} income\n", v),
           }
         }
 
