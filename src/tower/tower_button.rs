@@ -6,7 +6,7 @@ use strum::IntoEnumIterator;
 use crate::assets::*;
 use crate::tower::*;
 use crate::FarmBehavior;
-use crate::{GameData, GameState, GameplayUIRoot, MainCamera, Player, game_not_paused};
+use crate::{GameData, GameState, GameplayUIRoot, MainCamera, MapTile, Player, Tile, TerrainType, game_not_paused};
 
 pub struct TowerButtonPlugin;
 
@@ -18,6 +18,8 @@ impl Plugin for TowerButtonPlugin {
         (
           tower_button_interaction.run_if(game_not_paused),
           place_tower.run_if(game_not_paused),
+          close_upgrade_ui_while_placing.run_if(game_not_paused),
+          tick_placement_error,
           lock_tower_buttons.after(generate_ui).run_if(game_not_paused),
           update_tooltip_position,
         )
@@ -53,6 +55,18 @@ pub struct SpriteFollower;
 #[reflect(Component)]
 pub struct TowerButtonState {
   price: u32,
+}
+
+#[derive(Component)]
+pub struct PlacementErrorPanel;
+
+#[derive(Component)]
+pub struct PlacementErrorText;
+
+#[derive(Resource, Default)]
+pub struct PlacementError {
+  pub message: String,
+  pub timer: f32,
 }
 
 fn lock_tower_buttons(
@@ -126,6 +140,74 @@ pub fn cursor_above_ui<T: Component>(
   false
 }
 
+// Tiles are centered at (col*80, row*80), so a half-tile offset is needed.
+fn tile_at_world_pos(world_pos: Vec2, map_tiles: &Query<&MapTile>) -> Option<Tile> {
+  if world_pos.x < -40.0 || world_pos.y < -40.0 {
+    return None;
+  }
+  let tile_x = ((world_pos.x + 40.0) / 80.0) as usize;
+  let tile_y = ((world_pos.y + 40.0) / 80.0) as usize;
+  map_tiles.iter()
+    .find(|mt| mt.coordinate.x == tile_x && mt.coordinate.y == tile_y)
+    .map(|mt| mt.tile.clone())
+}
+
+fn placement_error_reason(
+  world_pos: Vec2,
+  allowed_terrain: &[TerrainType],
+  tower_overlap: bool,
+  map_tiles: &Query<&MapTile>,
+) -> Option<String> {
+  if tower_overlap {
+    return Some("A tower is already placed here".to_string());
+  }
+  match tile_at_world_pos(world_pos, map_tiles) {
+    None => Some("Cannot place outside the map".to_string()),
+    Some(tile) => match tile.terrain_type() {
+      None => Some("Towers cannot be placed on the path".to_string()),
+      Some(terrain) if allowed_terrain.contains(&terrain) => None,
+      Some(_) => {
+        let needed = allowed_terrain
+          .iter()
+          .map(|t| format!("{t:?}"))
+          .collect::<Vec<_>>()
+          .join(" or ");
+        Some(format!("This tower can only be placed on: {needed}"))
+      }
+    },
+  }
+}
+
+fn tick_placement_error(
+  mut error: ResMut<PlacementError>,
+  mut panels: Query<&mut Visibility, With<PlacementErrorPanel>>,
+  mut texts: Query<&mut Text, With<PlacementErrorText>>,
+  time: Res<Time>,
+) {
+  let showing = error.timer > 0.0;
+  if showing {
+    error.timer -= time.delta_seconds();
+    for mut text in &mut texts {
+      text.sections[0].value = error.message.clone();
+    }
+  }
+  for mut vis in &mut panels {
+    *vis = if showing { Visibility::Inherited } else { Visibility::Hidden };
+  }
+}
+
+fn close_upgrade_ui_while_placing(
+  mut commands: Commands,
+  followers: Query<Entity, With<SpriteFollower>>,
+  upgrade_uis: Query<Entity, With<TowerUpgradeUI>>,
+) {
+  if !followers.is_empty() {
+    for entity in &upgrade_uis {
+      commands.entity(entity).despawn_recursive();
+    }
+  }
+}
+
 fn place_tower(
   mut commands: Commands,
   mut query: Query<
@@ -143,15 +225,17 @@ fn place_tower(
   windows: Query<&Window>,
   camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
   mut player: Query<&mut Player>,
-  towers: Query<&Transform, (With<Tower>, Without<SpriteFollower>)>,
-  mut clicked_tower: Query<Entity, With<TowerUpgradeUI>>,
+  mut tower_tile_queries: ParamSet<(
+    Query<&Transform, (With<Tower>, Without<SpriteFollower>)>,
+    Query<&MapTile>,
+  )>,
   mut meshes: ResMut<Assets<Mesh>>,
   mut materials: ResMut<Assets<ColorMaterial>>,
   game_data: Res<GameData>,
   tower_stats: Res<Assets<TowerTypeStats>>,
   node_query: Query<(&Node, &GlobalTransform, &Visibility), With<GameplayUIRoot>>,
-  //tilemap: Res<Map>,
-  mut cursor_exited_ui: ResMut<CursorExitedUI>, // Flag to check initial mouse exit from button UI
+  mut cursor_exited_ui: ResMut<CursorExitedUI>,
+  mut placement_error: ResMut<PlacementError>,
 ) {
   let Some(tower_stats) = tower_stats.get(&game_data.tower_type_stats)
     else { return; };
@@ -161,87 +245,67 @@ fn place_tower(
   let mut player = player.single_mut();
 
   for (entity, mut transform, tower_type, mut color) in query.iter_mut() {
-    if !clicked_tower.is_empty() {
-      for entity in clicked_tower.iter_mut() {
-        commands.entity(entity).despawn_recursive();
-      }
-    }
-    // Sprite follows mouse until tower is placed or discarded
+    let allowed_terrain = &tower_stats.tower[tower_type].allowed_terrain.terrain;
+
     if let Some(position) = window.cursor_position() {
       if !cursor_above_ui(window, &node_query) {
         cursor_exited_ui.0 = true;
       }
 
       transform.translation = window_to_world_pos(window, position, camera, camera_transform);
+      let world_pos_2d = transform.translation.truncate();
 
-      // Tower range becomes red when trying to place on path/invalid tile
-      // for (y, row) in tilemap.tiles.iter().enumerate() {
-      //   let mouse_on_path = row.iter().enumerate().filter(|(x, tile)| {
-      //     if matches!(tile, Tile::Path(_)) &&
-      //       position.x >= (*x as f32 * tilemap.tile_size as f32 -
-      //        tilemap.tile_size as f32 / 2.) as f32 &&
-      //       position.y >= (y as f32 * tilemap.tile_size as f32 -
-      //        tilemap.tile_size as f32 / 2.) as f32 &&
-      //       position.x <= (*x as f32 * tilemap.tile_size as f32 +
-      //        tilemap.tile_size as f32 / 2.) as f32 &&
-      //       position.y <= (y as f32 * tilemap.tile_size as f32 +
-      //        tilemap.tile_size as f32 / 2.) as f32 {
-      //       println!("{:?}, {:?}, {:?}", position, x, y);
-      //       return true;
-      //     }
-      //     false
-      //   }).last();
-      //   if mouse_on_path.is_some() {
-      //     println!("ON PATH");
-      //     *color = materials.add(ColorMaterial::from(
-      //       Color::rgba_u8(202, 0, 0, 150)));
-      //   }
-      // }
-
-      let mouse_on_placed_tower = towers
+      let tower_close = tower_tile_queries.p0()
         .iter()
-        .filter(|tower_transform| {
-          Vec3::distance(transform.translation, tower_transform.translation) <= 50.
-        })
-        .last();
+        .any(|t| Vec3::distance(transform.translation, t.translation) <= 50.);
 
-      if mouse_on_placed_tower.is_some() {
+      let terrain_ok = {
+        let tiles = tower_tile_queries.p1();
+        tile_at_world_pos(world_pos_2d, &tiles)
+          .and_then(|t| t.terrain_type())
+          .map(|t| allowed_terrain.contains(&t))
+          .unwrap_or(false)
+      };
+
+      if tower_close || !terrain_ok {
         *color = materials.add(ColorMaterial::from(Color::rgba_u8(202, 0, 0, 150)));
       } else {
         *color = materials.add(ColorMaterial::from(Color::rgba_u8(0, 0, 0, 85)));
       }
     }
 
-    // Spawn the tower if user clicks with mouse button in a valid tower placement zone!!!
     if mouse.just_pressed(MouseButton::Left) && !cursor_above_ui(window, &node_query) {
       if let Some(screen_pos) = window.cursor_position() {
         cursor_exited_ui.0 = false;
-        let mouse_click_pos = window_to_world_pos(window, screen_pos, camera, camera_transform);
+        let click_pos = window_to_world_pos(window, screen_pos, camera, camera_transform);
 
-        let mut place_tower = true;
+        let tower_overlap = tower_tile_queries.p0()
+          .iter()
+          .any(|t| Vec3::distance(click_pos, t.translation) <= 40.);
 
-        for tower_transform in towers.iter() {
-          if Vec3::distance(mouse_click_pos, tower_transform.translation) <= 40. {
-            place_tower = false;
-          }
-        }
-        if place_tower {
+        let error = {
+          let tiles = tower_tile_queries.p1();
+          placement_error_reason(click_pos.truncate(), allowed_terrain, tower_overlap, &tiles)
+        };
+
+        if let Some(msg) = error {
+          placement_error.message = msg;
+          placement_error.timer = 2.5;
+        } else {
           player.money -= tower_stats.tower[tower_type].tower.price as usize;
           commands.entity(entity).despawn_recursive();
           spawn_tower(
             &mut commands,
             *tower_type,
             &assets,
-            mouse_click_pos,
+            click_pos,
             &mut meshes,
             &mut materials,
             tower_stats,
           );
         }
       }
-    }
-    // Discard tower
-    else if mouse.just_pressed(MouseButton::Right)
+    } else if mouse.just_pressed(MouseButton::Right)
       || window.cursor_position().is_none()
       || (cursor_exited_ui.0 && cursor_above_ui(window, &node_query))
     {
@@ -671,6 +735,50 @@ fn generate_ui(
     else { return; };
 
   commands.insert_resource(CursorExitedUI(false));
+  commands.insert_resource(PlacementError::default());
+
+  // Error message = full-width row at top that flex-centers the dark panel
+  commands
+    .spawn(NodeBundle {
+      style: Style {
+        position_type: PositionType::Absolute,
+        size: Size::new(Val::Percent(100.), Val::Auto),
+        justify_content: JustifyContent::Center,
+        position: UiRect { top: Val::Px(15.), ..default() },
+        ..default()
+      },
+      ..default()
+    })
+    .insert(TowerUIRoot)
+    .insert(Name::new("PlacementErrorWrapper"))
+    .with_children(|c| {
+      c.spawn(NodeBundle {
+        background_color: BackgroundColor(Color::rgba(0.0, 0.0, 0.0, 0.85)),
+        style: Style {
+          padding: UiRect::all(Val::Px(10.)),
+          ..default()
+        },
+        visibility: Visibility::Hidden,
+        ..default()
+      })
+      .insert(PlacementErrorPanel)
+      .insert(Name::new("PlacementErrorPanel"))
+      .with_children(|c| {
+        c.spawn(TextBundle {
+          text: Text::from_section(
+            "",
+            TextStyle {
+              font: assets.font.clone(),
+              font_size: 18.0,
+              color: Color::rgb(1.0, 0.3, 0.3),
+            },
+          ),
+          ..default()
+        })
+        .insert(PlacementErrorText);
+      });
+    });
+
   commands
     .spawn(NodeBundle {
       background_color: BackgroundColor(Color::GOLD),
@@ -728,7 +836,7 @@ fn generate_ui(
       }
     });
 
-  // Tooltip panel — hidden until a button is hovered; position updated by update_tooltip_position
+  // Tooltip panel = hidden until a button is hovered; position updated by update_tooltip_position
   commands
     .spawn(NodeBundle {
       background_color: BackgroundColor(Color::rgba(0.05, 0.05, 0.05, 0.88)),
@@ -780,7 +888,7 @@ fn update_tooltip_position(
   if *visibility == Visibility::Hidden { return; }
 
   if let Some(cursor) = window.cursor_position() {
-    // cursor_position() uses bottom-left origin, Y up — same as Val::Px bottom/left
+    // cursor_position() uses bottom-left origin, Y up = same as Val::Px bottom/left
     let x = cursor.x.min(window.width() - 340.);
     let y = cursor.y + 30.; // 30px above cursor
     style.position = UiRect {

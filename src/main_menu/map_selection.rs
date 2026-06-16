@@ -23,7 +23,7 @@ impl Plugin for MapSelectionPlugin {
 pub enum GameDifficulty {
   #[default]
   Normal,
-  /// Reduced game speed — 5000 starting gold, all enemies have 1 HP.
+  /// Reduced game speed = 5000 starting gold, all enemies have 1 HP.
   Test,
 }
 

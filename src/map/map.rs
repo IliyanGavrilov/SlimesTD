@@ -243,6 +243,13 @@ fn render_map(
     .insert(Name::new("TileMap"));
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum TerrainType {
+  Grass,
+  Water,
+  // Add future terrain types here (e.g. Mountain, Desert)
+}
+
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Tile {
   Grass,
@@ -251,6 +258,16 @@ pub enum Tile {
   Path(Vec<usize>),
   End,
   Empty,
+}
+
+impl Tile {
+  pub fn terrain_type(&self) -> Option<TerrainType> {
+    match self {
+      Tile::Grass => Some(TerrainType::Grass),
+      Tile::Water => Some(TerrainType::Water),
+      _ => None,
+    }
+  }
 }
 
 #[derive(Component)]

@@ -1,6 +1,6 @@
 (
     waves: [
-        // Wave 0 — Tutorial: slow trickle of easy green slimes
+        // Wave 0 = Tutorial: slow trickle of easy green slimes
         /*[0]*/ (enemies: [
             (Green, (secs: 1, nanos: 500000000)), (Green, (secs: 1, nanos: 500000000)),
             (Green, (secs: 1, nanos: 500000000)), (Green, (secs: 1, nanos: 500000000)),
@@ -9,7 +9,7 @@
             (Green, (secs: 1, nanos: 500000000)), (Green, (secs: 1, nanos: 500000000)),
         ], current: 0),
 
-        // Wave 1 — Warmup: more greens and first yellows
+        // Wave 1 = Warmup: more greens and first yellows
         /*[1]*/ (enemies: [
             (Green, (secs: 1, nanos: 0)), (Green, (secs: 1, nanos: 0)),
             (Green, (secs: 1, nanos: 0)), (Green, (secs: 1, nanos: 0)),
@@ -22,7 +22,7 @@
             (Yellow, (secs: 1, nanos: 500000000)),
         ], current: 0),
 
-        // Wave 2 — Escalation: yellows and first pinks
+        // Wave 2 = Escalation: yellows and first pinks
         /*[2]*/ (enemies: [
             (Yellow, (secs: 1, nanos: 200000000)), (Yellow, (secs: 1, nanos: 200000000)),
             (Yellow, (secs: 1, nanos: 200000000)), (Yellow, (secs: 1, nanos: 200000000)),
@@ -33,7 +33,7 @@
             (Pink, (secs: 1, nanos: 500000000)), (Pink, (secs: 1, nanos: 500000000)),
         ], current: 0),
 
-        // Wave 3 — Three fronts: yellows, pinks, whites
+        // Wave 3 = Three fronts: yellows, pinks, whites
         /*[3]*/ (enemies: [
             (Yellow, (secs: 1, nanos: 0)), (Yellow, (secs: 1, nanos: 0)),
             (Yellow, (secs: 1, nanos: 0)), (Yellow, (secs: 1, nanos: 0)),
@@ -46,7 +46,7 @@
             (White, (secs: 2, nanos: 0)), (White, (secs: 2, nanos: 0)),
         ], current: 0),
 
-        // Wave 4 — Heavy & fast: pinks, whites, first blues
+        // Wave 4 = Heavy & fast: pinks, whites, first blues
         /*[4]*/ (enemies: [
             (Pink,  (secs: 1, nanos: 0)), (Pink,  (secs: 1, nanos: 0)),
             (Pink,  (secs: 1, nanos: 0)), (Pink,  (secs: 1, nanos: 0)),
@@ -59,7 +59,7 @@
             (Blue,  (secs: 1, nanos: 500000000)),
         ], current: 0),
 
-        // Wave 5 — Blue rush + first oranges
+        // Wave 5 = Blue rush + first oranges
         /*[5]*/ (enemies: [
             (Blue, (secs: 0, nanos: 800000000)), (Blue, (secs: 0, nanos: 800000000)),
             (Blue, (secs: 0, nanos: 800000000)), (Blue, (secs: 0, nanos: 800000000)),
@@ -71,7 +71,7 @@
             (Orange, (secs: 2, nanos: 0)), (Orange, (secs: 2, nanos: 0)),
         ], current: 0),
 
-        // Wave 6 — Heavy hitters: oranges, purples, first reds
+        // Wave 6 = Heavy hitters: oranges, purples, first reds
         /*[6]*/ (enemies: [
             (Orange, (secs: 1, nanos: 0)), (Orange, (secs: 1, nanos: 0)),
             (Orange, (secs: 1, nanos: 0)), (Orange, (secs: 1, nanos: 0)),
@@ -84,7 +84,7 @@
             (Red, (secs: 2, nanos: 500000000)),
         ], current: 0),
 
-        // Wave 7 — Mixed swarm: fast low-HP + tanky highs interleaved
+        // Wave 7 = Mixed swarm: fast low-HP + tanky highs interleaved
         /*[7]*/ (enemies: [
             (Yellow, (secs: 0, nanos: 500000000)), (White,  (secs: 0, nanos: 800000000)),
             (Yellow, (secs: 0, nanos: 500000000)), (White,  (secs: 0, nanos: 800000000)),
@@ -97,7 +97,7 @@
             (Orange, (secs: 1, nanos: 0)),         (Orange, (secs: 1, nanos: 0)),
         ], current: 0),
 
-        // Wave 8 — Elite: purples and reds only
+        // Wave 8 = Elite: purples and reds only
         /*[8]*/ (enemies: [
             (Purple, (secs: 1, nanos: 200000000)), (Purple, (secs: 1, nanos: 200000000)),
             (Purple, (secs: 1, nanos: 200000000)), (Purple, (secs: 1, nanos: 200000000)),
@@ -109,7 +109,7 @@
             (Red, (secs: 1, nanos: 500000000)), (Red, (secs: 1, nanos: 500000000)),
         ], current: 0),
 
-        // Wave 9 — Final assault: relentless mix of reds, purples, oranges
+        // Wave 9 = Final assault: relentless mix of reds, purples, oranges
         /*[9]*/ (enemies: [
             (Red,    (secs: 0, nanos: 800000000)), (Purple, (secs: 0, nanos: 800000000)),
             (Orange, (secs: 0, nanos: 800000000)), (Red,    (secs: 0, nanos: 800000000)),

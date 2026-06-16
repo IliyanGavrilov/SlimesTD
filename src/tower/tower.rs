@@ -7,7 +7,7 @@ use crate::assets::*;
 use crate::enemy::*;
 use crate::movement::*;
 use crate::tower::*;
-use crate::{GameState, game_not_paused};
+use crate::{GameState, TerrainType, game_not_paused};
 
 /// Marker placed on farm towers that don't shoot (Passive, Kill, Wave).
 /// `tower_shooting` excludes entities with this component.
@@ -26,11 +26,17 @@ impl Plugin for TowerPlugin {
   }
 }
 
+#[derive(Component, Serialize, Deserialize, Clone, Debug, Default)]
+pub struct AllowedTerrain {
+  pub terrain: Vec<TerrainType>,
+}
+
 #[derive(Bundle, Serialize, Deserialize, Clone)]
 pub struct TowerBundle {
   pub tower_type: TowerType,
   pub tower: Tower,
   pub name: Name,
+  pub allowed_terrain: AllowedTerrain,
 }
 
 fn default_projectile_speed() -> f32 {

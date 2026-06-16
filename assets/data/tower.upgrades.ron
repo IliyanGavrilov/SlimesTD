@@ -1,6 +1,6 @@
 (
     upgrades: {
-        // Nature — balanced. Paths: Damage / Attack Speed / Range+Pierce
+        // Nature = balanced. Paths: Damage / Attack Speed / Range+Pierce
         Nature: [
             [(upgrade: {Damage: 1},                        cost: 50),
              (upgrade: {Damage: 2},                        cost: 100),
@@ -19,7 +19,7 @@
              (upgrade: {Range: 20, Pierce: 2},             cost: 600)],
         ],
 
-        // Fire — high damage. Paths: Raw Damage / Rapid Fire / Projectile Speed+Range
+        // Fire = high damage. Paths: Raw Damage / Rapid Fire / Projectile Speed+Range
         Fire: [
             [(upgrade: {Damage: 3},                        cost: 75),
              (upgrade: {Damage: 5},                        cost: 175),
@@ -38,7 +38,7 @@
              (upgrade: {Damage: 5, ProjectileSpeed: 1000}, cost: 850)],
         ],
 
-        // Ice — rapid-fire. Paths: Attack Speed / Precision Damage / Range+Pierce
+        // Ice = rapid-fire. Paths: Attack Speed / Precision Damage / Range+Pierce
         Ice: [
             [(upgrade: {AttackSpeed: 10},                  cost: 50),
              (upgrade: {AttackSpeed: 15},                  cost: 125),
@@ -57,7 +57,7 @@
              (upgrade: {Range: 35, Pierce: 2},             cost: 700)],
         ],
 
-        // Dark — pierce specialist. Paths: Pierce+Damage / Heavy Pierce / Speed
+        // Dark = pierce specialist. Paths: Pierce+Damage / Heavy Pierce / Speed
         Dark: [
             [(upgrade: {Pierce: 2},                        cost: 75),
              (upgrade: {Pierce: 3, Damage: 2},             cost: 200),
@@ -76,7 +76,7 @@
              (upgrade: {Pierce: 3, ProjectileSpeed: 2000}, cost: 1000)],
         ],
 
-        // Mage — slow heavy hitter. Paths: Arcane Power / Speed / Grand Vision
+        // Mage = slow heavy hitter. Paths: Arcane Power / Speed / Grand Vision
         Mage: [
             [(upgrade: {Damage: 5},                        cost: 100),
              (upgrade: {Damage: 10},                       cost: 250),
@@ -95,7 +95,7 @@
              (upgrade: {Range: 60, Damage: 35},            cost: 1400)],
         ],
 
-        // Archmage — ultimate all-rounder. Paths: Power+Pierce / Velocity / Dominion
+        // Archmage = ultimate all-rounder. Paths: Power+Pierce / Velocity / Dominion
         Archmage: [
             [(upgrade: {Damage: 8,  Pierce: 1},                            cost: 150),
              (upgrade: {Damage: 15, Pierce: 2},                            cost: 350),
@@ -114,7 +114,7 @@
              (upgrade: {Range: 75, Pierce: 4, Damage: 35},                 cost: 1600)],
         ],
 
-        // FarmPassive — earns $50 per 15s. Paths all increase the passive income amount.
+        // FarmPassive = earns $50 per 15s. Paths all increase the passive income amount.
         FarmPassive: [
             [(upgrade: {Income: 15}, cost: 75),
              (upgrade: {Income: 35}, cost: 175),
@@ -133,7 +133,7 @@
              (upgrade: {Income: 175}, cost: 825)],
         ],
 
-        // FarmKill — earns $5 per kill. Paths scale the per-kill bounty.
+        // FarmKill = earns $5 per kill. Paths scale the per-kill bounty.
         FarmKill: [
             [(upgrade: {Income: 3},  cost: 75),
              (upgrade: {Income: 7},  cost: 200),
@@ -152,7 +152,7 @@
              (upgrade: {Income: 35}, cost: 950)],
         ],
 
-        // FarmSelfKill — shoots and earns per own kill. Paths: Bounty / Combat Efficiency / Fire Rate
+        // FarmSelfKill = shoots and earns per own kill. Paths: Bounty / Combat Efficiency / Fire Rate
         FarmSelfKill: [
             [(upgrade: {Income: 2},              cost: 75),
              (upgrade: {Income: 4},              cost: 175),
@@ -171,7 +171,7 @@
              (upgrade: {AttackSpeed: 20, Income: 5},  cost: 950)],
         ],
 
-        // FarmWave — earns $75 per wave. Paths scale the per-wave bonus.
+        // FarmWave = earns $75 per wave. Paths scale the per-wave bonus.
         FarmWave: [
             [(upgrade: {Income: 30},  cost: 100),
              (upgrade: {Income: 75},  cost: 250),
