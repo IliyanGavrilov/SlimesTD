@@ -7,8 +7,6 @@ use std::time::Duration;
 
 use crate::{Bullet, EnemyDeathEvent, GameData, GameState, Tower, WaveClearedEvent, Waves};
 
-/// Where user volume settings are persisted between launches.
-const SETTINGS_PATH: &str = "audio_settings.json";
 /// How long music eases in when a track starts.
 const MUSIC_FADE: Duration = Duration::from_millis(800);
 
@@ -22,7 +20,6 @@ impl Plugin for GameAudioPlugin {
       .add_audio_channel::<MusicChannel>()
       .add_audio_channel::<SfxChannel>()
       .add_event::<EnemyJumpEvent>()
-      .insert_resource(AudioSettings::load())
       .insert_resource(CurrentMusic::None)
       // Load audio + apply initial volumes before startup
       .add_startup_system(load_audio.in_base_set(StartupSet::PreStartup))
@@ -68,6 +65,7 @@ pub enum CurrentMusic {
 }
 
 /// User-adjustable volumes, all in `0.0..=1.0`. `master` scales the others.
+/// Loaded/saved by `PersistencePlugin` as part of `settings.ron`.
 #[derive(Resource, Serialize, Deserialize, Clone)]
 pub struct AudioSettings {
   pub master: f32,
@@ -81,23 +79,6 @@ impl Default for AudioSettings {
       master: 1.0,
       music: 0.4,
       sfx: 0.6,
-    }
-  }
-}
-
-impl AudioSettings {
-  /// Loads persisted settings, falling back to defaults if absent/invalid.
-  pub fn load() -> Self {
-    std::fs::read_to_string(SETTINGS_PATH)
-      .ok()
-      .and_then(|raw| serde_json::from_str(&raw).ok())
-      .unwrap_or_default()
-  }
-
-  /// Best-effort save; ignores IO errors (not worth crashing the game over).
-  pub fn save(&self) {
-    if let Ok(json) = serde_json::to_string_pretty(self) {
-      let _ = std::fs::write(SETTINGS_PATH, json);
     }
   }
 }
@@ -139,7 +120,6 @@ fn apply_volume_settings(
   if settings.is_changed() {
     music.set_volume((settings.master * settings.music) as f64);
     sfx.set_volume((settings.master * settings.sfx) as f64);
-    settings.save();
   }
 }
 

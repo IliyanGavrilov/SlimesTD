@@ -26,6 +26,8 @@ mod effects;
 pub use effects::*;
 mod tutorial;
 pub use tutorial::*;
+mod persistence;
+pub use persistence::*;
 
 fn main() {
   App::new()
@@ -82,6 +84,7 @@ fn main() {
     .add_plugin(GameAudioPlugin)
     .add_plugin(EffectsPlugin)
     .add_plugin(TutorialPlugin)
+    .add_plugin(PersistencePlugin)
     // Debug-only tools
     .add_plugin(WorldInspectorPlugin::new())
     .run();

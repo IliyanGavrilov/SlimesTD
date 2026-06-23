@@ -1,11 +1,12 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{GameAssets, GameState, Player, Tower, TowerButtonState, TowerUpgradeButton};
+use crate::{persistence, GameAssets, GameState, Player, Tower, TowerButtonState, TowerUpgradeButton};
 
-/// Persisted so the tutorial only auto-runs on the first ever launch (recompiling
-/// doesn't reset it). Delete this file to re-test, or use the "How to Play" button.
-const PROGRESS_PATH: &str = "progress.json";
+/// Persistence key (`progress.ron`). Persisted so the tutorial only auto-runs on
+/// the first ever launch (recompiling doesn't reset it). Delete the file to
+/// re-test, or use the "How to Play" button.
+const PROGRESS_KEY: &str = "progress";
 
 pub struct TutorialPlugin;
 
@@ -44,16 +45,11 @@ pub struct TutorialProgress {
 
 impl TutorialProgress {
   fn load() -> Self {
-    std::fs::read_to_string(PROGRESS_PATH)
-      .ok()
-      .and_then(|raw| serde_json::from_str(&raw).ok())
-      .unwrap_or_default()
+    persistence::load_or_default(PROGRESS_KEY)
   }
 
   fn save(&self) {
-    if let Ok(json) = serde_json::to_string_pretty(self) {
-      let _ = std::fs::write(PROGRESS_PATH, json);
-    }
+    persistence::save(PROGRESS_KEY, self);
   }
 }
 
