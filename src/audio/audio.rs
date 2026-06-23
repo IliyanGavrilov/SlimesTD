@@ -263,7 +263,7 @@ fn sfx_wave_start(
     .get(&game_data.enemy_waves)
     .map_or(0, |w| w.waves.len());
   // `WaveClearedEvent` also fires for the final wave (which leads to Victory, not
-  // a new wave) — only play the "new wave" cue when another wave actually follows.
+  // a new wave) - only play the "new wave" cue when another wave actually follows.
   let starts_new_wave = wave_cleared.iter().any(|e| e.index + 1 < total);
   wave_cleared.clear();
   if starts_new_wave {

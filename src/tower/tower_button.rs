@@ -561,9 +561,12 @@ fn spawn_sprite_follower(
     // Range circle is spawned as a CHILD (matches spawn_tower) so the mesh2d entity
     // is separate from the sprite entity. A combined sprite+mesh2d entity flashed the
     // tower texture across the whole map on the first frame.
-    let mut range = spawn_tower_range(meshes, materials, tower_stats.tower[tower_type].tower.range);
-    // Counter the preview sprite's scale so the ring matches true firing range.
-    range.transform.scale = Vec3::splat(1.0 / tower_type.sprite_scale());
+    let range = spawn_tower_range(
+      meshes,
+      materials,
+      tower_stats.tower[tower_type].tower.range,
+      tower_type.sprite_scale(),
+    );
     commands
       .spawn(SpriteBundle {
         texture: assets.get_tower_asset(*tower_type),

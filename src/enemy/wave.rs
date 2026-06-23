@@ -6,7 +6,7 @@ use std::time::Duration;
 use crate::assets::*;
 use crate::enemy::*;
 use crate::map::*;
-use crate::{GameData, GameState, SelectedMap, game_not_paused};
+use crate::{GameData, GameState, SelectedMap, TutorialState, game_not_paused};
 
 pub struct WavePlugin;
 
@@ -94,7 +94,12 @@ fn spawn_waves(
   enemy_type_assets: Res<Assets<EnemyTypeStats>>,
   time: Res<Time>,
   mut wave_cleared_writer: EventWriter<WaveClearedEvent>,
+  tutorial: Res<TutorialState>,
 ) {
+  // Hold enemies back while the tutorial is running so the player can learn first.
+  if tutorial.active {
+    return;
+  }
   let Some(map_path) = maps.get(&selected_map.0)
     else { return; };
   let Some(waves) = waves.get_mut(&game_data.enemy_waves)

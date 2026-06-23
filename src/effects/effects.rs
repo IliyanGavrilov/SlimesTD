@@ -7,7 +7,7 @@ use crate::{
   Slowed, SplashEvent, Tower,
 };
 
-/// Visual juice: small, asset-free feedback effects (enemy hit flash, …).
+/// Visual juice: small, asset-free feedback effects (enemy hit flash, ...).
 pub struct EffectsPlugin;
 
 impl Plugin for EffectsPlugin {

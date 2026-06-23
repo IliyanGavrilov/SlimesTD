@@ -154,10 +154,12 @@ pub fn spawn_tower(
     }
   }
 
-  let mut range = spawn_tower_range(meshes, materials, tower_stats.tower[&tower_type].tower.range);
-  // Counter the parent sprite's scale so the ring shows TRUE range (the Hunter
-  // farm is scaled 1.5x, which would otherwise inflate its range ring).
-  range.transform.scale = Vec3::splat(1.0 / tower_type.sprite_scale());
+  let range = spawn_tower_range(
+    meshes,
+    materials,
+    tower_stats.tower[&tower_type].tower.range,
+    tower_type.sprite_scale(),
+  );
   entity.with_children(|commands| {
     commands
       .spawn(range)

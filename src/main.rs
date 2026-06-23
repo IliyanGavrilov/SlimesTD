@@ -24,6 +24,8 @@ mod audio;
 pub use audio::*;
 mod effects;
 pub use effects::*;
+mod tutorial;
+pub use tutorial::*;
 
 fn main() {
   App::new()
@@ -79,6 +81,7 @@ fn main() {
     .add_plugin(MovementPlugin)
     .add_plugin(GameAudioPlugin)
     .add_plugin(EffectsPlugin)
+    .add_plugin(TutorialPlugin)
     // Debug-only tools
     .add_plugin(WorldInspectorPlugin::new())
     .run();

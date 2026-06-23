@@ -121,8 +121,12 @@ fn update_tower_ui(
 
     // Update tower stats
     for mut stats in stats_ui.iter_mut() {
+      let combat_desc = format!(
+        " Damage: {}\n Attack Speed: {:.2}\n Range: {}\n Pierce: {}\n Proj. Speed: {:.0}",
+        tower.damage, tower.attack_speed, tower.range, tower.pierce, tower.projectile_speed
+      );
       let stats_text = if let Some(farm) = farm_tower {
-        let income_desc = match &farm.behavior {
+        match &farm.behavior {
           FarmBehavior::Passive { income, timer } => {
             format!(" Income: ${}/tick\n Interval: {:.0}s", income, timer.duration().as_secs_f32())
           }
@@ -132,16 +136,13 @@ fn update_tower_ui(
           FarmBehavior::Wave { income_per_wave } => {
             format!(" Income: ${}/wave\n Per: wave clear", income_per_wave)
           }
+          // The Hunter shoots AND earns gold per kill, so show both.
           FarmBehavior::SelfKill { income_per_kill } => {
-            format!(" Income: ${}/kill\n Per: own kill only", income_per_kill)
+            format!("{}\n Income: ${}/kill", combat_desc, income_per_kill)
           }
-        };
-        income_desc
+        }
       } else {
-        format!(
-          " Damage: {}\n Attack Speed: {:.2}\n Range: {}\n Pierce: {}\n Proj. Speed: {:.0}",
-          tower.damage, tower.attack_speed, tower.range, tower.pierce, tower.projectile_speed
-        )
+        combat_desc
       };
       *stats = Text::from_section(stats_text, stats.sections[0].style.clone());
     }
@@ -244,11 +245,21 @@ pub fn spawn_tower_range(
   meshes: &mut Assets<Mesh>,
   materials: &mut Assets<ColorMaterial>,
   radius: u32,
+  sprite_scale: f32,
 ) -> MaterialMesh2dBundle<ColorMaterial> {
+  // The ring is a child of the (possibly scaled) tower sprite. Divide both the
+  // size and the z-offset by the parent's scale so the rendered radius equals the
+  // true range AND the global z lands just above the tiles (parent_z + scale * z).
+  // Without this, a 1.5x tower (the Hunter farm) pushes its ring behind the map.
+  let inv = 1.0 / sprite_scale;
   MaterialMesh2dBundle {
     mesh: meshes.add(shape::Circle::new(radius as f32).into()).into(),
     material: materials.add(ColorMaterial::from(Color::rgba_u8(0, 0, 0, 85))),
-    transform: Transform::from_translation(Vec3::new(0., 0., -0.5)),
+    transform: Transform {
+      translation: Vec3::new(0., 0., -0.25 * inv),
+      scale: Vec3::splat(inv),
+      ..default()
+    },
     ..default()
   }
 }

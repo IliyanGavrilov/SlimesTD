@@ -356,7 +356,7 @@ fn animate_enemy_sprite(
       }
     }
 
-    // Animate sprite — scale by the slow factor so a slowed slime animates
+    // Animate sprite - scale by the slow factor so a slowed slime animates
     // slower and a stunned one (factor 0) freezes entirely.
     let factor = slowed.map_or(1.0, |s| s.factor);
     timer.tick(time.delta().mul_f32(factor));
@@ -364,7 +364,7 @@ fn animate_enemy_sprite(
     if timer.just_finished() {
       if sprite.index == indices.last {
         sprite.index = indices.first;
-        // One full jump cycle completed — cue the jump sound, frame-synced.
+        // One full jump cycle completed - cue the jump sound, frame-synced.
         jump_writer.send(EnemyJumpEvent);
       } else {
         sprite.index += 1;

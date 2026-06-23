@@ -2,6 +2,7 @@ use bevy::{app::AppExit, prelude::*};
 
 use crate::assets::*;
 use crate::main_menu::*;
+use crate::TutorialRequest;
 
 pub struct MainMenuPlugin;
 
@@ -11,7 +12,12 @@ impl Plugin for MainMenuPlugin {
       .add_system(spawn_main_menu.in_schedule(OnEnter(GameState::MainMenu)))
       .add_system(cleanup_main_menu.in_schedule(OnExit(GameState::MainMenu)))
       .add_systems(
-        (start_button_clicked, settings_button_clicked, exit_button_clicked)
+        (
+          start_button_clicked,
+          how_to_play_clicked,
+          settings_button_clicked,
+          exit_button_clicked,
+        )
           .in_set(OnUpdate(GameState::MainMenu)),
       );
   }
@@ -29,6 +35,9 @@ struct SettingsButton;
 #[derive(Component)]
 struct ExitButton;
 
+#[derive(Component)]
+struct HowToPlayButton;
+
 fn cleanup_main_menu(mut commands: Commands, roots: Query<Entity, With<MenuUIRoot>>) {
   for entity in &roots {
     commands.entity(entity).despawn_recursive();
@@ -41,6 +50,19 @@ fn start_button_clicked(
 ) {
   for interaction in &interactions {
     if matches!(interaction, Interaction::Clicked) {
+      next_state.set(GameState::MapSelection);
+    }
+  }
+}
+
+fn how_to_play_clicked(
+  interactions: Query<&Interaction, (With<HowToPlayButton>, Changed<Interaction>)>,
+  mut next_state: ResMut<NextState<GameState>>,
+  mut request: ResMut<TutorialRequest>,
+) {
+  for interaction in &interactions {
+    if matches!(interaction, Interaction::Clicked) {
+      request.force_replay = true;
       next_state.set(GameState::MapSelection);
     }
   }
@@ -98,6 +120,35 @@ fn spawn_main_menu(mut commands: Commands, assets: Res<GameAssets>) {
     .insert(ExitButton)
     .id();
 
+  let how_to_play_button = commands
+    .spawn(ButtonBundle {
+      style: Style {
+        size: Size::new(Val::Px(300.), Val::Px(56.)),
+        align_self: AlignSelf::Center,
+        justify_content: JustifyContent::Center,
+        align_items: AlignItems::Center,
+        margin: UiRect::all(Val::Percent(1.)),
+        ..default()
+      },
+      background_color: Color::rgb(0.15, 0.15, 0.2).into(),
+      ..default()
+    })
+    .insert(HowToPlayButton)
+    .with_children(|commands| {
+      commands.spawn(TextBundle {
+        text: Text::from_section(
+          "How to Play",
+          TextStyle {
+            font: assets.font.clone(),
+            font_size: 30.,
+            color: Color::WHITE,
+          },
+        ),
+        ..default()
+      });
+    })
+    .id();
+
   commands
     .spawn(NodeBundle {
       style: Style {
@@ -129,7 +180,8 @@ fn spawn_main_menu(mut commands: Commands, assets: Res<GameAssets>) {
     })
     .add_child(start_button)
     .add_child(settings_button)
-    .add_child(exit_button);
+    .add_child(exit_button)
+    .add_child(how_to_play_button);
 }
 
 fn image_button_style() -> Style {

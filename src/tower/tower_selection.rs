@@ -79,12 +79,16 @@ fn mouse_click_interaction(
     }
 
     for (tower_entity, tower, tower_type, transform) in towers.iter() {
-      if Vec3::distance(mouse_click_pos, transform.translation) <= 25.
+      // Scale the click target with the sprite (the Hunter farm is 1.5x, so a
+      // fixed 25px was too small to ever select it).
+      let select_radius = tower_type.placement_radius() + 10.0;
+      if Vec3::distance(mouse_click_pos, transform.translation) <= select_radius
         && !cursor_above_ui(window, node_query)
       {
+        let range = spawn_tower_range(meshes, materials, tower.range, tower_type.sprite_scale());
         commands.entity(tower_entity).with_children(|commands| {
           commands
-            .spawn(spawn_tower_range(meshes, materials, tower.range))
+            .spawn(range)
             .insert(Name::new("Tower Range"))
             .insert(TowerUpgradeUI);
         });
