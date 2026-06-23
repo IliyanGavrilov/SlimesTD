@@ -3,6 +3,7 @@ use bevy::{prelude::*, window::*};
 use crate::assets::*;
 use crate::gameplay_ui::*;
 use crate::{GameData, GameState, Waves, VsyncToggleButton, FullscreenToggleButton};
+use crate::{AudioSettings, VolumeKind, spawn_volume_row};
 
 #[derive(Component)]
 pub struct GameplayUIRoot;
@@ -333,7 +334,12 @@ fn spawn_gameplay_ui(mut commands: Commands, assets: Res<GameAssets>) {
     .insert(Name::new("GameplayUI"));
 }
 
-fn spawn_in_game_menu(mut commands: Commands, assets: Res<GameAssets>, windows: Query<&Window>) {
+fn spawn_in_game_menu(
+  mut commands: Commands,
+  assets: Res<GameAssets>,
+  windows: Query<&Window>,
+  audio_settings: Res<AudioSettings>,
+) {
   let window = windows.single();
   let vsync_on = matches!(window.present_mode, PresentMode::AutoVsync);
   let fullscreen_on = !matches!(window.mode, WindowMode::Windowed);
@@ -372,6 +378,10 @@ fn spawn_in_game_menu(mut commands: Commands, assets: Res<GameAssets>, windows: 
 
       spawn_menu_toggle_row(commands, &assets, "VSync", "[V]", vsync_on, VsyncToggleButton);
       spawn_menu_toggle_row(commands, &assets, "Fullscreen", "[F11]", fullscreen_on, FullscreenToggleButton);
+
+      spawn_volume_row(commands, &assets, "Master", VolumeKind::Master, audio_settings.master);
+      spawn_volume_row(commands, &assets, "Music", VolumeKind::Music, audio_settings.music);
+      spawn_volume_row(commands, &assets, "SFX", VolumeKind::Sfx, audio_settings.sfx);
 
       commands
         .spawn(ButtonBundle {

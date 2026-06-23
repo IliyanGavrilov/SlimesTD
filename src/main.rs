@@ -20,6 +20,8 @@ mod movement;
 pub use movement::*;
 mod game_data;
 pub use game_data::*;
+mod audio;
+pub use audio::*;
 
 fn main() {
   App::new()
@@ -73,6 +75,7 @@ fn main() {
     .add_plugin(WavePlugin)
     .add_plugin(BulletPlugin)
     .add_plugin(MovementPlugin)
+    .add_plugin(GameAudioPlugin)
     // Debug-only tools
     .add_plugin(WorldInspectorPlugin::new())
     .run();

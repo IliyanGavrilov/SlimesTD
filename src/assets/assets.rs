@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::movement::*;
-use crate::{GameState, Tile, TowerType, game_not_paused};
+use crate::{EnemyJumpEvent, GameState, Tile, TowerType, game_not_paused};
 
 pub struct AssetPlugin;
 
@@ -343,6 +343,7 @@ fn animate_enemy_sprite(
     &mut TextureAtlasSprite,
     &Movement,
   )>,
+  mut jump_writer: EventWriter<EnemyJumpEvent>,
 ) {
   for (indices, mut timer, mut sprite, movement) in &mut query {
     // Change direction based on where enemy is heading
@@ -360,6 +361,8 @@ fn animate_enemy_sprite(
     if timer.just_finished() {
       if sprite.index == indices.last {
         sprite.index = indices.first;
+        // One full jump cycle completed — cue the jump sound, frame-synced.
+        jump_writer.send(EnemyJumpEvent);
       } else {
         sprite.index += 1;
       }
