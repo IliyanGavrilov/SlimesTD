@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::assets::*;
 use crate::enemy::*;
 use crate::movement::*;
-use crate::{GameDifficulty, GameState, Map, game_not_paused};
+use crate::{FloatingTextEvent, GameDifficulty, GameState, Map, game_not_paused};
 
 pub struct EnemyPlugin;
 
@@ -17,6 +17,8 @@ impl Plugin for EnemyPlugin {
       .add_system(scale_hp_for_difficulty.in_set(OnUpdate(GameState::Gameplay)))
       .add_system(despawn_enemy_on_death.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused))
       .add_system(tick_slowed.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused))
+      .add_system(tick_poison.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused))
+      .add_system(apply_knockback.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused))
       .add_system(cleanup_enemies.in_schedule(OnExit(GameState::Gameplay)));
   }
 }
@@ -87,6 +89,85 @@ fn tick_slowed(mut commands: Commands, time: Res<Time>, mut slowed: Query<(Entit
     slow.timer.tick(time.delta());
     if slow.timer.finished() {
       commands.entity(entity).remove::<Slowed>();
+    }
+  }
+}
+
+/// Damage-over-time status applied by the Poison on-hit effect.
+#[derive(Component)]
+pub struct Poisoned {
+  pub dps: u32,
+  /// Overall lifetime of the poison.
+  pub duration: Timer,
+  /// Cadence at which a damage tick is applied.
+  pub tick: Timer,
+}
+
+impl Poisoned {
+  pub fn new(dps: u32, duration_secs: f32) -> Self {
+    Self {
+      dps,
+      duration: Timer::from_seconds(duration_secs, TimerMode::Once),
+      tick: Timer::from_seconds(1.0, TimerMode::Repeating),
+    }
+  }
+}
+
+/// Brief backwards shove applied by the Knockback on-hit effect.
+#[derive(Component)]
+pub struct KnockedBack {
+  pub strength: f32,
+  pub timer: Timer,
+}
+
+impl KnockedBack {
+  pub fn new(strength: f32) -> Self {
+    Self {
+      strength,
+      timer: Timer::from_seconds(0.15, TimerMode::Once),
+    }
+  }
+}
+
+fn apply_knockback(
+  mut commands: Commands,
+  time: Res<Time>,
+  mut knocked: Query<(Entity, &mut Transform, &Movement, &mut KnockedBack)>,
+) {
+  for (entity, mut transform, movement, mut knock) in &mut knocked {
+    knock.timer.tick(time.delta());
+    // Push opposite to the enemy's heading (back along its path).
+    if movement.direction.length_squared() > 0.0 {
+      let back = -movement.direction.normalize();
+      transform.translation += back * knock.strength * time.delta_seconds();
+    }
+    if knock.timer.finished() {
+      commands.entity(entity).remove::<KnockedBack>();
+    }
+  }
+}
+
+fn tick_poison(
+  mut commands: Commands,
+  time: Res<Time>,
+  mut poisoned: Query<(Entity, &mut Enemy, &Transform, &mut Poisoned)>,
+  mut float_writer: EventWriter<FloatingTextEvent>,
+) {
+  for (entity, mut enemy, transform, mut poison) in &mut poisoned {
+    poison.duration.tick(time.delta());
+    poison.tick.tick(time.delta());
+
+    if poison.tick.just_finished() && enemy.health > 0 {
+      enemy.health -= poison.dps as i32;
+      float_writer.send(FloatingTextEvent {
+        position: transform.translation,
+        text: format!("-{}", poison.dps),
+        color: Color::GREEN,
+      });
+    }
+
+    if poison.duration.finished() {
+      commands.entity(entity).remove::<Poisoned>();
     }
   }
 }

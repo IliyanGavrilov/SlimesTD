@@ -3,8 +3,8 @@ use bevy::sprite::MaterialMesh2dBundle;
 use bevy::ui::FocusPolicy;
 
 use crate::{
-  game_not_paused, Enemy, EnemyDeathEvent, GameAssets, GameState, MainCamera, Slowed, SplashEvent,
-  Tower,
+  game_not_paused, Enemy, EnemyDeathEvent, GameAssets, GameState, KnockedBack, MainCamera, Poisoned,
+  Slowed, SplashEvent, Tower,
 };
 
 /// Visual juice: small, asset-free feedback effects (enemy hit flash, …).
@@ -16,6 +16,7 @@ impl Plugin for EffectsPlugin {
       .add_event::<EnemyHitEvent>()
       .add_event::<FloatingTextEvent>()
       .add_event::<BaseDamagedEvent>()
+      .add_event::<ChainBoltEvent>()
       .init_resource::<ScreenShake>()
       .add_systems(
         (
@@ -67,12 +68,22 @@ impl Plugin for EffectsPlugin {
           .chain()
           .in_set(OnUpdate(GameState::Gameplay)),
       )
+      .add_systems(
+        (
+          spawn_chain_bolt.run_if(game_not_paused),
+          update_chain_bolt.run_if(game_not_paused),
+        )
+          .chain()
+          .in_set(OnUpdate(GameState::Gameplay)),
+      )
       .add_system(spawn_damage_flash.in_schedule(OnEnter(GameState::Gameplay)))
       .add_system(update_damage_flash.in_set(OnUpdate(GameState::Gameplay)))
       .add_system(cleanup_death_pops.in_schedule(OnExit(GameState::Gameplay)))
+      .add_system(cleanup_hit_sparks.in_schedule(OnExit(GameState::Gameplay)))
       .add_system(cleanup_place_poofs.in_schedule(OnExit(GameState::Gameplay)))
       .add_system(cleanup_floating_text.in_schedule(OnExit(GameState::Gameplay)))
       .add_system(cleanup_splash_rings.in_schedule(OnExit(GameState::Gameplay)))
+      .add_system(cleanup_chain_bolts.in_schedule(OnExit(GameState::Gameplay)))
       .add_system(cleanup_damage_flash.in_schedule(OnExit(GameState::Gameplay)));
   }
 }
@@ -277,8 +288,8 @@ fn spawn_floating_text(
             color: event.color,
           },
         ),
-        // Above sprites; small offset so it starts just over the source.
-        transform: Transform::from_translation(event.position + Vec3::new(0., 18., 200.)),
+        // Offset to the top-right so the tall slime jump sprite doesn't cover it.
+        transform: Transform::from_translation(event.position + Vec3::new(30., 30., 200.)),
         ..default()
       },
       FloatingText {
@@ -402,6 +413,12 @@ fn update_hit_spark(
   }
 }
 
+fn cleanup_hit_sparks(mut commands: Commands, sparks: Query<Entity, With<HitSpark>>) {
+  for entity in &sparks {
+    commands.entity(entity).despawn_recursive();
+  }
+}
+
 /// Full-screen red flash that pulses when the base takes damage.
 const FLASH_PEAK_ALPHA: f32 = 0.35;
 const FLASH_FADE_PER_SEC: f32 = 1.2;
@@ -511,17 +528,90 @@ fn cleanup_splash_rings(mut commands: Commands, rings: Query<Entity, With<Splash
   }
 }
 
-/// Tint slowed/stunned enemies blue so the status is visible. Skips enemies that
-/// are mid hit-flash (the flash owns their colour briefly) to avoid fighting it.
+/// Tint enemies by status: knockback = purple, poison = green, slow/stun = blue.
+/// Skips enemies mid hit-flash (the flash owns their colour briefly).
 fn tint_slowed(
-  mut enemies: Query<(&mut TextureAtlasSprite, Option<&Slowed>), (With<Enemy>, Without<HitFlash>)>,
+  mut enemies: Query<
+    (
+      &mut TextureAtlasSprite,
+      Option<&Slowed>,
+      Option<&Poisoned>,
+      Option<&KnockedBack>,
+    ),
+    (With<Enemy>, Without<HitFlash>),
+  >,
 ) {
-  for (mut sprite, slowed) in &mut enemies {
-    sprite.color = if slowed.is_some() {
+  for (mut sprite, slowed, poisoned, knocked) in &mut enemies {
+    sprite.color = if knocked.is_some() {
+      Color::rgb(0.85, 0.4, 1.0)
+    } else if poisoned.is_some() {
+      Color::rgb(0.4, 1.0, 0.4)
+    } else if slowed.is_some() {
       Color::rgb(0.45, 0.6, 1.0)
     } else {
       Color::WHITE
     };
+  }
+}
+
+/// A short-lived lightning segment drawn between two chain targets.
+const BOLT_SECONDS: f32 = 0.16;
+
+pub struct ChainBoltEvent {
+  pub from: Vec3,
+  pub to: Vec3,
+}
+
+#[derive(Component)]
+pub struct ChainBolt {
+  timer: Timer,
+}
+
+fn spawn_chain_bolt(mut commands: Commands, mut events: EventReader<ChainBoltEvent>) {
+  for bolt in events.iter() {
+    let from = bolt.from.truncate();
+    let to = bolt.to.truncate();
+    let delta = to - from;
+    let length = delta.length().max(1.0);
+    let midpoint = (from + to) / 2.0;
+    let angle = delta.y.atan2(delta.x);
+    commands.spawn((
+      SpriteBundle {
+        sprite: Sprite {
+          color: Color::rgba(1.0, 1.0, 0.3, 0.9),
+          custom_size: Some(Vec2::new(length, 3.0)),
+          ..default()
+        },
+        transform: Transform::from_translation(midpoint.extend(160.))
+          .with_rotation(Quat::from_rotation_z(angle)),
+        ..default()
+      },
+      ChainBolt {
+        timer: Timer::from_seconds(BOLT_SECONDS, TimerMode::Once),
+      },
+      Name::new("ChainBolt"),
+    ));
+  }
+}
+
+fn update_chain_bolt(
+  mut commands: Commands,
+  time: Res<Time>,
+  mut bolts: Query<(Entity, &mut ChainBolt, &mut Sprite)>,
+) {
+  for (entity, mut bolt, mut sprite) in &mut bolts {
+    bolt.timer.tick(time.delta());
+    let t = (bolt.timer.elapsed_secs() / BOLT_SECONDS).clamp(0., 1.);
+    sprite.color.set_a(0.9 * (1.0 - t));
+    if bolt.timer.finished() {
+      commands.entity(entity).despawn_recursive();
+    }
+  }
+}
+
+fn cleanup_chain_bolts(mut commands: Commands, bolts: Query<Entity, With<ChainBolt>>) {
+  for entity in &bolts {
+    commands.entity(entity).despawn_recursive();
   }
 }
 

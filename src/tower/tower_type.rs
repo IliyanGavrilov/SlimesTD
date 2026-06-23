@@ -37,12 +37,12 @@ pub struct TowerTypeStats {
 impl TowerType {
   pub fn description(&self) -> &'static str {
     match self {
-      TowerType::Nature      => "Balanced all-rounder, good starter",
+      TowerType::Nature      => "Poisons enemies over time",
       TowerType::Fire        => "Splash damage to nearby enemies",
       TowerType::Ice         => "Rapid-fire, slows enemies it hits",
-      TowerType::Dark        => "Pierces through multiple enemies",
+      TowerType::Dark        => "Pierces and knocks enemies back",
       TowerType::Mage        => "Hits hard and briefly stuns",
-      TowerType::Archmage    => "Ultimate power, pierce, and range",
+      TowerType::Archmage    => "Chains lightning between enemies",
       TowerType::FarmPassive => "Earns gold passively over time",
       TowerType::FarmKill    => "Gold for any kill on the map",
       TowerType::FarmWave    => "Big bonus gold each wave cleared",

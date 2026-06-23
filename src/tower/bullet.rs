@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 use crate::enemy::*;
 use crate::movement::*;
 use crate::{
-  EnemyHitEvent, FarmBehavior, FarmTower, FloatingTextEvent, GameState, Player, Slowed, Tower,
-  game_not_paused,
+  ChainBoltEvent, EnemyHitEvent, FarmBehavior, FarmTower, FloatingTextEvent, GameState, KnockedBack,
+  Player, Slowed, Tower, game_not_paused,
 };
 
 /// An on-hit combat effect carried by a projectile. Analogous to `FarmBehavior`
@@ -20,6 +20,23 @@ pub enum OnHitEffect {
   Stun { duration: f32 },
   /// Deal `damage` to every other enemy within `radius` of the impact point.
   Splash { radius: f32, damage: u32 },
+  /// Damage-over-time: `dps` damage each second for `duration` seconds.
+  Poison { dps: u32, duration: f32 },
+  /// Lightning that arcs to up to `jumps` nearby enemies (each within `radius`
+  /// of the previous), dealing `damage` to each.
+  Chain { jumps: u32, radius: f32, damage: u32 },
+  /// Shove the enemy backwards along its path at `strength` units/sec briefly.
+  Knockback { strength: f32 },
+}
+
+/// Requests a lightning chain starting from a hit point.
+pub struct ChainEvent {
+  pub from: Vec3,
+  pub jumps: u32,
+  pub radius: f32,
+  pub damage: u32,
+  /// The directly-hit enemy, excluded as a chain target.
+  pub exclude: Entity,
 }
 
 /// Requests area damage around an impact point (sent by Splash hits).
@@ -38,11 +55,13 @@ impl Plugin for BulletPlugin {
     app
       .register_type::<Bullet>()
       .add_event::<SplashEvent>()
+      .add_event::<ChainEvent>()
       .add_systems(
         (
           despawn_bullets.run_if(game_not_paused),
           bullet_enemy_collision.run_if(game_not_paused),
           apply_splash.after(bullet_enemy_collision).run_if(game_not_paused),
+          apply_chain.after(bullet_enemy_collision).run_if(game_not_paused),
         )
           .in_set(OnUpdate(GameState::Gameplay)),
       )
@@ -99,6 +118,7 @@ fn bullet_enemy_collision(
   mut hit_writer: EventWriter<EnemyHitEvent>,
   mut float_writer: EventWriter<FloatingTextEvent>,
   mut splash_writer: EventWriter<SplashEvent>,
+  mut chain_writer: EventWriter<ChainEvent>,
 ) {
   for (bullet_entity, mut bullet, tower_parent, bullet_transform) in &mut bullets {
     for (enemy_entity, mut enemy, enemy_transform) in &mut enemies {
@@ -168,6 +188,21 @@ fn bullet_enemy_collision(
                 exclude: enemy_entity,
               });
             }
+            OnHitEffect::Poison { dps, duration } if enemy.health > 0 => {
+              commands.entity(enemy_entity).insert(Poisoned::new(dps, duration));
+            }
+            OnHitEffect::Chain { jumps, radius, damage } => {
+              chain_writer.send(ChainEvent {
+                from: enemy_transform.translation,
+                jumps,
+                radius,
+                damage,
+                exclude: enemy_entity,
+              });
+            }
+            OnHitEffect::Knockback { strength } if enemy.health > 0 => {
+              commands.entity(enemy_entity).insert(KnockedBack::new(strength));
+            }
             _ => {}
           }
         }
@@ -206,6 +241,47 @@ fn apply_splash(
           color: Color::ORANGE,
         });
       }
+    }
+  }
+}
+
+fn apply_chain(
+  mut events: EventReader<ChainEvent>,
+  mut enemies: Query<(Entity, &mut Enemy, &Transform)>,
+  mut hit_writer: EventWriter<EnemyHitEvent>,
+  mut float_writer: EventWriter<FloatingTextEvent>,
+  mut bolt_writer: EventWriter<ChainBoltEvent>,
+) {
+  for chain in events.iter() {
+    let mut from = chain.from;
+    let mut visited = vec![chain.exclude];
+
+    for _ in 0..chain.jumps {
+      // Nearest living, unvisited enemy within radius of the previous target.
+      let mut best: Option<(Entity, f32, Vec3)> = None;
+      for (entity, enemy, transform) in enemies.iter() {
+        if enemy.health <= 0 || visited.contains(&entity) {
+          continue;
+        }
+        let dist = transform.translation.distance(from);
+        if dist <= chain.radius && best.map_or(true, |(_, b, _)| dist < b) {
+          best = Some((entity, dist, transform.translation));
+        }
+      }
+
+      let Some((entity, _, position)) = best else { break };
+      if let Ok((_, mut enemy, _)) = enemies.get_mut(entity) {
+        enemy.health -= chain.damage as i32;
+      }
+      bolt_writer.send(ChainBoltEvent { from, to: position });
+      hit_writer.send(EnemyHitEvent { entity, position });
+      float_writer.send(FloatingTextEvent {
+        position,
+        text: format!("-{}", chain.damage),
+        color: Color::YELLOW,
+      });
+      visited.push(entity);
+      from = position;
     }
   }
 }
