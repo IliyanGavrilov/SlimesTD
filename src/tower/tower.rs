@@ -63,6 +63,10 @@ pub struct Tower {
   pub total_spent: u32,
   pub total_damage: u32,
   pub first_enemy_appeared: bool,
+  /// Optional on-hit effect (slow / stun / splash), configured in tower_stats.ron.
+  #[serde(default)]
+  #[reflect(ignore)]
+  pub effect: Option<OnHitEffect>,
 }
 
 impl Tower {
@@ -220,6 +224,7 @@ fn tower_shooting(
               tower.damage,
               tower.pierce,
               tower.projectile_speed,
+              tower.effect.clone(),
               &assets,
               Transform::from_translation(tower.bullet_spawn_offset),
             ));

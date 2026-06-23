@@ -122,7 +122,7 @@ fn bullet_enemy_collision(
         float_writer.send(FloatingTextEvent {
           position: enemy_transform.translation,
           text: format!("-{}", bullet.damage),
-          color: Color::WHITE,
+          color: Color::RED,
         });
 
         if enemy.health <= 0 {

@@ -16,6 +16,7 @@ impl Plugin for EnemyPlugin {
       .add_event::<EnemyDeathEvent>()
       .add_system(scale_hp_for_difficulty.in_set(OnUpdate(GameState::Gameplay)))
       .add_system(despawn_enemy_on_death.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused))
+      .add_system(tick_slowed.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused))
       .add_system(cleanup_enemies.in_schedule(OnExit(GameState::Gameplay)));
   }
 }
@@ -70,6 +71,23 @@ pub struct Path {
 impl Enemy {
   pub fn new(health: i32) -> Self {
     Self { health }
+  }
+}
+
+/// A temporary movement-speed status applied by Slow/Stun on-hit effects.
+/// `factor` multiplies the enemy's speed (0.0 = stunned, 0.5 = half speed).
+#[derive(Component)]
+pub struct Slowed {
+  pub factor: f32,
+  pub timer: Timer,
+}
+
+fn tick_slowed(mut commands: Commands, time: Res<Time>, mut slowed: Query<(Entity, &mut Slowed)>) {
+  for (entity, mut slow) in &mut slowed {
+    slow.timer.tick(time.delta());
+    if slow.timer.finished() {
+      commands.entity(entity).remove::<Slowed>();
+    }
   }
 }
 

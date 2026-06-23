@@ -38,10 +38,10 @@ impl TowerType {
   pub fn description(&self) -> &'static str {
     match self {
       TowerType::Nature      => "Balanced all-rounder, good starter",
-      TowerType::Fire        => "High damage, fast projectiles",
-      TowerType::Ice         => "Rapid-fire, low per-shot damage",
+      TowerType::Fire        => "Splash damage to nearby enemies",
+      TowerType::Ice         => "Rapid-fire, slows enemies it hits",
       TowerType::Dark        => "Pierces through multiple enemies",
-      TowerType::Mage        => "Slow but hits extremely hard",
+      TowerType::Mage        => "Hits hard and briefly stuns",
       TowerType::Archmage    => "Ultimate power, pierce, and range",
       TowerType::FarmPassive => "Earns gold passively over time",
       TowerType::FarmKill    => "Gold for any kill on the map",
@@ -105,6 +105,7 @@ impl TowerType {
     damage: u32,
     pierce: u32,
     projectile_speed: f32,
+    effect: Option<OnHitEffect>,
     assets: &GameAssets,
     position: Transform,
   ) -> BulletBundle {
@@ -125,6 +126,7 @@ impl TowerType {
         damage,
         pierce_remaining: pierce,
         lifetime: Timer::from_seconds(1.25, TimerMode::Once),
+        effect,
       },
       movement: Movement::new(Vec3::new(0.00000001, 0., 0.), projectile_speed),
       sprite: SpriteBundle {

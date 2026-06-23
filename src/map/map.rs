@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 use crate::gameplay_ui::*;
 use crate::movement::*;
 use crate::{
-  BaseDamagedEvent, Enemy, GameAssets, GameData, GameState, Path, SelectedMap, game_not_paused,
+  BaseDamagedEvent, Enemy, GameAssets, GameData, GameState, Path, SelectedMap, Slowed,
+  game_not_paused,
 };
 
 pub struct MapPlugin;
@@ -306,7 +307,7 @@ fn despawn_enemy(
 }
 
 fn update_enemy_checkpoint(
-  mut enemies: Query<(&mut Movement, &mut Transform, &mut Path)>,
+  mut enemies: Query<(&mut Movement, &mut Transform, &mut Path, Option<&Slowed>)>,
   selected_map: Res<SelectedMap>,
   maps: Res<Assets<Map>>,
   time: Res<Time>,
@@ -314,7 +315,7 @@ fn update_enemy_checkpoint(
   let Some(map) = maps.get(&selected_map.0)
     else { return; };
 
-  for (mut movement, mut transform, mut path) in &mut enemies {
+  for (mut movement, mut transform, mut path, slowed) in &mut enemies {
     if path.index >= map.checkpoints.len() {
       continue;
     }
@@ -324,7 +325,9 @@ fn update_enemy_checkpoint(
       path.index += 1;
       continue;
     }
-    let enemy_movement = distance.normalize() * movement.speed * time.delta_seconds();
+    // Slow/Stun scales the effective speed without touching the base value.
+    let speed = movement.speed * slowed.map_or(1.0, |s| s.factor);
+    let enemy_movement = distance.normalize() * speed * time.delta_seconds();
 
     if enemy_movement.length() > distance.length() {
       transform.translation = map.checkpoints[path.index];
