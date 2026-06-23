@@ -1,7 +1,11 @@
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
+use bevy::ui::FocusPolicy;
 
-use crate::{game_not_paused, Enemy, EnemyDeathEvent, GameAssets, GameState, MainCamera, Tower};
+use crate::{
+  game_not_paused, Enemy, EnemyDeathEvent, GameAssets, GameState, MainCamera, Slowed, SplashEvent,
+  Tower,
+};
 
 /// Visual juice: small, asset-free feedback effects (enemy hit flash, …).
 pub struct EffectsPlugin;
@@ -17,6 +21,7 @@ impl Plugin for EffectsPlugin {
         (
           apply_hit_flash.run_if(game_not_paused),
           update_hit_flash.run_if(game_not_paused),
+          tint_slowed.run_if(game_not_paused),
         )
           .chain()
           .in_set(OnUpdate(GameState::Gameplay)),
@@ -46,9 +51,29 @@ impl Plugin for EffectsPlugin {
           .chain()
           .in_set(OnUpdate(GameState::Gameplay)),
       )
+      .add_systems(
+        (
+          spawn_hit_spark.run_if(game_not_paused),
+          update_hit_spark.run_if(game_not_paused),
+        )
+          .chain()
+          .in_set(OnUpdate(GameState::Gameplay)),
+      )
+      .add_systems(
+        (
+          spawn_splash_ring.run_if(game_not_paused),
+          update_splash_ring.run_if(game_not_paused),
+        )
+          .chain()
+          .in_set(OnUpdate(GameState::Gameplay)),
+      )
+      .add_system(spawn_damage_flash.in_schedule(OnEnter(GameState::Gameplay)))
+      .add_system(update_damage_flash.in_set(OnUpdate(GameState::Gameplay)))
       .add_system(cleanup_death_pops.in_schedule(OnExit(GameState::Gameplay)))
       .add_system(cleanup_place_poofs.in_schedule(OnExit(GameState::Gameplay)))
-      .add_system(cleanup_floating_text.in_schedule(OnExit(GameState::Gameplay)));
+      .add_system(cleanup_floating_text.in_schedule(OnExit(GameState::Gameplay)))
+      .add_system(cleanup_splash_rings.in_schedule(OnExit(GameState::Gameplay)))
+      .add_system(cleanup_damage_flash.in_schedule(OnExit(GameState::Gameplay)));
   }
 }
 
@@ -67,6 +92,7 @@ pub struct BaseDamagedEvent;
 /// the bullet/collision code.
 pub struct EnemyHitEvent {
   pub entity: Entity,
+  pub position: Vec3,
 }
 
 /// Tint applied for a frame when an enemy is hit, then lerped back to white.
@@ -328,6 +354,174 @@ fn screen_shake(
     // Settle back exactly and release the captured home for the next shake.
     transform.translation = home;
     shake.home = None;
+  }
+}
+
+/// A brief bright spark at each bullet impact. Uses a plain Sprite quad (no
+/// per-hit mesh/material assets) since hits are very frequent.
+const SPARK_SECONDS: f32 = 0.14;
+
+#[derive(Component)]
+pub struct HitSpark {
+  timer: Timer,
+}
+
+fn spawn_hit_spark(mut commands: Commands, mut hits: EventReader<EnemyHitEvent>) {
+  for hit in hits.iter() {
+    commands.spawn((
+      SpriteBundle {
+        sprite: Sprite {
+          color: Color::rgba(1.0, 0.95, 0.6, 0.9),
+          custom_size: Some(Vec2::splat(14.0)),
+          ..default()
+        },
+        transform: Transform::from_translation(hit.position.truncate().extend(150.)),
+        ..default()
+      },
+      HitSpark {
+        timer: Timer::from_seconds(SPARK_SECONDS, TimerMode::Once),
+      },
+      Name::new("HitSpark"),
+    ));
+  }
+}
+
+fn update_hit_spark(
+  mut commands: Commands,
+  time: Res<Time>,
+  mut sparks: Query<(Entity, &mut HitSpark, &mut Transform, &mut Sprite)>,
+) {
+  for (entity, mut spark, mut transform, mut sprite) in &mut sparks {
+    spark.timer.tick(time.delta());
+    let t = (spark.timer.elapsed_secs() / SPARK_SECONDS).clamp(0., 1.);
+    transform.scale = Vec3::splat(1.0 + 1.4 * t);
+    sprite.color.set_a(0.9 * (1.0 - t));
+    if spark.timer.finished() {
+      commands.entity(entity).despawn_recursive();
+    }
+  }
+}
+
+/// Full-screen red flash that pulses when the base takes damage.
+const FLASH_PEAK_ALPHA: f32 = 0.35;
+const FLASH_FADE_PER_SEC: f32 = 1.2;
+
+#[derive(Component)]
+pub struct DamageFlash;
+
+fn spawn_damage_flash(mut commands: Commands) {
+  commands.spawn((
+    NodeBundle {
+      style: Style {
+        size: Size::new(Val::Percent(100.), Val::Percent(100.)),
+        position_type: PositionType::Absolute,
+        ..default()
+      },
+      background_color: Color::rgba(0.8, 0.0, 0.0, 0.0).into(),
+      // Never intercept clicks (tower placement etc.).
+      focus_policy: FocusPolicy::Pass,
+      z_index: ZIndex::Global(50),
+      ..default()
+    },
+    DamageFlash,
+    Name::new("DamageFlash"),
+  ));
+}
+
+fn update_damage_flash(
+  time: Res<Time>,
+  mut damage_events: EventReader<BaseDamagedEvent>,
+  mut flash: Query<&mut BackgroundColor, With<DamageFlash>>,
+) {
+  let Ok(mut color) = flash.get_single_mut() else { return; };
+  if damage_events.iter().next().is_some() {
+    damage_events.clear();
+    color.0.set_a(FLASH_PEAK_ALPHA);
+  } else {
+    let new_alpha = (color.0.a() - FLASH_FADE_PER_SEC * time.delta_seconds()).max(0.0);
+    color.0.set_a(new_alpha);
+  }
+}
+
+fn cleanup_damage_flash(mut commands: Commands, flashes: Query<Entity, With<DamageFlash>>) {
+  for entity in &flashes {
+    commands.entity(entity).despawn_recursive();
+  }
+}
+
+/// An expanding orange ring marking a splash/AoE hit, sized to the splash radius.
+const SPLASH_SECONDS: f32 = 0.35;
+
+#[derive(Component)]
+pub struct SplashRing {
+  timer: Timer,
+  material: Handle<ColorMaterial>,
+  base_scale: f32,
+}
+
+fn spawn_splash_ring(
+  mut commands: Commands,
+  mut events: EventReader<SplashEvent>,
+  mut meshes: ResMut<Assets<Mesh>>,
+  mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+  for splash in events.iter() {
+    let material = materials.add(ColorMaterial::from(Color::rgba(1.0, 0.5, 0.1, 0.55)));
+    commands.spawn((
+      MaterialMesh2dBundle {
+        // Unit circle; scaled up to the splash radius over its lifetime.
+        mesh: meshes.add(shape::Circle::new(1.0).into()).into(),
+        material: material.clone(),
+        transform: Transform::from_translation(splash.position.truncate().extend(140.)),
+        ..default()
+      },
+      SplashRing {
+        timer: Timer::from_seconds(SPLASH_SECONDS, TimerMode::Once),
+        material,
+        base_scale: splash.radius,
+      },
+      Name::new("SplashRing"),
+    ));
+  }
+}
+
+fn update_splash_ring(
+  mut commands: Commands,
+  time: Res<Time>,
+  mut materials: ResMut<Assets<ColorMaterial>>,
+  mut rings: Query<(Entity, &mut SplashRing, &mut Transform)>,
+) {
+  for (entity, mut ring, mut transform) in &mut rings {
+    ring.timer.tick(time.delta());
+    let t = (ring.timer.elapsed_secs() / SPLASH_SECONDS).clamp(0., 1.);
+    // Grow from ~half to full splash radius, fading out.
+    transform.scale = Vec3::splat(ring.base_scale * (0.5 + 0.5 * t));
+    if let Some(material) = materials.get_mut(&ring.material) {
+      material.color.set_a(0.55 * (1.0 - t));
+    }
+    if ring.timer.finished() {
+      commands.entity(entity).despawn_recursive();
+    }
+  }
+}
+
+fn cleanup_splash_rings(mut commands: Commands, rings: Query<Entity, With<SplashRing>>) {
+  for entity in &rings {
+    commands.entity(entity).despawn_recursive();
+  }
+}
+
+/// Tint slowed/stunned enemies blue so the status is visible. Skips enemies that
+/// are mid hit-flash (the flash owns their colour briefly) to avoid fighting it.
+fn tint_slowed(
+  mut enemies: Query<(&mut TextureAtlasSprite, Option<&Slowed>), (With<Enemy>, Without<HitFlash>)>,
+) {
+  for (mut sprite, slowed) in &mut enemies {
+    sprite.color = if slowed.is_some() {
+      Color::rgb(0.45, 0.6, 1.0)
+    } else {
+      Color::WHITE
+    };
   }
 }
 

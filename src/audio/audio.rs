@@ -1,8 +1,16 @@
 use bevy::prelude::*;
+use bevy::window::WindowFocused;
 use bevy_kira_audio::prelude::*;
 use bevy_kira_audio::AudioSource;
+use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 use crate::{Bullet, EnemyDeathEvent, GameData, GameState, Tower, WaveClearedEvent, Waves};
+
+/// Where user volume settings are persisted between launches.
+const SETTINGS_PATH: &str = "audio_settings.json";
+/// How long music eases in when a track starts.
+const MUSIC_FADE: Duration = Duration::from_millis(800);
 
 pub struct GameAudioPlugin;
 
@@ -14,11 +22,12 @@ impl Plugin for GameAudioPlugin {
       .add_audio_channel::<MusicChannel>()
       .add_audio_channel::<SfxChannel>()
       .add_event::<EnemyJumpEvent>()
-      .insert_resource(AudioSettings::default())
+      .insert_resource(AudioSettings::load())
       .insert_resource(CurrentMusic::None)
       // Load audio + apply initial volumes before startup
       .add_startup_system(load_audio.in_base_set(StartupSet::PreStartup))
       .add_system(apply_volume_settings)
+      .add_system(mute_on_unfocus)
       // Music per game state
       .add_system(play_menu_music.in_schedule(OnEnter(GameState::MainMenu)))
       .add_system(play_gameplay_music.in_schedule(OnEnter(GameState::Gameplay)))
@@ -59,7 +68,7 @@ pub enum CurrentMusic {
 }
 
 /// User-adjustable volumes, all in `0.0..=1.0`. `master` scales the others.
-#[derive(Resource)]
+#[derive(Resource, Serialize, Deserialize, Clone)]
 pub struct AudioSettings {
   pub master: f32,
   pub music: f32,
@@ -72,6 +81,23 @@ impl Default for AudioSettings {
       master: 1.0,
       music: 0.4,
       sfx: 0.6,
+    }
+  }
+}
+
+impl AudioSettings {
+  /// Loads persisted settings, falling back to defaults if absent/invalid.
+  pub fn load() -> Self {
+    std::fs::read_to_string(SETTINGS_PATH)
+      .ok()
+      .and_then(|raw| serde_json::from_str(&raw).ok())
+      .unwrap_or_default()
+  }
+
+  /// Best-effort save; ignores IO errors (not worth crashing the game over).
+  pub fn save(&self) {
+    if let Ok(json) = serde_json::to_string_pretty(self) {
+      let _ = std::fs::write(SETTINGS_PATH, json);
     }
   }
 }
@@ -113,6 +139,24 @@ fn apply_volume_settings(
   if settings.is_changed() {
     music.set_volume((settings.master * settings.music) as f64);
     sfx.set_volume((settings.master * settings.sfx) as f64);
+    settings.save();
+  }
+}
+
+/// Pause audio while the window is unfocused, resume when it regains focus.
+fn mute_on_unfocus(
+  mut events: EventReader<WindowFocused>,
+  music: Res<AudioChannel<MusicChannel>>,
+  sfx: Res<AudioChannel<SfxChannel>>,
+) {
+  for event in events.iter() {
+    if event.focused {
+      music.resume();
+      sfx.resume();
+    } else {
+      music.pause();
+      sfx.pause();
+    }
   }
 }
 
@@ -126,7 +170,7 @@ fn play_menu_music(
   }
   *current = CurrentMusic::Menu;
   music.stop();
-  music.play(audio.menu_music.clone()).looped();
+  music.play(audio.menu_music.clone()).looped().fade_in(AudioTween::new(MUSIC_FADE, AudioEasing::Linear));
 }
 
 fn play_gameplay_music(
@@ -139,19 +183,31 @@ fn play_gameplay_music(
   }
   *current = CurrentMusic::Gameplay;
   music.stop();
-  music.play(audio.gameplay_music.clone()).looped();
+  music.play(audio.gameplay_music.clone()).looped().fade_in(AudioTween::new(MUSIC_FADE, AudioEasing::Linear));
 }
 
 fn sfx_shoot(
+  time: Res<Time>,
   audio: Res<GameAudio>,
   sfx: Res<AudioChannel<SfxChannel>>,
   new_bullets: Query<(), Added<Bullet>>,
+  mut cooldown: Local<f32>,
 ) {
-  // Play once per frame regardless of how many towers fired, to avoid stacking.
-  // Quieter than other SFX since it fires very frequently.
-  if !new_bullets.is_empty() {
-    sfx.play(audio.shoot.clone()).with_volume(0.35);
+  // Throttle across frames: with several towers firing, bullets spawn nearly every
+  // frame, which previously made this play continuously. Cap it to ~8/sec.
+  *cooldown -= time.delta_seconds();
+  if !new_bullets.is_empty() && *cooldown <= 0.0 {
+    sfx
+      .play(audio.shoot.clone())
+      .with_volume(0.175)
+      .with_playback_rate(random_pitch());
+    *cooldown = 0.12;
   }
+}
+
+/// A small random playback-rate multiplier (~0.9..1.1) to de-monotonize repeated SFX.
+fn random_pitch() -> f64 {
+  (0.9 + rand::random::<f64>() * 0.2) as f64
 }
 
 fn sfx_enemy_death(
@@ -178,8 +234,11 @@ fn sfx_enemy_jump(
   // Many slimes hop out of phase; throttle so it stays lively without stacking
   // into a buzz. Quiet, since it plays often.
   if any_jumped && *cooldown <= 0. {
-    sfx.play(audio.enemy_jump.clone()).with_volume(0.4);
-    *cooldown = 0.06;
+    sfx
+      .play(audio.enemy_jump.clone())
+      .with_volume(0.3)
+      .with_playback_rate(random_pitch());
+    *cooldown = 0.3;
   }
 }
 

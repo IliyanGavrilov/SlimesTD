@@ -118,7 +118,10 @@ fn bullet_enemy_collision(
         }
 
         enemy.health -= bullet.damage as i32;
-        hit_writer.send(EnemyHitEvent { entity: enemy_entity });
+        hit_writer.send(EnemyHitEvent {
+          entity: enemy_entity,
+          position: enemy_transform.translation,
+        });
         float_writer.send(FloatingTextEvent {
           position: enemy_transform.translation,
           text: format!("-{}", bullet.damage),
@@ -193,7 +196,10 @@ fn apply_splash(
       }
       if transform.translation.distance(splash.position) <= splash.radius {
         enemy.health -= splash.damage as i32;
-        hit_writer.send(EnemyHitEvent { entity });
+        hit_writer.send(EnemyHitEvent {
+          entity,
+          position: transform.translation,
+        });
         float_writer.send(FloatingTextEvent {
           position: transform.translation,
           text: format!("-{}", splash.damage),

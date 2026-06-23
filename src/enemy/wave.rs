@@ -123,7 +123,11 @@ fn spawn_waves(
   if !wave_state.enemy_spawn_timer.just_finished() {
     return;
   }
-  //if wave_state.remaining > 0 { // !!!
+  // Defensive: never index past the wave. `remaining` should always be in
+  // 1..=len here, but a stale value would otherwise underflow/panic.
+  if wave_state.remaining == 0 || wave_state.remaining > current_wave.enemies.len() {
+    return;
+  }
   let index = current_wave.enemies.len() - wave_state.remaining;
   //println!("Enemy #{}", (current_wave.enemies.len() - wave_state.remaining + 1));
 

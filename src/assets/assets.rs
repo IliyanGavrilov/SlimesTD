@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::movement::*;
-use crate::{EnemyJumpEvent, GameState, Tile, TowerType, game_not_paused};
+use crate::{EnemyJumpEvent, GameState, Slowed, Tile, TowerType, game_not_paused};
 
 pub struct AssetPlugin;
 
@@ -342,10 +342,11 @@ fn animate_enemy_sprite(
     &mut AnimationTimer,
     &mut TextureAtlasSprite,
     &Movement,
+    Option<&Slowed>,
   )>,
   mut jump_writer: EventWriter<EnemyJumpEvent>,
 ) {
-  for (indices, mut timer, mut sprite, movement) in &mut query {
+  for (indices, mut timer, mut sprite, movement, slowed) in &mut query {
     // Change direction based on where enemy is heading
     if movement.direction.x != 0. {
       if movement.direction.x < 0. {
@@ -355,8 +356,10 @@ fn animate_enemy_sprite(
       }
     }
 
-    // Animate sprite
-    timer.tick(time.delta());
+    // Animate sprite — scale by the slow factor so a slowed slime animates
+    // slower and a stunned one (factor 0) freezes entirely.
+    let factor = slowed.map_or(1.0, |s| s.factor);
+    timer.tick(time.delta().mul_f32(factor));
 
     if timer.just_finished() {
       if sprite.index == indices.last {
