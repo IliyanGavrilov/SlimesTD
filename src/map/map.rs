@@ -191,7 +191,7 @@ impl Map {
   }
 }
 
-// Main camera marker component
+/// Marker for the game's main 2D camera.
 #[derive(Component)]
 pub struct MainCamera;
 

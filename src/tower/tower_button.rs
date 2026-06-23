@@ -34,7 +34,7 @@ impl Plugin for TowerButtonPlugin {
   }
 }
 
-// Marker component to despawn buttons in UI
+/// Root of the bottom tower bar; despawned on exit from gameplay.
 #[derive(Component)]
 pub struct TowerUIRoot;
 
@@ -160,28 +160,21 @@ fn lock_tower_buttons(
   }
 }
 
-// Convert cursor position from window/screen position to world position
+/// Maps a screen-space cursor position to a world position on the z=0.5 plane.
 pub fn window_to_world_pos(
   window: &Window,
   cursor_pos: Vec2,
   camera: &Camera,
   camera_transform: &GlobalTransform,
 ) -> Vec3 {
-  // get the size of the window
   let window_size = Vec2::new(window.width(), window.height());
-
-  // convert screen position [0...<resolution>] to ndc [-1..1] (gpu coordinates)
-  // Normalized device coordinates
+  // Screen pixels -> normalised device coordinates [-1, 1], then undo the camera
+  // projection to land back in world space.
   let ndc = (cursor_pos / window_size) * 2.0 - Vec2::ONE;
-
-  // matrix for undoing the projection and camera transform
   let ndc_to_world = camera_transform.compute_matrix() * camera.projection_matrix().inverse();
-
-  // use it to convert ndc to world-space coordinates
   let mut world_pos = ndc_to_world.project_point3(ndc.extend(-1.0));
 
   world_pos.z = 0.5;
-
   world_pos
 }
 
@@ -362,8 +355,10 @@ fn close_upgrade_ui_while_placing(
   upgrade_uis: Query<Entity, With<TowerUpgradeUI>>,
 ) {
   if !followers.is_empty() {
+    // Deferred despawn (see `Despawning`): tearing the panel down inline here while
+    // starting a placement races Bevy 0.10's accessibility insert and crashes (B0003).
     for entity in &upgrade_uis {
-      commands.entity(entity).despawn_recursive();
+      commands.entity(entity).insert(Despawning);
     }
   }
 }
@@ -552,8 +547,8 @@ fn spawn_sprite_follower(
   assets: &GameAssets,
   tower_stats: &TowerTypeStats,
 ) {
-  // Spawn component that alerts the place_tower() system that a button has been pressed,
-  // and it starts moving a sprite with the cursor until the tower is placed
+  // The SpriteFollower marker hands the preview off to place_tower, which moves it
+  // with the cursor until the tower is placed.
   if let Some(position) = window.cursor_position() {
     let world_pos = window_to_world_pos(window, position, camera, camera_transform);
     let initial_transform = Transform::from_translation(world_pos)
@@ -622,9 +617,8 @@ fn tower_button_interaction(
   let (camera, camera_transform) = camera_query.single();
   let player = player.single();
 
-  // Keyboard shortcuts
+  // Only start a placement when one isn't already in progress (one preview at a time).
   if query.is_empty() {
-    // Spawn one tower at a time
     tower_spawn_from_keyboard_input(
       &mut commands,
       &keys,
@@ -644,15 +638,13 @@ fn tower_button_interaction(
       match interaction {
         Interaction::Clicked => {
           if query.is_empty() {
-            // Spawn one tower at a time
-            // Change button UI
+            // Show the pressed-button texture.
             for (mut image, button_tower_type) in images.iter_mut() {
               if button_tower_type == tower_type {
                 image.texture = assets.get_button_pressed_asset(*tower_type);
               }
             }
 
-            // Spawn tower sprite following mouse
             spawn_sprite_follower(
               &mut commands,
               window,
@@ -959,7 +951,6 @@ fn update_snap_button(
   }
 }
 
-// Creating a UI menu on the whole screen with buttons
 fn cleanup_tower_ui(
   mut commands: Commands,
   roots: Query<Entity, With<TowerUIRoot>>,
@@ -1038,10 +1029,9 @@ fn generate_ui(
       },
       ..default()
     })
-    .insert(TowerUIRoot) // Marker component
+    .insert(TowerUIRoot)
     .insert(Name::new("TowerButtons"))
     .with_children(|commands| {
-      // Make the buttons children of the menu
       for i in TowerType::iter() {
         commands
           .spawn(ButtonBundle {

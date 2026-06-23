@@ -43,7 +43,6 @@ fn default_projectile_speed() -> f32 {
   1500.0
 }
 
-//#[derive(Component)] // !!!Debugging
 #[derive(Reflect, Clone, Component, Default, Serialize, Deserialize)]
 #[reflect(Component)]
 pub struct Tower {
@@ -197,30 +196,25 @@ fn tower_shooting(
   time: Res<Time>,
 ) {
   for (tower_entity, mut tower, tower_type, mut tower_transform, transform) in &mut towers {
-    // Check if an enemy is in range so we can tick the timer
+    // Only tick the cooldown while a target is in range.
     if enemy_in_range(&tower, &tower_transform, &enemies) {
       let bullet_spawn_pos = transform.translation() + tower.bullet_spawn_offset;
 
       let direction =
         get_enemy_direction(&enemies, bullet_spawn_pos, tower.range + 10, &tower.target);
 
-      // If there is an enemy in the tower's range (if direction != None), then shoot bullet
       if let Some(direction) = direction {
-        // If the attack cooldown finished OR if there was no enemy spawned before, spawn bullet
+        // Fire on cooldown, or immediately for the first target after a lull.
         if tower.shooting_timer.just_finished() || tower.first_enemy_appeared {
           tower.first_enemy_appeared = false;
 
-          // Calculate angle between tower and enemy
           let mut angle = direction.angle_between(tower.bullet_spawn_offset);
           if tower.bullet_spawn_offset.y > direction.y {
-            // flip angle if enemy is below tower
-            angle = -angle;
+            angle = -angle; // enemy below the tower
           }
-
-          // Rotate tower to face enemy it is attacking, based on enemy's location
           tower_transform.rotation = Quat::from_rotation_z(angle);
 
-          // Make bullet a child of tower
+          // Bullet is a child of the tower so it inherits the firing transform.
           commands.entity(tower_entity).with_children(|commands| {
             commands.spawn(tower_type.get_bullet(
               tower.damage,

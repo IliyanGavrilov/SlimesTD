@@ -51,20 +51,20 @@ pub fn get_enemy_direction(
 ) -> Option<Vec3> {
   let enemy_filtered_query = enemies
     .iter()
-    // Filter the enemies that are in the tower's range
+    // Only enemies within range.
     .filter(|(enemy_transform, ..)| {
       Vec3::distance(enemy_transform.translation(), bullet_spawn_pos) <= tower_range as f32
     });
 
   let enemy = match tower_targeting_priority {
     TargetingPriority::FIRST => enemy_filtered_query
-      // Find first enemy that is closest to the base
+      // Furthest along the path (closest to the base).
       .max_by_key(|(.., movement)| FloatOrd(movement.distance_travelled)),
     TargetingPriority::LAST => enemy_filtered_query
-      // Find first enemy that is closest to the base
+      // Least far along the path (nearest the spawn).
       .min_by_key(|(.., movement)| FloatOrd(movement.distance_travelled)),
     TargetingPriority::CLOSE => enemy_filtered_query
-      // Find enemy that is closest to the tower
+      // Closest to the tower.
       .min_by_key(|(enemy_transform, ..)| {
         FloatOrd(Vec3::distance(
           enemy_transform.translation(),
@@ -72,7 +72,7 @@ pub fn get_enemy_direction(
         ))
       }),
     TargetingPriority::FAR => enemy_filtered_query
-      // Find enemy that is the farthest away from the tower
+      // Farthest from the tower.
       .max_by_key(|(enemy_transform, ..)| {
         FloatOrd(Vec3::distance(
           enemy_transform.translation(),
@@ -91,7 +91,6 @@ pub fn get_enemy_direction(
   };
 
   if let Some((enemy, ..)) = enemy {
-    // return direction
     return Option::from(enemy.translation() - bullet_spawn_pos);
   }
   None

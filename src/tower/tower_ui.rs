@@ -399,7 +399,6 @@ pub fn spawn_tower_ui(
             .spawn(ButtonBundle {
               style: Style {
                 size: Size::new(Val::Px(26.), Val::Px(21.)),
-                //align_self: AlignSelf::Center,
                 margin: UiRect {
                   left: Val::Percent(2.5),
                   right: Val::Percent(2.),
@@ -450,7 +449,6 @@ pub fn spawn_tower_ui(
             .spawn(ButtonBundle {
               style: Style {
                 size: Size::new(Val::Px(26.), Val::Px(21.)),
-                //align_self: AlignSelf::Center,
                 margin: UiRect {
                   left: Val::Percent(2.),
                   ..default()

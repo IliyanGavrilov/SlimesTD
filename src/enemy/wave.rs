@@ -105,8 +105,7 @@ fn spawn_waves(
   let Some(waves) = waves.get_mut(&game_data.enemy_waves)
     else { return; };
 
-  // If all enemies in wave have finished, if button has been pressed
-  // or if in-between waves timer has finished !!!
+  // Wave fully spawned: wait out the between-waves timer, then advance.
   if wave_state.remaining == 0 {
     wave_state.wave_spawn_timer.tick(time.delta());
     if !wave_state.wave_spawn_timer.just_finished() {
@@ -134,7 +133,6 @@ fn spawn_waves(
     return;
   }
   let index = current_wave.enemies.len() - wave_state.remaining;
-  //println!("Enemy #{}", (current_wave.enemies.len() - wave_state.remaining + 1));
 
   let Some(enemy_stats) = enemy_type_assets.get(&game_data.enemy_type_stats)
     else { return; };
@@ -152,7 +150,6 @@ fn spawn_waves(
   wave_state.enemy_spawn_timer = Timer::new(current_wave.enemies[index].1, TimerMode::Repeating);
 
   wave_state.remaining -= 1;
-  //}
 }
 
 fn load_waves(mut commands: Commands, game_data: Res<GameData>, mut waves: ResMut<Assets<Waves>>) {

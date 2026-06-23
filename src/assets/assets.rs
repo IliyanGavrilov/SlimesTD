@@ -15,8 +15,7 @@ impl Plugin for AssetPlugin {
   }
 }
 
-// Asset loading
-
+/// Handles to every texture and font the game loads at startup.
 #[derive(Resource)]
 pub struct GameAssets {
   // Fonts
@@ -314,7 +313,7 @@ fn load_assets(
       Some(Vec2::new(5., 5.)),
       None,
     )),
-    // Bullets !!!
+    // Bullets
     wizard_nature_bullet: assets_server.load("textures/tower_bullets/wizard_nature_bullet.png"),
     wizard_fire_bullet: assets_server.load("textures/tower_bullets/wizard_fire_bullet.png"),
     wizard_ice_bullet: assets_server.load("textures/tower_bullets/wizard_ice_bullet.png"),

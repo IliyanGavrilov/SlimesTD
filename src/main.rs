@@ -31,10 +31,9 @@ pub use persistence::*;
 
 fn main() {
   App::new()
-    // Background of window. Set colour of screen on each refresh
+    // Window clear colour.
     .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
-    // Add basic game functionality - window, game tick, renderer,
-    // asset loading, UI system, input, startup systems, etc.
+    // Window, rendering, input, asset loading, UI - the engine essentials.
     .add_plugins(
       DefaultPlugins
         // Prevent blurry sprites
