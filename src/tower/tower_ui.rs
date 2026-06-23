@@ -3,7 +3,7 @@ use bevy::sprite::MaterialMesh2dBundle;
 
 use crate::assets::*;
 use crate::tower::*;
-use crate::{GameData, GameState};
+use crate::{GameData, GameState, Player};
 
 pub struct TowerUIPlugin;
 
@@ -100,6 +100,8 @@ fn update_tower_ui(
     ),
   >,
   mut tower_upgrade_index_image_ui: Query<(&mut UiImage, &TowerUpgradeIndex)>,
+  mut upgrade_button_ui: Query<(&mut BackgroundColor, &TowerUpgradeButton)>,
+  player: Query<&Player>,
   mut upgrade_stats: Query<
     (&mut Text, &UpgradeStats),
     (
@@ -181,7 +183,24 @@ fn update_tower_ui(
           format!("Upgrade: ${:?}", tower_upgrades[i].cost),
           upgrade_cost_text.sections[0].style.clone(),
         );
+      } else {
+        *upgrade_cost_text =
+          Text::from_section("MAX", upgrade_cost_text.sections[0].style.clone());
       }
+    }
+
+    // Darken the upgrade button when it's maxed out OR unaffordable, so it reads
+    // as locked; restore full colour once it can be bought again.
+    let money = player.get_single().map(|p| p.money).unwrap_or(0);
+    for (mut button_tint, upgrade_button) in upgrade_button_ui.iter_mut() {
+      let i = tower.upgrades.upgrades[upgrade_button.path_index];
+      let tower_upgrades = &upgrades.upgrades[tower_type][upgrade_button.path_index];
+      let buyable = i < tower_upgrades.len() && money >= tower_upgrades[i].cost;
+      *button_tint = if buyable {
+        Color::WHITE.into()
+      } else {
+        Color::rgb(0.4, 0.4, 0.4).into()
+      };
     }
 
     // Update upgrade index image for each path
@@ -520,6 +539,8 @@ pub fn spawn_tower_ui(
                 commands
                   .spawn(TextBundle {
                     style: Style {
+                      // Clear the level-bar image above; smaller font keeps a
+                      // 3-stat path inside the fixed-height box.
                       margin: UiRect {
                         top: Val::Percent(4.),
                         ..default()
@@ -530,7 +551,7 @@ pub fn spawn_tower_ui(
                       "",
                       TextStyle {
                         font: assets.font.clone(),
-                        font_size: 12.5,
+                        font_size: 9.5,
                         color: Color::WHITE,
                       },
                     ),

@@ -20,7 +20,12 @@ impl Plugin for EnemyPlugin {
   }
 }
 
-pub struct EnemyDeathEvent;
+pub struct EnemyDeathEvent {
+  pub transform: Transform,
+  pub atlas: Handle<TextureAtlas>,
+  pub sprite_index: usize,
+  pub flip_x: bool,
+}
 
 #[derive(Bundle, Debug, Serialize, Deserialize, Clone)]
 pub struct EnemyBundle {
@@ -101,12 +106,23 @@ fn cleanup_enemies(mut commands: Commands, enemies: Query<Entity, With<Enemy>>) 
 
 fn despawn_enemy_on_death(
   mut commands: Commands,
-  enemies: Query<(Entity, &mut Enemy)>,
+  enemies: Query<(
+    Entity,
+    &Enemy,
+    &Transform,
+    &TextureAtlasSprite,
+    &Handle<TextureAtlas>,
+  )>,
   mut death_event_writer: EventWriter<EnemyDeathEvent>,
 ) {
-  for (entity, enemy) in &enemies {
+  for (entity, enemy, transform, sprite, atlas) in &enemies {
     if enemy.health <= 0 {
-      death_event_writer.send(EnemyDeathEvent);
+      death_event_writer.send(EnemyDeathEvent {
+        transform: *transform,
+        atlas: atlas.clone(),
+        sprite_index: sprite.index,
+        flip_x: sprite.flip_x,
+      });
       commands.entity(entity).despawn_recursive();
     }
   }

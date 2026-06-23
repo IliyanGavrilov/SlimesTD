@@ -5,7 +5,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::gameplay_ui::*;
 use crate::movement::*;
-use crate::{Enemy, GameAssets, GameData, GameState, Path, SelectedMap, game_not_paused};
+use crate::{
+  BaseDamagedEvent, Enemy, GameAssets, GameData, GameState, Path, SelectedMap, game_not_paused,
+};
 
 pub struct MapPlugin;
 
@@ -288,6 +290,7 @@ fn despawn_enemy(
   mut base: Query<&mut Base>,
   selected_map: Res<SelectedMap>,
   maps: Res<Assets<Map>>,
+  mut base_damaged: EventWriter<BaseDamagedEvent>,
 ) {
   let Some(map) = maps.get(&selected_map.0)
     else { return; };
@@ -297,6 +300,7 @@ fn despawn_enemy(
   for (entity, enemy, path) in &mut enemies {
     if path.index >= map.checkpoints.len() {
       damage_base(&mut commands, &entity, enemy.health, &mut base);
+      base_damaged.send(BaseDamagedEvent);
     }
   }
 }

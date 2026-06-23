@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 
-use crate::{EnemyDeathEvent, GameState, Player, WaveClearedEvent, game_not_paused};
+use crate::{
+  EnemyDeathEvent, FloatingTextEvent, GameState, Player, WaveClearedEvent, game_not_paused,
+};
 
 pub struct FarmPlugin;
 
@@ -61,31 +63,40 @@ impl FarmTower {
 }
 
 fn farm_income(
-  mut farms: Query<&mut FarmTower>,
+  mut farms: Query<(&mut FarmTower, &Transform)>,
   mut player: Query<&mut Player>,
   time: Res<Time>,
   mut death_events: EventReader<EnemyDeathEvent>,
   mut wave_events: EventReader<WaveClearedEvent>,
+  mut float_writer: EventWriter<FloatingTextEvent>,
 ) {
   let kills = death_events.iter().count();
   let waves_cleared = wave_events.iter().count();
   let mut player = player.single_mut();
 
-  for mut farm in &mut farms {
-    match &mut farm.behavior {
+  for (mut farm, transform) in &mut farms {
+    // Income earned by this farm this tick; 0 means no indicator.
+    let earned = match &mut farm.behavior {
       FarmBehavior::Passive { income, timer } => {
         timer.tick(time.delta());
         if timer.just_finished() {
-          player.money += *income as usize;
+          *income as usize
+        } else {
+          0
         }
       }
-      FarmBehavior::Kill { income_per_kill } => {
-        player.money += kills * *income_per_kill as usize;
-      }
-      FarmBehavior::Wave { income_per_wave } => {
-        player.money += waves_cleared * *income_per_wave as usize;
-      }
-      FarmBehavior::SelfKill { .. } => {} // awarded per-kill inside bullet_enemy_collision
+      FarmBehavior::Kill { income_per_kill } => kills * *income_per_kill as usize,
+      FarmBehavior::Wave { income_per_wave } => waves_cleared * *income_per_wave as usize,
+      FarmBehavior::SelfKill { .. } => 0, // awarded per-kill inside bullet_enemy_collision
+    };
+
+    if earned > 0 {
+      player.money += earned;
+      float_writer.send(FloatingTextEvent {
+        position: transform.translation,
+        text: format!("+${}", earned),
+        color: Color::GOLD,
+      });
     }
   }
 }
