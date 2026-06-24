@@ -51,6 +51,9 @@ fn main() {
             title: "Slimes Tower Defense".to_string(),
             position: WindowPosition::Centered(MonitorSelection::Primary),
             resizable: false,
+            // On web, track the parent element's size so the canvas fills the
+            // itch.io / fullscreen container instead of staying a fixed size.
+            fit_canvas_to_parent: true,
             ..default()
           }),
           ..default()

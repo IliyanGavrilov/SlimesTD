@@ -111,15 +111,6 @@ fn spawn_main_menu(mut commands: Commands, assets: Res<GameAssets>) {
     .insert(SettingsButton)
     .id();
 
-  let exit_button = commands
-    .spawn(ButtonBundle {
-      style: image_button_style(),
-      image: assets.exit_button.clone().into(),
-      ..default()
-    })
-    .insert(ExitButton)
-    .id();
-
   let how_to_play_button = commands
     .spawn(ButtonBundle {
       style: Style {
@@ -149,7 +140,7 @@ fn spawn_main_menu(mut commands: Commands, assets: Res<GameAssets>) {
     })
     .id();
 
-  commands
+  let menu_root = commands
     .spawn(NodeBundle {
       style: Style {
         size: Size::new(Val::Percent(100.), Val::Percent(100.)),
@@ -180,8 +171,24 @@ fn spawn_main_menu(mut commands: Commands, assets: Res<GameAssets>) {
     })
     .add_child(start_button)
     .add_child(settings_button)
-    .add_child(exit_button)
-    .add_child(how_to_play_button);
+    .id();
+
+  // Quitting the process is meaningless in a browser tab (AppExit just freezes
+  // the canvas), so the Exit button only exists on native builds.
+  #[cfg(not(target_arch = "wasm32"))]
+  {
+    let exit_button = commands
+      .spawn(ButtonBundle {
+        style: image_button_style(),
+        image: assets.exit_button.clone().into(),
+        ..default()
+      })
+      .insert(ExitButton)
+      .id();
+    commands.entity(menu_root).add_child(exit_button);
+  }
+
+  commands.entity(menu_root).add_child(how_to_play_button);
 }
 
 fn image_button_style() -> Style {
