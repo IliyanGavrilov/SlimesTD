@@ -8,20 +8,30 @@ Built with [Bevy 0.10.1](https://bevyengine.org/) and Rust.
 
 ---
 
-## Platforms
+## Download & play
 
-| Platform | How to get it |
-|----------|--------------|
-| Windows  | `installation/windows.zip` → run `Slimes TD.exe` |
-| Linux    | `installation/linux.zip` → run `Slimes TD` (mark executable if needed) |
-| Browser  | Play directly on [itch.io](https://iliyangavrilov.itch.io/slimestd) (WebAssembly) |
+Pre-built bundles for **Windows, Linux and macOS** are published on the
+[**Releases** page](../../releases). Each release has a `SlimesTD-<platform>.zip` —
+download the one for your OS, unzip it, and run the game inside. No installation needed.
+
+| Platform | After unzipping |
+|----------|-----------------|
+| Windows  | Run `Slimes TD.exe`. Windows SmartScreen may warn on first launch = click **More info → Run anyway**. |
+| Linux    | Run `./"Slimes TD"` (see system libraries below). |
+| macOS    | Run `Slimes TD`. It's unsigned, so right-click → **Open** the first time to bypass Gatekeeper. |
+| Browser  | Play directly on [itch.io](https://iliyangavrilov.itch.io/slimestd) (WebAssembly) — no download. |
+
+The release bundles are produced automatically by GitHub Actions
+([`.github/workflows/release.yml`](.github/workflows/release.yml)) on native runners
+for each OS, so they always match the source.
 
 ### Linux = first run
 
 ```bash
-unzip "installation/linux.zip"
-chmod +x "Slimes TD - Linux/Slimes TD"
-"Slimes TD - Linux/Slimes TD"
+unzip SlimesTD-Linux.zip
+cd "Slimes TD - Linux"
+chmod +x "Slimes TD"   # if the zip didn't preserve it
+./"Slimes TD"
 ```
 
 Bevy on Linux requires a few system libraries. Install them if the binary fails to launch:
@@ -35,10 +45,6 @@ sudo apt install libasound2-dev libudev-dev libx11-dev libxcb1-dev pkg-config
 ```bash
 sudo dnf install alsa-lib-devel libudev-devel libX11-devel
 ```
-
-### Windows
-
-Unzip `installation/windows.zip` and double-click `Slimes TD.exe`. No install needed. Windows Defender may show a SmartScreen warning on first launch = click **More info → Run anyway**.
 
 ---
 
@@ -176,7 +182,7 @@ src/
   tutorial/        = first-launch interactive tutorial
   persistence/     = save/load of settings and progress (RON)
 assets/data/       = RON balance files (edit to tune the game)
-installation/      = pre-built Windows and Linux binaries
+.github/workflows/ = CI that builds the Windows/Linux/macOS release bundles
 ```
 
 Balance lives in `assets/data/` RON files = tweak stats, waves, and upgrade paths without recompiling.

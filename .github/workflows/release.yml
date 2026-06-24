@@ -1,10 +1,15 @@
 name: Release build
 
 # Builds packaged game bundles (binary + assets) for Windows, Linux and macOS on
-# native runners. Run manually from the Actions tab (workflow_dispatch), or push a
-# version tag like `v1.0.0` to also create a GitHub Release with the zips attached.
+# native runners, then publishes them as a GitHub Release. Run it manually from the
+# Actions tab (provide a version tag), or push a tag like `v1.0.0`.
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag to publish (e.g. v1.0.0)"
+        required: true
+        default: v1.0.0
   push:
     tags: ['v*']
 
@@ -47,35 +52,52 @@ jobs:
       - name: Build release
         run: cargo build --release
 
-      # Stage "Slimes TD - <OS>/" containing the renamed binary next to assets/.
+      # Stage the renamed binary next to assets/. Uploaded as a folder (not a zip)
+      # so the artifact downloads as a single zip, not a zip-inside-a-zip.
       - name: Stage package
         shell: bash
         run: |
-          dir="Slimes TD - ${{ matrix.label }}"
-          mkdir -p "dist/$dir"
-          cp -r assets "dist/$dir/"
-          cp "target/release/${{ matrix.bin }}" "dist/$dir/${{ matrix.outbin }}"
-          find "dist/$dir/assets" -name README.md -delete
+          mkdir -p dist
+          cp -r assets dist/
+          cp "target/release/${{ matrix.bin }}" "dist/${{ matrix.outbin }}"
+          find dist/assets -name README.md -delete
 
-      - name: Zip (Linux/macOS)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: cd dist && zip -r "../SlimesTD-${{ matrix.label }}.zip" "Slimes TD - ${{ matrix.label }}"
-
-      - name: Zip (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: Compress-Archive -Path "dist/Slimes TD - ${{ matrix.label }}" -DestinationPath "SlimesTD-${{ matrix.label }}.zip"
-
-      - name: Upload artifact
+      - name: Upload bundle
         uses: actions/upload-artifact@v4
         with:
           name: SlimesTD-${{ matrix.label }}
-          path: SlimesTD-${{ matrix.label }}.zip
+          path: dist/
 
-      # Only when triggered by a version tag: attach the zip to the GitHub Release.
-      - name: Attach to release
-        if: startsWith(github.ref, 'refs/tags/')
+  release:
+    name: Publish GitHub Release
+    needs: build
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      # Wrap each platform's files in a nicely named top folder and zip once.
+      - name: Repackage bundles
+        shell: bash
+        run: |
+          mkdir -p out
+          for label in Windows Linux macOS; do
+            src="artifacts/SlimesTD-$label"
+            [ -d "$src" ] || continue
+            stage="Slimes TD - $label"
+            rm -rf "$stage"
+            cp -r "$src" "$stage"
+            # Artifacts drop the executable bit; restore it for the Linux/macOS binary.
+            chmod +x "$stage/Slimes TD" 2>/dev/null || true
+            zip -r "out/SlimesTD-$label.zip" "$stage" >/dev/null
+          done
+          ls -lh out
+
+      - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          files: SlimesTD-${{ matrix.label }}.zip
+          tag_name: ${{ github.event.inputs.version || github.ref_name }}
+          files: out/*.zip
+          generate_release_notes: true
