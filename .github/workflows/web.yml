@@ -46,10 +46,14 @@ jobs:
             --out-dir dist --out-name slimestd \
             target/wasm32-unknown-unknown/release/tower_defence_game.wasm
 
+      # wasm-bindgen emits an externref table it grows at init. Without these feature
+      # flags wasm-opt clamps that table, causing "Table.grow failed" at runtime
+      # (black page). Enabling them keeps the size win and a working module.
       - name: Shrink wasm
         run: |
           sudo apt-get update && sudo apt-get install -y binaryen
-          wasm-opt -Oz -o dist/slimestd_bg.wasm dist/slimestd_bg.wasm
+          wasm-opt -Oz --enable-reference-types --enable-bulk-memory \
+            -o dist/slimestd_bg.wasm dist/slimestd_bg.wasm
 
       - name: Assemble site
         run: |
