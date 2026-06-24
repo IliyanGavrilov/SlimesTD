@@ -2,28 +2,25 @@
 
 A tower defense game where waves of colored slimes march along a path toward your base. Place wizard towers, earn gold, upgrade your defenses, and survive all 10 waves to win.
 
-Built with [Bevy 0.10.1](https://bevyengine.org/) and Rust.
-
-**Itch.io (play in browser or download):** https://iliyangavrilov.itch.io/slimestd
-
 ---
 
-## Download & play
+## Play now
 
-Pre-built bundles for **Windows, Linux and macOS** are published on the
-[**Releases** page](../../releases). Each release has a `SlimesTD-<platform>.zip` —
-download the one for your OS, unzip it, and run the game inside. No installation needed.
+**▶ In your browser** (nothing to install): **[itch.io](https://iliyangavrilov.itch.io/slimestd)** · **[GitHub Pages](https://iliyangavrilov.github.io/SlimesTD/)**
 
-| Platform | After unzipping |
-|----------|-----------------|
-| Windows  | Run `Slimes TD.exe`. Windows SmartScreen may warn on first launch = click **More info → Run anyway**. |
-| Linux    | Run `./"Slimes TD"` (see system libraries below). |
-| macOS    | Run `Slimes TD`. It's unsigned, so right-click → **Open** the first time to bypass Gatekeeper. |
-| Browser  | Play directly on [itch.io](https://iliyangavrilov.itch.io/slimestd) (WebAssembly) — no download. |
+**💾 Desktop downloads:** grab the latest zip for your OS from the [**Releases** page](../../releases) - unzip and run, no installation needed.
 
-The release bundles are produced automatically by GitHub Actions
-([`.github/workflows/release.yml`](.github/workflows/release.yml)) on native runners
-for each OS, so they always match the source.
+| Platform | Download | How to run |
+|----------|----------|------------|
+| Windows | `SlimesTD-Windows.zip` | Run `Slimes TD.exe`. SmartScreen may warn on first launch - click **More info → Run anyway**. |
+| Linux | `SlimesTD-Linux.zip` | Run `./"Slimes TD"` (see system libraries below). |
+| macOS | `SlimesTD-macOS.zip` | Run `Slimes TD`. It's unsigned, so right-click → **Open** the first time to bypass Gatekeeper. |
+| Web bundle | `SlimesTD-Web.zip` | The browser build for **self-hosting** - serve the unzipped folder with any static web server (it won't run from a `file://` double-click). |
+| Browser | - | Play instantly on **[itch.io](https://iliyangavrilov.itch.io/slimestd)** or **[GitHub Pages](https://iliyangavrilov.github.io/SlimesTD/)**. |
+
+All bundles are built automatically by GitHub Actions
+([`release.yml`](.github/workflows/release.yml)) on native runners per OS, so they always
+match the source.
 
 ### Linux = first run
 
@@ -93,14 +90,15 @@ zip root) and upload to itch.io as an HTML5 project with "play in browser" ticke
 ### Web hosting (CD)
 
 `.github/workflows/web.yml` does this automatically: on every push to `main` it builds
-the wasm bundle, shrinks it with `wasm-opt`, **deploys it to GitHub Pages** (a live,
-always-current URL), and uploads a `SlimesTD-Web.zip` artifact ready for itch.io.
-Enable it once under **Settings → Pages → Source: GitHub Actions**.
+the wasm bundle, **deploys it to GitHub Pages** (a live, always-current URL), **pushes
+it to itch.io** via [`butler`](https://itch.io/docs/butler/), and uploads a
+`SlimesTD-Web.zip` artifact. Enable Pages once under
+**Settings → Pages → Source: GitHub Actions**; itch publishing needs an itch API key
+stored as the `BUTLER_API_KEY` repo secret (the step runs
+`butler push dist iliyangavrilov/slimestd:html5`).
 
-To push to itch.io automatically too, add a step using
-[`butler`](https://itch.io/docs/butler/) with an itch API key stored as the
-`BUTLER_API_KEY` repo secret:
-`butler push dist iliyangavrilov/slimestd:html5`.
+Tagged releases (`.github/workflows/release.yml`) additionally bundle the web build as
+`SlimesTD-Web.zip` alongside the desktop zips.
 
 ---
 
@@ -117,7 +115,7 @@ Prevent slimes from reaching your base. You start with a set amount of gold and 
 | Left click on tower button | Pick up tower to place |
 | Left click on map          | Place tower |
 | Right click                | Cancel placement |
-| `1` - `0`                  | Keyboard shortcut for each tower (same order as the button bar) |
+| `0` - `9`                  | Keyboard shortcut for each tower (same order as the button bar) |
 | Left click on placed tower | Open upgrade / sell panel |
 | `G` | Toggle snap mode (aligns to tower axes and tile edges) |
 
@@ -211,7 +209,7 @@ src/
   tutorial/        = first-launch interactive tutorial
   persistence/     = save/load of settings and progress (RON)
 assets/data/       = RON balance files (edit to tune the game)
-.github/workflows/ = CI that builds the Windows/Linux/macOS release bundles
+.github/workflows/ = CI/CD: desktop + web release bundles, GitHub Pages + itch.io deploy
 ```
 
 Balance lives in `assets/data/` RON files = tweak stats, waves, and upgrade paths without recompiling.
@@ -220,8 +218,8 @@ Balance lives in `assets/data/` RON files = tweak stats, waves, and upgrade path
 
 ## Tech
 
-- **Engine:** Bevy 0.10.1
-- **Language:** Rust 2024
+- **Engine:** [Bevy 0.10.1](https://bevy.org/)
+- **Language:** [Rust 2024](https://rust-lang.org/)
 - **Serialization:** RON (Rusty Object Notation) via `bevy_common_assets`
 - **Asset loading:** `bevy_asset_loader`
 - **WASM runner:** `wasm-server-runner`

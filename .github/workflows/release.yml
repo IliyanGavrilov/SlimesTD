@@ -68,9 +68,48 @@ jobs:
           name: SlimesTD-${{ matrix.label }}
           path: dist/
 
+  # The browser build, so a tagged release ships all four platforms. It's served
+  # live on itch.io / Pages too; the zip is for archival / self-hosting (needs a
+  # static web server - index.html won't run from a file:// double-click).
+  web:
+    name: Build Web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install wasm-bindgen-cli
+        run: cargo install -f wasm-bindgen-cli --version 0.2.108
+
+      - name: Build wasm
+        run: cargo build --release --target wasm32-unknown-unknown
+
+      - name: Generate JS bindings
+        run: |
+          wasm-bindgen --no-typescript --target web \
+            --out-dir dist --out-name slimestd \
+            target/wasm32-unknown-unknown/release/tower_defence_game.wasm
+
+      - name: Assemble bundle
+        shell: bash
+        run: |
+          cp web/index.html dist/
+          cp -r assets dist/assets
+          find dist/assets -name README.md -delete
+
+      - name: Upload bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: SlimesTD-Web
+          path: dist/
+
   release:
     name: Publish GitHub Release
-    needs: build
+    needs: [build, web]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
@@ -83,7 +122,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p out
-          for label in Windows Linux macOS; do
+          for label in Windows Linux macOS Web; do
             src="artifacts/SlimesTD-$label"
             [ -d "$src" ] || continue
             stage="Slimes TD - $label"
@@ -101,3 +140,19 @@ jobs:
           tag_name: ${{ github.event.inputs.version || github.ref_name }}
           files: out/*.zip
           generate_release_notes: true
+          body: |
+            **Slimes TD** - a pixel-art tower defense game. Defend your base from 10 waves of slimes with wizard towers.
+
+            ## ▶ Play in your browser (no download)
+            - **itch.io:** https://iliyangavrilov.itch.io/slimestd
+            - **GitHub Pages:** https://iliyangavrilov.github.io/SlimesTD/
+
+            ## 💾 Downloads
+            | Asset | Platform / use |
+            |-------|----------------|
+            | `SlimesTD-Windows.zip` | Windows - unzip, run `Slimes TD.exe` |
+            | `SlimesTD-Linux.zip` | Linux - unzip, run `./"Slimes TD"` |
+            | `SlimesTD-macOS.zip` | macOS - unzip, run `Slimes TD` (right-click → **Open**, unsigned) |
+            | `SlimesTD-Web.zip` | Browser build for **self-hosting** - serve the unzipped folder with any static web server |
+
+            See the [README](https://github.com/IliyanGavrilov/SlimesTD#readme) for full controls, towers, enemies and build instructions.
