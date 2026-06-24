@@ -4,12 +4,12 @@ use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
 use strum::IntoEnumIterator;
 
+use crate::FarmBehavior;
 use crate::assets::*;
 use crate::tower::*;
-use crate::FarmBehavior;
 use crate::{
-  game_not_paused, GameData, GameState, GameplayUIRoot, MainCamera, MapTile, Player, TerrainType,
-  Tile,
+  GameData, GameState, GameplayUIRoot, MainCamera, MapTile, Player, TerrainType, Tile,
+  game_not_paused,
 };
 
 pub struct TowerButtonPlugin;
@@ -261,7 +261,7 @@ fn find_nearest_valid(
       let p = cursor + Vec2::new(angle.cos(), angle.sin()) * radius;
       if placement_is_valid(p, new_radius, tower_data, allowed_terrain, tiles) {
         let d = cursor.distance_squared(p);
-        if best.map_or(true, |(bd, _)| d < bd) {
+        if best.is_none_or(|(bd, _)| d < bd) {
           best = Some((d, p));
         }
       }
@@ -768,16 +768,14 @@ fn tower_button_interaction(
                   format!("→ ${}{}", max_income, unit),
                 )
               }
+            } else if t.damage > 0 {
+              (
+                "DMG\nSPD\nRNG".to_string(),
+                format!("{}\n{:.1}\n{}", t.damage, t.attack_speed, t.range),
+                String::new(),
+              )
             } else {
-              if t.damage > 0 {
-                (
-                  "DMG\nSPD\nRNG".to_string(),
-                  format!("{}\n{:.1}\n{}", t.damage, t.attack_speed, t.range),
-                  String::new(),
-                )
-              } else {
-                (String::new(), String::new(), String::new())
-              }
+              (String::new(), String::new(), String::new())
             };
 
           for mut text in tooltip_texts.p0().iter_mut() {

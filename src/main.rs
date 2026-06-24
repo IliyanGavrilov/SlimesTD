@@ -1,4 +1,12 @@
-#![cfg_attr(not(test), windows_subsystem = "windows")] // Disable console
+#![cfg_attr(not(test), windows_subsystem = "windows")]
+// Disable console
+// These lints fight Bevy's idioms rather than catch real problems: system signatures
+// are inherently large (many queries/resources), and the flat re-export module pattern
+// (`mod foo; pub use foo::*;` over `foo/foo.rs`) intentionally nests same-named modules.
+// Allowed crate-wide instead of scattering per-item attributes.
+#![allow(clippy::type_complexity)]
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::module_inception)]
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-  persistence, GameAssets, GameState, Player, Tower, TowerButtonState, TowerUpgradeButton,
+  GameAssets, GameState, Player, Tower, TowerButtonState, TowerUpgradeButton, persistence,
 };
 
 /// Persistence key (`progress.ron`). Persisted so the tutorial only auto-runs on

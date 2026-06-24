@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::window::WindowFocused;
-use bevy_kira_audio::prelude::*;
 use bevy_kira_audio::AudioSource;
+use bevy_kira_audio::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 

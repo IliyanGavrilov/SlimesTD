@@ -1,8 +1,8 @@
 use bevy::{prelude::*, window::*};
 
+use crate::AudioSettings;
 use crate::assets::*;
 use crate::main_menu::*;
-use crate::AudioSettings;
 
 pub struct SettingsPlugin;
 

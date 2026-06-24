@@ -71,7 +71,9 @@ fn get_enemy_clones_health_from_stats() {
 #[test]
 #[should_panic]
 fn get_enemy_panics_past_the_last_checkpoint() {
-  let mut map = Map::default();
-  map.checkpoints = vec![Vec3::ZERO, Vec3::ONE];
+  let map = Map {
+    checkpoints: vec![Vec3::ZERO, Vec3::ONE],
+    ..Default::default()
+  };
   let _ = EnemyType::Green.get_enemy(&map, Path { index: 1, route: 0 }, &stats_with_green());
 }

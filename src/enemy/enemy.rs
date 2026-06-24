@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::assets::*;
 use crate::enemy::*;
 use crate::movement::*;
-use crate::{game_not_paused, FloatingTextEvent, GameDifficulty, GameState, Map};
+use crate::{FloatingTextEvent, GameDifficulty, GameState, Map, game_not_paused};
 
 pub struct EnemyPlugin;
 
@@ -22,7 +22,12 @@ impl Plugin for EnemyPlugin {
           .run_if(game_not_paused),
       )
       .add_system(
-        tick_slowed
+        expire_status::<Slowed>
+          .in_set(OnUpdate(GameState::Gameplay))
+          .run_if(game_not_paused),
+      )
+      .add_system(
+        expire_status::<KnockedBack>
           .in_set(OnUpdate(GameState::Gameplay))
           .run_if(game_not_paused),
       )
@@ -116,11 +121,27 @@ pub struct Slowed {
   pub timer: Timer,
 }
 
-fn tick_slowed(mut commands: Commands, time: Res<Time>, mut slowed: Query<(Entity, &mut Slowed)>) {
-  for (entity, mut slow) in &mut slowed {
-    slow.timer.tick(time.delta());
-    if slow.timer.finished() {
-      commands.entity(entity).remove::<Slowed>();
+/// A status component with a bounded lifetime. `expire_status` ticks that lifetime
+/// and removes the component when it runs out, so purely-timed effects don't each
+/// need their own near-identical expiry system.
+pub trait TimedStatus: Component {
+  fn lifetime(&mut self) -> &mut Timer;
+}
+
+impl TimedStatus for Slowed {
+  fn lifetime(&mut self) -> &mut Timer {
+    &mut self.timer
+  }
+}
+
+fn expire_status<T: TimedStatus>(
+  mut commands: Commands,
+  time: Res<Time>,
+  mut statuses: Query<(Entity, &mut T)>,
+) {
+  for (entity, mut status) in &mut statuses {
+    if status.lifetime().tick(time.delta()).finished() {
+      commands.entity(entity).remove::<T>();
     }
   }
 }
@@ -161,20 +182,19 @@ impl KnockedBack {
   }
 }
 
-fn apply_knockback(
-  mut commands: Commands,
-  time: Res<Time>,
-  mut knocked: Query<(Entity, &mut Transform, &Movement, &mut KnockedBack)>,
-) {
-  for (entity, mut transform, movement, mut knock) in &mut knocked {
-    knock.timer.tick(time.delta());
-    // Push opposite to the enemy's heading (back along its path).
+impl TimedStatus for KnockedBack {
+  fn lifetime(&mut self) -> &mut Timer {
+    &mut self.timer
+  }
+}
+
+fn apply_knockback(time: Res<Time>, mut knocked: Query<(&mut Transform, &Movement, &KnockedBack)>) {
+  for (mut transform, movement, knock) in &mut knocked {
+    // Push opposite to the enemy's heading (back along its path). The lifetime is
+    // ticked and removed by `expire_status::<KnockedBack>`.
     if movement.direction.length_squared() > 0.0 {
       let back = -movement.direction.normalize();
       transform.translation += back * knock.strength * time.delta_seconds();
-    }
-    if knock.timer.finished() {
-      commands.entity(entity).remove::<KnockedBack>();
     }
   }
 }
@@ -207,23 +227,35 @@ fn tick_poison(
 /// Render alpha for invisible enemies.
 pub const INVISIBLE_ALPHA: f32 = 0.3;
 
+/// The per-spawn data for one enemy: what varies between spawns, kept separate from
+/// the shared context (commands, map, assets, stats) passed to `spawn_enemy`.
+pub struct EnemySpawn<'a> {
+  pub enemy_type: EnemyType,
+  pub position: Vec3,
+  pub path: Path,
+  pub traits: &'a [EnemyTrait],
+}
+
 pub fn spawn_enemy(
   commands: &mut Commands,
   map_path: &Map,
-  enemy_type: EnemyType,
   assets: &GameAssets,
-  position: Vec3,
-  path: Path,
   enemy_stats: &EnemyTypeStats,
-  traits: &[EnemyTrait],
+  spawn: EnemySpawn,
 ) {
-  let mut sprite = enemy_type.get_sprite_sheet_bundle(assets, position);
-  if traits.contains(&EnemyTrait::Invisible) {
+  let mut sprite = spawn
+    .enemy_type
+    .get_sprite_sheet_bundle(assets, spawn.position);
+  if spawn.traits.contains(&EnemyTrait::Invisible) {
     sprite.sprite.color.set_a(INVISIBLE_ALPHA);
   }
-  let mut entity = commands.spawn(enemy_type.get_enemy(map_path, path, enemy_stats));
+  let mut entity = commands.spawn(
+    spawn
+      .enemy_type
+      .get_enemy(map_path, spawn.path, enemy_stats),
+  );
   entity.insert(sprite);
-  for enemy_trait in traits {
+  for enemy_trait in spawn.traits {
     match enemy_trait {
       EnemyTrait::Invisible => entity.insert(Invisible),
     };

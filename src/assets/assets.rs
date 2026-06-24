@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::movement::*;
-use crate::{game_not_paused, EnemyJumpEvent, GameState, Slowed, Tile, TowerType};
+use crate::{EnemyJumpEvent, GameState, Slowed, Tile, TowerType, game_not_paused};
 
 pub struct AssetPlugin;
 
@@ -356,13 +356,9 @@ fn animate_enemy_sprite(
   mut jump_writer: EventWriter<EnemyJumpEvent>,
 ) {
   for (indices, mut timer, mut sprite, movement, slowed) in &mut query {
-    // Change direction based on where enemy is heading
+    // Face the direction the enemy is heading.
     if movement.direction.x != 0. {
-      if movement.direction.x < 0. {
-        sprite.flip_x = true;
-      } else {
-        sprite.flip_x = false;
-      }
+      sprite.flip_x = movement.direction.x < 0.;
     }
 
     // Animate sprite - scale by the slow factor so a slowed slime animates

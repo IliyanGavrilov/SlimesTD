@@ -1,8 +1,8 @@
 use bevy::{app::AppExit, prelude::*};
 
+use crate::TutorialRequest;
 use crate::assets::*;
 use crate::main_menu::*;
-use crate::TutorialRequest;
 
 pub struct MainMenuPlugin;
 

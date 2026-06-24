@@ -3,7 +3,7 @@ use bevy::sprite::Mesh2dHandle;
 
 use crate::assets::*;
 use crate::tower::*;
-use crate::{game_not_paused, GameData, GameState, MainCamera, Player};
+use crate::{GameData, GameState, MainCamera, Player, game_not_paused};
 
 pub struct TowerSelectionPlugin;
 

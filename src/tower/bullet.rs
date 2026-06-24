@@ -5,9 +5,13 @@ use serde::{Deserialize, Serialize};
 use crate::enemy::*;
 use crate::movement::*;
 use crate::{
-  game_not_paused, is_targetable, ChainBoltEvent, EnemyHitEvent, FarmBehavior, FarmTower,
-  FloatingTextEvent, GameState, KnockedBack, Player, Slowed, Tower,
+  ChainBoltEvent, EnemyHitEvent, FarmBehavior, FarmTower, FloatingTextEvent, GameState,
+  KnockedBack, Player, Slowed, Tower, game_not_paused, is_targetable,
 };
+
+/// AABB sizes used for bullet/enemy collision.
+const BULLET_HITBOX: Vec2 = Vec2::new(40.0, 22.0);
+const ENEMY_HITBOX: Vec2 = Vec2::new(30.0, 30.0);
 
 /// An on-hit combat effect carried by a projectile. Analogous to `FarmBehavior`
 /// for income: data on the component, applied by systems. Configured per tower in
@@ -136,9 +140,9 @@ fn bullet_enemy_collision(
     for (enemy_entity, mut enemy, enemy_transform) in &mut enemies {
       if collide(
         bullet_transform.translation(),
-        Vec2::new(40., 22.),
+        BULLET_HITBOX,
         enemy_transform.translation,
-        Vec2::new(30., 30.),
+        ENEMY_HITBOX,
       )
       .is_some()
       {
@@ -160,19 +164,18 @@ fn bullet_enemy_collision(
           color: Color::RED,
         });
 
-        if enemy.health <= 0 {
-          if let Ok(farm) = farm_towers.get(tower_parent.get()) {
-            if let FarmBehavior::SelfKill { income_per_kill } = &farm.behavior {
-              if let Ok(mut p) = player.get_single_mut() {
-                p.money += *income_per_kill as usize;
-              }
-              float_writer.send(FloatingTextEvent {
-                position: tower_transform.translation(),
-                text: format!("+${}", income_per_kill),
-                color: Color::GOLD,
-              });
-            }
+        if enemy.health <= 0
+          && let Ok(farm) = farm_towers.get(tower_parent.get())
+          && let FarmBehavior::SelfKill { income_per_kill } = &farm.behavior
+        {
+          if let Ok(mut p) = player.get_single_mut() {
+            p.money += *income_per_kill as usize;
           }
+          float_writer.send(FloatingTextEvent {
+            position: tower_transform.translation(),
+            text: format!("+${}", income_per_kill),
+            color: Color::GOLD,
+          });
         }
 
         // Apply the projectile's on-hit effect.
@@ -292,7 +295,7 @@ fn apply_chain(
           continue;
         }
         let dist = transform.translation.distance(from);
-        if dist <= chain.radius && best.map_or(true, |(_, b, _)| dist < b) {
+        if dist <= chain.radius && best.is_none_or(|(_, b, _)| dist < b) {
           best = Some((entity, dist, transform.translation));
         }
       }

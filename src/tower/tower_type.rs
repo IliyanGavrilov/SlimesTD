@@ -132,7 +132,8 @@ impl TowerType {
         lifetime: Timer::from_seconds(1.25, TimerMode::Once),
         effect,
       },
-      movement: Movement::new(Vec3::new(0.00000001, 0., 0.), projectile_speed),
+      // Local +X; the tower's rotation orients it toward the target when fired.
+      movement: Movement::new(Vec3::X, projectile_speed),
       sprite: SpriteBundle {
         texture,
         transform: position,

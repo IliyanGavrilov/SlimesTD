@@ -52,7 +52,7 @@ sudo dnf install alsa-lib-devel libudev-devel libX11-devel
 
 ### Prerequisites
 
-- [Rust](https://rustup.rs/) (stable toolchain, 2021 edition)
+- [Rust](https://rustup.rs/) (stable toolchain, **1.85+** for the 2024 edition)
 - On Linux: the system libraries listed above
 
 ```bash
@@ -192,7 +192,7 @@ Balance lives in `assets/data/` RON files = tweak stats, waves, and upgrade path
 ## Tech
 
 - **Engine:** Bevy 0.10.1
-- **Language:** Rust 2021
+- **Language:** Rust 2024
 - **Serialization:** RON (Rusty Object Notation) via `bevy_common_assets`
 - **Asset loading:** `bevy_asset_loader`
 - **WASM runner:** `wasm-server-runner`

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{game_not_paused, Bullet, GameState};
+use crate::{Bullet, GameState, game_not_paused};
 
 pub struct MovementPlugin;
 
@@ -48,4 +48,5 @@ fn basic_movement(
   }
 }
 
+#[cfg(test)]
 mod tests;

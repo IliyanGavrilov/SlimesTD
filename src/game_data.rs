@@ -3,15 +3,12 @@ use bevy_asset_loader::prelude::*;
 
 use crate::{EnemyTypeStats, Map, TowerTypeStats, Upgrades, Waves};
 
-#[derive(Resource)]
-struct EnemyTypeStatsHandle(Handle<EnemyTypeStats>);
-
 #[derive(AssetCollection, Resource)]
 pub struct GameData {
   #[asset(path = "data/stats.enemy_types.ron")]
   pub enemy_type_stats: Handle<EnemyTypeStats>,
   #[asset(path = "data/level1.map.ron")]
-  pub map: Handle<Map>,
+  pub map1: Handle<Map>,
   #[asset(path = "data/level2.map.ron")]
   pub map2: Handle<Map>,
   #[asset(path = "data/level3.map.ron")]

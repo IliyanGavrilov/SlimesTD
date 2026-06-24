@@ -6,7 +6,7 @@ use std::time::Duration;
 use crate::assets::*;
 use crate::enemy::*;
 use crate::map::*;
-use crate::{game_not_paused, GameData, GameState, SelectedMap, TutorialState};
+use crate::{GameData, GameState, SelectedMap, TutorialState, game_not_paused};
 
 pub struct WavePlugin;
 
@@ -169,12 +169,14 @@ fn spawn_waves(
   spawn_enemy(
     &mut commands,
     map_path,
-    current_wave.enemies[index].0,
     &assets,
-    map_path.route(route)[0],
-    Path { index: 0, route },
     enemy_stats,
-    &current_wave.enemies[index].2,
+    EnemySpawn {
+      enemy_type: current_wave.enemies[index].0,
+      position: map_path.route(route)[0],
+      path: Path { index: 0, route },
+      traits: &current_wave.enemies[index].2,
+    },
   );
 
   wave_state.enemy_spawn_timer = Timer::new(current_wave.enemies[index].1, TimerMode::Repeating);

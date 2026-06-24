@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-  game_not_paused, EnemyDeathEvent, FloatingTextEvent, GameState, Player, WaveClearedEvent,
+  EnemyDeathEvent, FloatingTextEvent, GameState, Player, WaveClearedEvent, game_not_paused,
 };
 
 pub struct FarmPlugin;

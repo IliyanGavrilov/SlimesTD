@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 use crate::gameplay_ui::*;
 use crate::movement::*;
 use crate::{
-  game_not_paused, BaseDamagedEvent, Enemy, GameAssets, GameData, GameState, Path, SelectedMap,
-  Slowed,
+  BaseDamagedEvent, Enemy, GameAssets, GameData, GameState, Path, SelectedMap, Slowed,
+  game_not_paused,
 };
 
 pub struct MapPlugin;
@@ -32,11 +32,6 @@ impl Plugin for MapPlugin {
       )
       .add_system(cleanup_map.in_schedule(OnExit(GameState::Gameplay)));
   }
-}
-
-#[derive(Resource)]
-pub struct MapPath {
-  pub checkpoints: Vec<Vec3>,
 }
 
 #[derive(Component)]
@@ -145,74 +140,6 @@ fn initialize_selected_map(selected_map: Res<SelectedMap>, mut maps: ResMut<Asse
 }
 
 impl Map {
-  fn create_checkpoints(&mut self, path_tiles: Vec<Point>, spawn: Point, end: Point) {
-    self.checkpoints = self.build_route(path_tiles, spawn, end);
-  }
-
-  /// The order list of a path tile, whichever lane it belongs to.
-  fn orders_at(&self, p: Point) -> Option<&Vec<usize>> {
-    match &self.tiles[p.y][p.x] {
-      Tile::Path(orders) | Tile::Lane(_, orders) => Some(orders),
-      _ => None,
-    }
-  }
-
-  /// Builds one lane's world-space checkpoints: spawn (offset off-screen), the
-  /// path tiles in order, then the end. Tiles carrying an order > 0 use numbered
-  /// pathfinding (loops/crossings); otherwise simple adjacency walking.
-  fn build_route(&self, path_tiles: Vec<Point>, spawn: Point, end: Point) -> Vec<Vec3> {
-    let offset_distance = (self.tile_size * 2) as f32;
-    let mut spawn_coord = spawn.to_coordinate(self.tile_size, false);
-    if spawn.y == 0 {
-      spawn_coord.y -= offset_distance;
-    } else if spawn.y == self.height - 1 {
-      spawn_coord.y += offset_distance;
-    } else if spawn.x == 0 {
-      spawn_coord.x -= offset_distance;
-    } else if spawn.x == self.width - 1 {
-      spawn_coord.x += offset_distance;
-    }
-
-    let mut checkpoints = vec![spawn_coord.to_vec3()];
-
-    let has_numbered_path = path_tiles.iter().any(|&p| {
-      self
-        .orders_at(p)
-        .is_some_and(|o| o.iter().any(|&order| order > 0))
-    });
-
-    if has_numbered_path {
-      let max_order = path_tiles
-        .iter()
-        .filter_map(|&p| self.orders_at(p).and_then(|o| o.iter().max().copied()))
-        .max()
-        .unwrap_or(0);
-
-      for i in 0..=max_order {
-        if let Some(&point) = path_tiles
-          .iter()
-          .find(|&&p| self.orders_at(p).is_some_and(|o| o.contains(&i)))
-        {
-          checkpoints.push(point.to_coordinate(self.tile_size, true).to_vec3());
-        }
-      }
-    } else {
-      let mut remaining_tiles = path_tiles;
-      let mut last_point = spawn;
-      while let Some(next_idx) = remaining_tiles
-        .iter()
-        .position(|p| last_point.is_adjacent_to(*p))
-      {
-        let next_point = remaining_tiles.remove(next_idx);
-        checkpoints.push(next_point.to_coordinate(self.tile_size, true).to_vec3());
-        last_point = next_point;
-      }
-    }
-
-    checkpoints.push(end.to_coordinate(self.tile_size, true).to_vec3());
-    checkpoints
-  }
-
   /// Checkpoints for the given lane, falling back to route 0 / the main path.
   pub fn route(&self, route: usize) -> &Vec<Vec3> {
     self.route_paths.get(route).unwrap_or(&self.checkpoints)
@@ -229,8 +156,8 @@ impl Map {
 pub struct MainCamera;
 
 fn setup_camera(mut commands: Commands, game_data: Res<GameData>, maps: Res<Assets<Map>>) {
-  // Use map1 for camera dimensions (both maps are the same size)
-  let Some(map) = maps.get(&game_data.map) else {
+  // All maps share the same dimensions, so map1 drives the camera framing.
+  let Some(map) = maps.get(&game_data.map1) else {
     return;
   };
   let mut camera = Camera2dBundle::default();
@@ -242,6 +169,11 @@ fn setup_camera(mut commands: Commands, game_data: Res<GameData>, maps: Res<Asse
   };
   commands.spawn((camera, MainCamera));
 }
+
+/// Z for map tiles: just behind everything spawned at z = 0 (enemies, towers, UI),
+/// but still inside the 2D camera's depth range (its far plane sits at ~z = -0.1, so
+/// a larger negative like -1.0 would be clipped and the map would not render).
+const TILE_LAYER_Z: f32 = -0.01;
 
 fn render_map(
   mut commands: Commands,
@@ -265,7 +197,7 @@ fn render_map(
               transform: Transform::from_translation(Vec3::new(
                 column as f32 * map.tile_size as f32,
                 row as f32 * map.tile_size as f32,
-                -0.000000000000001,
+                TILE_LAYER_Z,
               )),
               ..Default::default()
             })
@@ -384,4 +316,7 @@ fn update_enemy_checkpoint(
   }
 }
 
+mod pathfinding;
+
+#[cfg(test)]
 mod tests;

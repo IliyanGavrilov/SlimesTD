@@ -7,7 +7,14 @@ use crate::assets::*;
 use crate::enemy::*;
 use crate::movement::*;
 use crate::tower::*;
-use crate::{game_not_paused, GameState, TerrainType};
+use crate::{GameState, TerrainType, game_not_paused};
+
+/// Extra radius (px) beyond a tower's range for deciding an enemy is near enough to
+/// start ticking the firing cooldown, so the first shot lands as a target arrives.
+const ENEMY_DETECTION_MARGIN: u32 = 50;
+/// Small slack (px) added to the firing range when picking a target, so an enemy right
+/// at the edge doesn't flicker in and out of range.
+const TARGETING_MARGIN: u32 = 10;
 
 /// Marker placed on farm towers that don't shoot (Passive, Kill, Wave).
 /// `tower_shooting` excludes entities with this component.
@@ -212,7 +219,7 @@ fn tower_shooting(
       let direction = get_enemy_direction(
         &enemies,
         bullet_spawn_pos,
-        tower.range + 10,
+        tower.range + TARGETING_MARGIN,
         &tower.target,
         tower.can_see_invisible,
       );
@@ -258,7 +265,7 @@ fn enemy_in_range(
   for (enemy_transform, _, _, invisible) in enemies {
     if is_targetable(invisible.is_some(), tower.can_see_invisible)
       && Vec3::distance(tower_transform.translation, enemy_transform.translation())
-        <= (tower.range + 50) as f32
+        <= (tower.range + ENEMY_DETECTION_MARGIN) as f32
     {
       return true;
     }

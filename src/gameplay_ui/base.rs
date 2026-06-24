@@ -1,4 +1,4 @@
-use crate::{game_not_paused, GameState};
+use crate::{GameState, game_not_paused};
 use bevy::prelude::*;
 
 pub struct BasePlugin;
@@ -43,10 +43,10 @@ pub fn damage_base(commands: &mut Commands, entity: &Entity, enemy_health: i32, 
 }
 
 fn check_game_over(base: Query<&Base>, mut next_state: ResMut<NextState<GameState>>) {
-  if let Ok(base) = base.get_single() {
-    if base.health <= 0 {
-      next_state.set(GameState::GameOver);
-    }
+  if let Ok(base) = base.get_single()
+    && base.health <= 0
+  {
+    next_state.set(GameState::GameOver);
   }
 }
 

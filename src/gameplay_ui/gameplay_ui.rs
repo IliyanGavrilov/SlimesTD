@@ -2,7 +2,7 @@ use bevy::{prelude::*, window::*};
 
 use crate::assets::*;
 use crate::gameplay_ui::*;
-use crate::{spawn_volume_row, AudioSettings, VolumeKind};
+use crate::{AudioSettings, VolumeKind, spawn_volume_row};
 use crate::{FullscreenToggleButton, GameData, GameState, VsyncToggleButton, Waves};
 
 #[derive(Component)]

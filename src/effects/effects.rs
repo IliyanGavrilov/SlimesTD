@@ -3,8 +3,8 @@ use bevy::sprite::MaterialMesh2dBundle;
 use bevy::ui::FocusPolicy;
 
 use crate::{
-  game_not_paused, Enemy, EnemyDeathEvent, GameAssets, GameState, Invisible, KnockedBack,
-  MainCamera, Poisoned, Slowed, SplashEvent, Tower, INVISIBLE_ALPHA,
+  Enemy, EnemyDeathEvent, GameAssets, GameState, INVISIBLE_ALPHA, Invisible, KnockedBack,
+  MainCamera, Poisoned, Slowed, SplashEvent, Tower, game_not_paused,
 };
 
 /// Visual juice: small, asset-free feedback effects (enemy hit flash, ...).

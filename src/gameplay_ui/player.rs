@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{game_not_paused, EnemyDeathEvent, GameDifficulty, GameState, WaveClearedEvent};
+use crate::{EnemyDeathEvent, GameDifficulty, GameState, WaveClearedEvent, game_not_paused};
 
 pub struct PlayerPlugin;
 

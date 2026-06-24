@@ -40,7 +40,7 @@ struct SelectMapButton(Handle<Map>, GameDifficulty);
 struct BackButton;
 
 fn init_selected_map(mut commands: Commands, game_data: Res<GameData>) {
-  commands.insert_resource(SelectedMap(game_data.map.clone()));
+  commands.insert_resource(SelectedMap(game_data.map1.clone()));
 }
 
 fn select_button_clicked(
@@ -121,7 +121,7 @@ fn spawn_map_selection(
           ..default()
         })
         .with_children(|commands| {
-          spawn_map_card(commands, &assets, &maps, game_data.map.clone(), "Level 1");
+          spawn_map_card(commands, &assets, &maps, game_data.map1.clone(), "Level 1");
           spawn_map_card(commands, &assets, &maps, game_data.map2.clone(), "Level 2");
           spawn_map_card(commands, &assets, &maps, game_data.map3.clone(), "Level 3");
         });
