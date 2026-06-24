@@ -1,2 +1,4 @@
 [target.wasm32-unknown-unknown]
 runner = "wasm-server-runner"
+# getrandom 0.3/0.4 need their browser backend selected at compile time on wasm.
+rustflags = ['--cfg', 'getrandom_backend="wasm_js"']

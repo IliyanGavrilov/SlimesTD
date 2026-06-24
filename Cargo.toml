@@ -36,6 +36,9 @@ dirs = "5.0"
 # Web-only: persist to the browser's localStorage (itch.io has no filesystem).
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-sys = {version = "0.3", features = ["Window", "Storage"]}
+# On wasm there's no OS RNG, so randomness crates need a browser-backed source.
+uuid = { version = "1", features = ["js"] }
+getrandom = { version = "0.4", features = ["wasm_js"] }
 
 [build-dependencies]
 embed-resource = "3.0.6"

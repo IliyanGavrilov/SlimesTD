@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Slimes TD</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #1a1a1a;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+        margin: 0 auto;
+        outline: none;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import init from "./slimestd.js";
+      // winit signals its event loop on wasm by throwing a control-flow
+      // exception; swallow only that one and re-throw anything real.
+      init().catch((error) => {
+        if (!`${error}`.includes("Using exceptions for control flow")) {
+          throw error;
+        }
+      });
+    </script>
+  </body>
+</html>

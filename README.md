@@ -65,13 +65,42 @@ The first build takes a few minutes (Bevy is large). Subsequent builds are fast 
 
 ### WebAssembly (WASM)
 
+**Quick local run** (auto-opens a browser tab):
+
 ```bash
 rustup target add wasm32-unknown-unknown
 cargo install wasm-server-runner
 cargo run --target wasm32-unknown-unknown
 ```
 
-The `.cargo/config.toml` already sets `wasm-server-runner` as the runner for the WASM target, so `cargo run` opens a local browser tab automatically.
+`.cargo/config.toml` sets `wasm-server-runner` as the runner and selects the
+`getrandom` browser backend (`--cfg getrandom_backend="wasm_js"`) the wasm build needs.
+
+**Deployable web build** (for itch.io / any static host):
+
+```bash
+cargo install wasm-bindgen-cli --version 0.2.108   # must match the crate in Cargo.lock
+cargo build --release --target wasm32-unknown-unknown
+wasm-bindgen --no-typescript --target web \
+  --out-dir dist --out-name slimestd \
+  target/wasm32-unknown-unknown/release/tower_defence_game.wasm
+cp web/index.html dist/ && cp -r assets dist/assets
+```
+
+`dist/` is now a self-contained site. Zip its **contents** (so `index.html` is at the
+zip root) and upload to itch.io as an HTML5 project with "play in browser" ticked.
+
+### Web hosting (CD)
+
+`.github/workflows/web.yml` does this automatically: on every push to `main` it builds
+the wasm bundle, shrinks it with `wasm-opt`, **deploys it to GitHub Pages** (a live,
+always-current URL), and uploads a `SlimesTD-Web.zip` artifact ready for itch.io.
+Enable it once under **Settings → Pages → Source: GitHub Actions**.
+
+To push to itch.io automatically too, add a step using
+[`butler`](https://itch.io/docs/butler/) with an itch API key stored as the
+`BUTLER_API_KEY` repo secret:
+`butler push dist iliyangavrilov/slimestd:html5`.
 
 ---
 

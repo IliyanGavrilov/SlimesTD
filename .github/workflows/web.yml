@@ -1,0 +1,79 @@
+name: Web deploy
+
+# Builds the WebAssembly version and (CD) publishes it: a live GitHub Pages site on
+# every push to main, plus a downloadable zip you can upload to itch.io. Run manually
+# from the Actions tab or let it fire on push.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+# Pages deployment needs these.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one web deploy at a time; newer pushes supersede older runs.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+
+      # CLI version must match the wasm-bindgen crate in Cargo.lock.
+      - name: Install wasm-bindgen-cli
+        run: cargo install -f wasm-bindgen-cli --version 0.2.108
+
+      # The getrandom wasm backend flag comes from .cargo/config.toml, so no env needed.
+      - name: Build wasm
+        run: cargo build --release --target wasm32-unknown-unknown
+
+      - name: Generate JS bindings
+        run: |
+          wasm-bindgen --no-typescript --target web \
+            --out-dir dist --out-name slimestd \
+            target/wasm32-unknown-unknown/release/tower_defence_game.wasm
+
+      - name: Shrink wasm
+        run: |
+          sudo apt-get update && sudo apt-get install -y binaryen
+          wasm-opt -Oz -o dist/slimestd_bg.wasm dist/slimestd_bg.wasm
+
+      - name: Assemble site
+        run: |
+          cp web/index.html dist/
+          cp -r assets dist/assets
+          find dist/assets -name README.md -delete
+
+      # Zip for manual itch.io upload (HTML5 project; tick "play in browser").
+      - name: Package itch.io zip
+        run: |
+          cd dist && zip -r ../SlimesTD-Web.zip . >/dev/null
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SlimesTD-Web
+          path: SlimesTD-Web.zip
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
