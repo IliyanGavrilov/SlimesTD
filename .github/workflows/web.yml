@@ -22,6 +22,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -63,6 +65,16 @@ jobs:
         with:
           name: SlimesTD-Web
           path: SlimesTD-Web.zip
+
+      # Auto-push to itch.io as the HTML5 build. Skipped unless the BUTLER_API_KEY
+      # secret is set (Settings → Secrets and variables → Actions).
+      - name: Publish to itch.io
+        if: ${{ env.BUTLER_API_KEY != '' }}
+        run: |
+          curl -fsSL -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip
+          chmod +x butler
+          ./butler push dist iliyangavrilov/slimestd:html5
 
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -6,3 +6,9 @@
 /CLAUDE.md
 /settings.ron
 /progress.ron
+/.vscode
+.DS_Store
+Thumbs.db
+/*.zip
+*.docx
+*.pdb
