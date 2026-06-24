@@ -6,7 +6,7 @@ use std::time::Duration;
 use crate::assets::*;
 use crate::enemy::*;
 use crate::map::*;
-use crate::{GameData, GameState, SelectedMap, TutorialState, game_not_paused};
+use crate::{game_not_paused, GameData, GameState, SelectedMap, TutorialState};
 
 pub struct WavePlugin;
 
@@ -57,14 +57,11 @@ impl Waves {
   }
 }
 
-#[derive(Component, Deserialize)]
-#[derive(Default)]
+#[derive(Component, Deserialize, Default)]
 pub struct Wave {
   pub enemies: Vec<(EnemyType, Duration, Vec<EnemyTrait>)>,
   pub current: usize, // Current enemy
 }
-
-
 
 #[derive(Resource)]
 pub struct WaveState {
@@ -93,6 +90,18 @@ pub struct RouteState {
 /// 0-based wave index at which the second lane opens (if the map has one).
 const SECOND_ROUTE_WAVE: usize = 2;
 
+fn lanes_open(wave_index: usize, route_count: usize) -> usize {
+  if wave_index >= SECOND_ROUTE_WAVE {
+    route_count
+  } else {
+    1
+  }
+}
+
+fn pick_route(next_route: usize, open_routes: usize) -> usize {
+  next_route % open_routes
+}
+
 fn spawn_waves(
   mut commands: Commands,
   assets: Res<GameAssets>,
@@ -111,10 +120,12 @@ fn spawn_waves(
   if tutorial.active {
     return;
   }
-  let Some(map_path) = maps.get(&selected_map.0)
-    else { return; };
-  let Some(waves) = waves.get_mut(&game_data.enemy_waves)
-    else { return; };
+  let Some(map_path) = maps.get(&selected_map.0) else {
+    return;
+  };
+  let Some(waves) = waves.get_mut(&game_data.enemy_waves) else {
+    return;
+  };
 
   // Wave fully spawned: wait out the between-waves timer, then advance.
   if wave_state.remaining == 0 {
@@ -145,17 +156,14 @@ fn spawn_waves(
   }
   let index = current_wave.enemies.len() - wave_state.remaining;
 
-  let Some(enemy_stats) = enemy_type_assets.get(&game_data.enemy_type_stats)
-    else { return; };
+  let Some(enemy_stats) = enemy_type_assets.get(&game_data.enemy_type_stats) else {
+    return;
+  };
 
   // Adaptive split: once past the threshold, fan enemies across every lane the
   // map offers (round-robin); before that, everyone takes the main route.
-  let open_routes = if waves.current >= SECOND_ROUTE_WAVE {
-    map_path.route_count()
-  } else {
-    1
-  };
-  let route = route_state.next_route % open_routes;
+  let open_routes = lanes_open(waves.current, map_path.route_count());
+  let route = pick_route(route_state.next_route, open_routes);
   route_state.next_route = route_state.next_route.wrapping_add(1);
 
   spawn_enemy(
@@ -175,8 +183,9 @@ fn spawn_waves(
 }
 
 fn load_waves(mut commands: Commands, game_data: Res<GameData>, mut waves: ResMut<Assets<Waves>>) {
-  let Some(waves) = waves.get_mut(&game_data.enemy_waves)
-    else { return; };
+  let Some(waves) = waves.get_mut(&game_data.enemy_waves) else {
+    return;
+  };
 
   waves.current = 0;
   let num_enemies = waves.waves[0].enemies.len();
@@ -199,7 +208,11 @@ fn check_victory(
   }
 }
 
-fn cleanup_waves(mut commands: Commands, game_data: Res<GameData>, mut waves: ResMut<Assets<Waves>>) {
+fn cleanup_waves(
+  mut commands: Commands,
+  game_data: Res<GameData>,
+  mut waves: ResMut<Assets<Waves>>,
+) {
   if let Some(waves) = waves.get_mut(&game_data.enemy_waves) {
     waves.current = 0;
   }

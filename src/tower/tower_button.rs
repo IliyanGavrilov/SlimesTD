@@ -1,5 +1,5 @@
-use bevy::math::Vec3Swizzles;
 use bevy::ecs::system::ParamSet;
+use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
 use strum::IntoEnumIterator;
@@ -7,7 +7,10 @@ use strum::IntoEnumIterator;
 use crate::assets::*;
 use crate::tower::*;
 use crate::FarmBehavior;
-use crate::{GameData, GameState, GameplayUIRoot, MainCamera, MapTile, Player, Tile, TerrainType, game_not_paused};
+use crate::{
+  game_not_paused, GameData, GameState, GameplayUIRoot, MainCamera, MapTile, Player, TerrainType,
+  Tile,
+};
 
 pub struct TowerButtonPlugin;
 
@@ -25,7 +28,9 @@ impl Plugin for TowerButtonPlugin {
           tick_placement_error,
           snap_button_clicked,
           update_snap_button,
-          lock_tower_buttons.after(generate_ui).run_if(game_not_paused),
+          lock_tower_buttons
+            .after(generate_ui)
+            .run_if(game_not_paused),
           update_tooltip_position,
         )
           .in_set(OnUpdate(GameState::Gameplay)),
@@ -84,7 +89,10 @@ fn spawn_render_warmup(
     commands.spawn((
       SpriteBundle {
         texture: assets.get_tower_asset(tower_type),
-        sprite: Sprite { color: Color::rgba(1.0, 1.0, 1.0, 0.0), ..default() },
+        sprite: Sprite {
+          color: Color::rgba(1.0, 1.0, 1.0, 0.0),
+          ..default()
+        },
         // Centered (so it is inside the camera frustum and actually gets rendered),
         // but alpha 0 and effectively zero-size, so it is imperceptible.
         transform: Transform::from_translation(Vec3::new(0.0, 0.0, -20.0))
@@ -222,7 +230,10 @@ fn placement_is_valid(
     .and_then(|t| t.terrain_type())
     .map(|t| allowed_terrain.contains(&t))
     .unwrap_or(false);
-  terrain_ok && !tower_data.iter().any(|&(tp, r)| tp.distance(pos) <= new_radius + r)
+  terrain_ok
+    && !tower_data
+      .iter()
+      .any(|&(tp, r)| tp.distance(pos) <= new_radius + r)
 }
 
 // BTD6-style auto-nudge: if the cursor itself is a legal spot, return it unchanged
@@ -284,7 +295,13 @@ fn refine_toward_cursor(
   let mut hi = 1.0; // valid end
   for _ in 0..16 {
     let mid = 0.5 * (lo + hi);
-    if placement_is_valid(cursor.lerp(valid, mid), new_radius, tower_data, allowed_terrain, tiles) {
+    if placement_is_valid(
+      cursor.lerp(valid, mid),
+      new_radius,
+      tower_data,
+      allowed_terrain,
+      tiles,
+    ) {
       hi = mid;
     } else {
       lo = mid;
@@ -300,7 +317,8 @@ fn tile_at_world_pos(world_pos: Vec2, map_tiles: &Query<&MapTile>) -> Option<Til
   }
   let tile_x = ((world_pos.x + 40.0) / 80.0) as usize;
   let tile_y = ((world_pos.y + 40.0) / 80.0) as usize;
-  map_tiles.iter()
+  map_tiles
+    .iter()
     .find(|mt| mt.coordinate.x == tile_x && mt.coordinate.y == tile_y)
     .map(|mt| mt.tile.clone())
 }
@@ -345,7 +363,11 @@ fn tick_placement_error(
     }
   }
   for mut vis in &mut panels {
-    *vis = if showing { Visibility::Inherited } else { Visibility::Hidden };
+    *vis = if showing {
+      Visibility::Inherited
+    } else {
+      Visibility::Hidden
+    };
   }
 }
 
@@ -388,8 +410,9 @@ fn place_tower(
   mut state: ResMut<PlacementState>,
   mut placement_error: ResMut<PlacementError>,
 ) {
-  let Some(tower_stats) = tower_stats.get(&game_data.tower_type_stats)
-    else { return; };
+  let Some(tower_stats) = tower_stats.get(&game_data.tower_type_stats) else {
+    return;
+  };
 
   let window = windows.get_single().unwrap();
   let (camera, camera_transform) = camera_query.single();
@@ -418,7 +441,8 @@ fn place_tower(
       let raw_pos = window_to_world_pos(window, position, camera, camera_transform).truncate();
 
       // Collect tower data once - releases p0 borrow before we need p1.
-      let tower_data: Vec<(Vec2, f32)> = tower_tile_queries.p0()
+      let tower_data: Vec<(Vec2, f32)> = tower_tile_queries
+        .p0()
         .iter()
         .map(|(t, tt)| (t.translation.truncate(), tt.placement_radius()))
         .collect();
@@ -433,9 +457,9 @@ fn place_tower(
       transform.translation = final_pos.extend(0.5);
 
       // Overlap rule is IDENTICAL in snap and normal mode: each tower's radius counts.
-      let tile_occupied = tower_data.iter().any(|&(tp, r)| {
-        tp.distance(final_pos) <= new_radius + r
-      });
+      let tile_occupied = tower_data
+        .iter()
+        .any(|&(tp, r)| tp.distance(final_pos) <= new_radius + r);
 
       let terrain_ok = {
         let tiles = tower_tile_queries.p1();
@@ -446,9 +470,9 @@ fn place_tower(
       };
 
       let tint = match (tile_occupied || !terrain_ok, state.snap_mode) {
-        (true, _)      => Color::rgba_u8(202, 0, 0, 150),   // invalid - red
-        (false, true)  => Color::rgba_u8(0, 120, 220, 110), // snap + valid - blue
-        (false, false) => Color::rgba_u8(0, 0, 0, 85),      // normal valid - dark
+        (true, _) => Color::rgba_u8(202, 0, 0, 150), // invalid - red
+        (false, true) => Color::rgba_u8(0, 120, 220, 110), // snap + valid - blue
+        (false, false) => Color::rgba_u8(0, 0, 0, 85), // normal valid - dark
       };
       let new_material = materials.add(ColorMaterial::from(tint));
       for mut handle in tower_tile_queries.p2().iter_mut() {
@@ -459,9 +483,11 @@ fn place_tower(
     if mouse.just_pressed(MouseButton::Left) && !cursor_above_ui(window, &node_query) {
       if let Some(screen_pos) = window.cursor_position() {
         state.cursor_exited_ui = false;
-        let raw_click = window_to_world_pos(window, screen_pos, camera, camera_transform).truncate();
+        let raw_click =
+          window_to_world_pos(window, screen_pos, camera, camera_transform).truncate();
 
-        let tower_data: Vec<(Vec2, f32)> = tower_tile_queries.p0()
+        let tower_data: Vec<(Vec2, f32)> = tower_tile_queries
+          .p0()
           .iter()
           .map(|(t, tt)| (t.translation.truncate(), tt.placement_radius()))
           .collect();
@@ -475,9 +501,9 @@ fn place_tower(
         };
 
         // Same overlap rule as the preview above - snap and normal mode are identical.
-        let tile_occupied = tower_data.iter().any(|&(tp, r)| {
-          tp.distance(final_click) <= new_radius + r
-        });
+        let tile_occupied = tower_data
+          .iter()
+          .any(|&(tp, r)| tp.distance(final_click) <= new_radius + r);
 
         let error = {
           let tiles = tower_tile_queries.p1();
@@ -551,8 +577,8 @@ fn spawn_sprite_follower(
   // with the cursor until the tower is placed.
   if let Some(position) = window.cursor_position() {
     let world_pos = window_to_world_pos(window, position, camera, camera_transform);
-    let initial_transform = Transform::from_translation(world_pos)
-      .with_scale(Vec3::splat(tower_type.sprite_scale()));
+    let initial_transform =
+      Transform::from_translation(world_pos).with_scale(Vec3::splat(tower_type.sprite_scale()));
     // Range circle is spawned as a CHILD (matches spawn_tower) so the mesh2d entity
     // is separate from the sprite entity. A combined sprite+mesh2d entity flashed the
     // tower texture across the whole map on the first frame.
@@ -610,8 +636,9 @@ fn tower_button_interaction(
     Query<&mut Text, With<TooltipMaxes>>,
   )>,
 ) {
-  let Some(tower_stats) = tower_stats.get(&game_data.tower_type_stats)
-    else { return; };
+  let Some(tower_stats) = tower_stats.get(&game_data.tower_type_stats) else {
+    return;
+  };
 
   let window = windows.get_single().unwrap();
   let (camera, camera_transform) = camera_query.single();
@@ -665,71 +692,100 @@ fn tower_button_interaction(
             }
           }
           let t = &tower_stats.tower[tower_type].tower;
-          let (stats_labels, stats_bases, stats_maxes) = if let Some(all_upgrades) = upgrades_res.get(&game_data.tower_upgrades) {
-            let paths = &all_upgrades.upgrades[tower_type];
-            // Pick the path that contributes most damage (combat) or income (farm)
-            let preview_path = paths.iter().max_by_key(|path| {
-              path.iter().flat_map(|u| u.upgrade.iter())
-                .map(|(s, v)| match s { TowerStat::Damage => v * 10, TowerStat::Income => *v, _ => 0 })
-                .sum::<i32>()
-            }).unwrap();
+          let (stats_labels, stats_bases, stats_maxes) =
+            if let Some(all_upgrades) = upgrades_res.get(&game_data.tower_upgrades) {
+              let paths = &all_upgrades.upgrades[tower_type];
+              // Pick the path that contributes most damage (combat) or income (farm)
+              let preview_path = paths
+                .iter()
+                .max_by_key(|path| {
+                  path
+                    .iter()
+                    .flat_map(|u| u.upgrade.iter())
+                    .map(|(s, v)| match s {
+                      TowerStat::Damage => v * 10,
+                      TowerStat::Income => *v,
+                      _ => 0,
+                    })
+                    .sum::<i32>()
+                })
+                .unwrap();
 
-            let mut max_dmg = t.damage as i32;
-            let mut max_spd = t.attack_speed;
-            let mut max_rng = t.range as i32;
-            let mut max_pierce = t.pierce as i32;
-            let base_income = tower_type.get_farm_tower().map(|f| match f.behavior {
-              FarmBehavior::Passive { income, .. }       => income,
-              FarmBehavior::Kill { income_per_kill }     => income_per_kill,
-              FarmBehavior::Wave { income_per_wave }     => income_per_wave,
-              FarmBehavior::SelfKill { income_per_kill } => income_per_kill,
-            }).unwrap_or(0);
-            let mut max_income = base_income;
+              let mut max_dmg = t.damage as i32;
+              let mut max_spd = t.attack_speed;
+              let mut max_rng = t.range as i32;
+              let mut max_pierce = t.pierce as i32;
+              let base_income = tower_type
+                .get_farm_tower()
+                .map(|f| match f.behavior {
+                  FarmBehavior::Passive { income, .. } => income,
+                  FarmBehavior::Kill { income_per_kill } => income_per_kill,
+                  FarmBehavior::Wave { income_per_wave } => income_per_wave,
+                  FarmBehavior::SelfKill { income_per_kill } => income_per_kill,
+                })
+                .unwrap_or(0);
+              let mut max_income = base_income;
 
-            for upgrade in preview_path {
-              for (stat, val) in &upgrade.upgrade {
-                match stat {
-                  TowerStat::Damage        => max_dmg += *val,
-                  TowerStat::AttackSpeed   => max_spd -= (*val as f32) * 0.01 * max_spd,
-                  TowerStat::Range         => max_rng += *val,
-                  TowerStat::Pierce        => max_pierce += *val,
-                  TowerStat::Income        => max_income += *val as u32,
-                  TowerStat::ProjectileSpeed => {}
+              for upgrade in preview_path {
+                for (stat, val) in &upgrade.upgrade {
+                  match stat {
+                    TowerStat::Damage => max_dmg += *val,
+                    TowerStat::AttackSpeed => max_spd -= (*val as f32) * 0.01 * max_spd,
+                    TowerStat::Range => max_rng += *val,
+                    TowerStat::Pierce => max_pierce += *val,
+                    TowerStat::Income => max_income += *val as u32,
+                    TowerStat::ProjectileSpeed => {}
+                  }
                 }
               }
-            }
 
-            if t.damage > 0 {
-              let mut lbl = "DMG\nSPD\nRNG\nPierce".to_string();
-              let mut bas = format!("{}\n{:.1}\n{}\n{}", t.damage, t.attack_speed, t.range, t.pierce);
-              let mut maxs = format!("→ {}\n→ {:.1}\n→ {}\n→ {}", max_dmg, max_spd, max_rng, max_pierce);
-              if base_income > 0 {
-                lbl  += "\n$/kill";
-                bas  += &format!("\n{}", base_income);
-                maxs += &format!("\n→ {}", max_income);
+              if t.damage > 0 {
+                let mut lbl = "DMG\nSPD\nRNG\nPierce".to_string();
+                let mut bas = format!(
+                  "{}\n{:.1}\n{}\n{}",
+                  t.damage, t.attack_speed, t.range, t.pierce
+                );
+                let mut maxs = format!(
+                  "→ {}\n→ {:.1}\n→ {}\n→ {}",
+                  max_dmg, max_spd, max_rng, max_pierce
+                );
+                if base_income > 0 {
+                  lbl += "\n$/kill";
+                  bas += &format!("\n{}", base_income);
+                  maxs += &format!("\n→ {}", max_income);
+                }
+                (lbl, bas, maxs)
+              } else {
+                let (unit, base) = match tower_type.get_farm_tower().map(|f| f.behavior) {
+                  Some(FarmBehavior::Passive { income, .. }) => ("/15s", income),
+                  Some(FarmBehavior::Kill { income_per_kill }) => ("/kill", income_per_kill),
+                  Some(FarmBehavior::Wave { income_per_wave }) => ("/wave", income_per_wave),
+                  _ => ("", 0),
+                };
+                (
+                  "Income".to_string(),
+                  format!("${}{}", base, unit),
+                  format!("→ ${}{}", max_income, unit),
+                )
               }
-              (lbl, bas, maxs)
             } else {
-              let (unit, base) = match tower_type.get_farm_tower().map(|f| f.behavior) {
-                Some(FarmBehavior::Passive { income, .. })    => ("/15s", income),
-                Some(FarmBehavior::Kill { income_per_kill })  => ("/kill", income_per_kill),
-                Some(FarmBehavior::Wave { income_per_wave })  => ("/wave", income_per_wave),
-                _                                             => ("", 0),
-              };
-              ("Income".to_string(), format!("${}{}", base, unit), format!("→ ${}{}", max_income, unit))
-            }
-          } else {
-            if t.damage > 0 {
-              ("DMG\nSPD\nRNG".to_string(),
-               format!("{}\n{:.1}\n{}", t.damage, t.attack_speed, t.range),
-               String::new())
-            } else {
-              (String::new(), String::new(), String::new())
-            }
-          };
+              if t.damage > 0 {
+                (
+                  "DMG\nSPD\nRNG".to_string(),
+                  format!("{}\n{:.1}\n{}", t.damage, t.attack_speed, t.range),
+                  String::new(),
+                )
+              } else {
+                (String::new(), String::new(), String::new())
+              }
+            };
 
           for mut text in tooltip_texts.p0().iter_mut() {
-            text.sections[0].value = format!("{}\n{}\n", tower_stats.tower[tower_type].name, tower_type.description());
+            text.sections[0].value = format!(
+              "{}\n{}\n",
+              tower_stats.tower[tower_type].name,
+              tower_type.description()
+            );
           }
           for mut text in tooltip_texts.p1().iter_mut() {
             text.sections[0].value = stats_labels.clone();
@@ -938,9 +994,17 @@ fn update_snap_button(
   mut texts: Query<&mut Text, With<SnapButtonText>>,
 ) {
   let (bg, label, text_color) = if state.snap_mode {
-    (Color::rgba(0.0, 0.47, 0.87, 0.92), "Nudge: ON  [G]", Color::WHITE)
+    (
+      Color::rgba(0.0, 0.47, 0.87, 0.92),
+      "Nudge: ON  [G]",
+      Color::WHITE,
+    )
   } else {
-    (Color::rgba(0.08, 0.08, 0.08, 0.80), "Nudge: OFF [G]", Color::rgb(0.55, 0.55, 0.55))
+    (
+      Color::rgba(0.08, 0.08, 0.08, 0.80),
+      "Nudge: OFF [G]",
+      Color::rgb(0.55, 0.55, 0.55),
+    )
   };
   for mut bg_color in &mut buttons {
     *bg_color = BackgroundColor(bg);
@@ -970,8 +1034,9 @@ fn generate_ui(
   game_data: Res<GameData>,
   tower_stats: Res<Assets<TowerTypeStats>>,
 ) {
-  let Some(tower_stats) = tower_stats.get(&game_data.tower_type_stats)
-    else { return; };
+  let Some(tower_stats) = tower_stats.get(&game_data.tower_type_stats) else {
+    return;
+  };
 
   commands.insert_resource(PlacementState::default());
   commands.insert_resource(PlacementError::default());
@@ -983,7 +1048,10 @@ fn generate_ui(
         position_type: PositionType::Absolute,
         size: Size::new(Val::Percent(100.), Val::Auto),
         justify_content: JustifyContent::Center,
-        position: UiRect { top: Val::Px(15.), ..default() },
+        position: UiRect {
+          top: Val::Px(15.),
+          ..default()
+        },
         ..default()
       },
       ..default()
@@ -1079,8 +1147,17 @@ fn generate_ui(
     .spawn(ButtonBundle {
       style: Style {
         position_type: PositionType::Absolute,
-        position: UiRect { right: Val::Px(12.), bottom: Val::Px(12.), ..default() },
-        padding: UiRect { left: Val::Px(10.), right: Val::Px(10.), top: Val::Px(6.), bottom: Val::Px(6.) },
+        position: UiRect {
+          right: Val::Px(12.),
+          bottom: Val::Px(12.),
+          ..default()
+        },
+        padding: UiRect {
+          left: Val::Px(10.),
+          right: Val::Px(10.),
+          top: Val::Px(6.),
+          bottom: Val::Px(6.),
+        },
         ..default()
       },
       background_color: BackgroundColor(Color::rgba(0.08, 0.08, 0.08, 0.80)),
@@ -1093,7 +1170,11 @@ fn generate_ui(
       c.spawn(TextBundle {
         text: Text::from_section(
           "Nudge: OFF [G]",
-          TextStyle { font: assets.font.clone(), font_size: 15.0, color: Color::rgb(0.55, 0.55, 0.55) },
+          TextStyle {
+            font: assets.font.clone(),
+            font_size: 15.0,
+            color: Color::rgb(0.55, 0.55, 0.55),
+          },
         ),
         ..default()
       })
@@ -1117,29 +1198,47 @@ fn generate_ui(
     .insert(TooltipPanel)
     .insert(Name::new("TooltipPanel"))
     .with_children(|commands| {
-      let style = TextStyle { font: assets.font.clone(), font_size: 16.0, color: Color::WHITE };
-      commands.spawn(TextBundle {
-        text: Text::from_section("", style.clone()),
-        ..default()
-      }).insert(TooltipHeader);
-      commands.spawn(NodeBundle {
-        style: Style { flex_direction: FlexDirection::Row, ..default() },
-        ..default()
-      }).with_children(|c| {
-        c.spawn(TextBundle {
-          text: Text::from_section("", style.clone()).with_alignment(TextAlignment::Right),
-          ..default()
-        }).insert(TooltipLabels);
-        c.spawn(TextBundle {
-          text: Text::from_section("", style.clone()).with_alignment(TextAlignment::Right),
-          style: Style { min_size: Size::new(Val::Px(36.), Val::Auto), margin: UiRect::horizontal(Val::Px(4.)), ..default() },
-          ..default()
-        }).insert(TooltipBases);
-        c.spawn(TextBundle {
+      let style = TextStyle {
+        font: assets.font.clone(),
+        font_size: 16.0,
+        color: Color::WHITE,
+      };
+      commands
+        .spawn(TextBundle {
           text: Text::from_section("", style.clone()),
           ..default()
-        }).insert(TooltipMaxes);
-      });
+        })
+        .insert(TooltipHeader);
+      commands
+        .spawn(NodeBundle {
+          style: Style {
+            flex_direction: FlexDirection::Row,
+            ..default()
+          },
+          ..default()
+        })
+        .with_children(|c| {
+          c.spawn(TextBundle {
+            text: Text::from_section("", style.clone()).with_alignment(TextAlignment::Right),
+            ..default()
+          })
+          .insert(TooltipLabels);
+          c.spawn(TextBundle {
+            text: Text::from_section("", style.clone()).with_alignment(TextAlignment::Right),
+            style: Style {
+              min_size: Size::new(Val::Px(36.), Val::Auto),
+              margin: UiRect::horizontal(Val::Px(4.)),
+              ..default()
+            },
+            ..default()
+          })
+          .insert(TooltipBases);
+          c.spawn(TextBundle {
+            text: Text::from_section("", style.clone()),
+            ..default()
+          })
+          .insert(TooltipMaxes);
+        });
     });
 }
 
@@ -1147,9 +1246,15 @@ fn update_tooltip_position(
   windows: Query<&Window>,
   mut tooltip: Query<(&mut Style, &Visibility), With<TooltipPanel>>,
 ) {
-  let Ok(window) = windows.get_single() else { return; };
-  let Ok((mut style, visibility)) = tooltip.get_single_mut() else { return; };
-  if *visibility == Visibility::Hidden { return; }
+  let Ok(window) = windows.get_single() else {
+    return;
+  };
+  let Ok((mut style, visibility)) = tooltip.get_single_mut() else {
+    return;
+  };
+  if *visibility == Visibility::Hidden {
+    return;
+  }
 
   if let Some(cursor) = window.cursor_position() {
     // cursor_position() uses bottom-left origin, Y up = same as Val::Px bottom/left

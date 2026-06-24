@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 use crate::gameplay_ui::*;
 use crate::movement::*;
 use crate::{
-  BaseDamagedEvent, Enemy, GameAssets, GameData, GameState, Path, SelectedMap, Slowed,
-  game_not_paused,
+  game_not_paused, BaseDamagedEvent, Enemy, GameAssets, GameData, GameState, Path, SelectedMap,
+  Slowed,
 };
 
 pub struct MapPlugin;
@@ -17,7 +17,10 @@ impl Plugin for MapPlugin {
     app
       .add_system(setup_camera.in_schedule(OnExit(GameState::AssetLoading)))
       .add_systems(
-        (initialize_selected_map, render_map.after(initialize_selected_map))
+        (
+          initialize_selected_map,
+          render_map.after(initialize_selected_map),
+        )
           .in_schedule(OnEnter(GameState::Gameplay)),
       )
       .add_systems(
@@ -62,7 +65,8 @@ impl Point {
     let distance = Vec2::new(
       self.x as f32 - other.x as f32,
       self.y as f32 - other.y as f32,
-    ).length();
+    )
+    .length();
     (0.9..=1.1).contains(&distance)
   }
 }
@@ -96,7 +100,9 @@ pub struct Map {
 }
 
 fn initialize_selected_map(selected_map: Res<SelectedMap>, mut maps: ResMut<Assets<Map>>) {
-  let Some(map) = maps.get_mut(&selected_map.0) else { return; };
+  let Some(map) = maps.get_mut(&selected_map.0) else {
+    return;
+  };
   if map.initialized {
     return;
   }
@@ -169,9 +175,11 @@ impl Map {
 
     let mut checkpoints = vec![spawn_coord.to_vec3()];
 
-    let has_numbered_path = path_tiles
-      .iter()
-      .any(|&p| self.orders_at(p).is_some_and(|o| o.iter().any(|&order| order > 0)));
+    let has_numbered_path = path_tiles.iter().any(|&p| {
+      self
+        .orders_at(p)
+        .is_some_and(|o| o.iter().any(|&order| order > 0))
+    });
 
     if has_numbered_path {
       let max_order = path_tiles
@@ -191,7 +199,10 @@ impl Map {
     } else {
       let mut remaining_tiles = path_tiles;
       let mut last_point = spawn;
-      while let Some(next_idx) = remaining_tiles.iter().position(|p| last_point.is_adjacent_to(*p)) {
+      while let Some(next_idx) = remaining_tiles
+        .iter()
+        .position(|p| last_point.is_adjacent_to(*p))
+      {
         let next_point = remaining_tiles.remove(next_idx);
         checkpoints.push(next_point.to_coordinate(self.tile_size, true).to_vec3());
         last_point = next_point;
@@ -219,8 +230,9 @@ pub struct MainCamera;
 
 fn setup_camera(mut commands: Commands, game_data: Res<GameData>, maps: Res<Assets<Map>>) {
   // Use map1 for camera dimensions (both maps are the same size)
-  let Some(map) = maps.get(&game_data.map)
-    else { return; };
+  let Some(map) = maps.get(&game_data.map) else {
+    return;
+  };
   let mut camera = Camera2dBundle::default();
   camera.transform.translation.x = (map.width as f32 / 2. - 0.5) * map.tile_size as f32;
   camera.transform.translation.y = (map.height as f32 / 2. - 0.5) * map.tile_size as f32;
@@ -237,8 +249,9 @@ fn render_map(
   maps: Res<Assets<Map>>,
   assets: Res<GameAssets>,
 ) {
-  let Some(map) = maps.get(&selected_map.0)
-    else { return; };
+  let Some(map) = maps.get(&selected_map.0) else {
+    return;
+  };
 
   commands
     .spawn(SpatialBundle::default())
@@ -319,8 +332,9 @@ fn despawn_enemy(
   maps: Res<Assets<Map>>,
   mut base_damaged: EventWriter<BaseDamagedEvent>,
 ) {
-  let Some(map) = maps.get(&selected_map.0)
-    else { return; };
+  let Some(map) = maps.get(&selected_map.0) else {
+    return;
+  };
 
   let mut base = base.single_mut();
 
@@ -338,8 +352,9 @@ fn update_enemy_checkpoint(
   maps: Res<Assets<Map>>,
   time: Res<Time>,
 ) {
-  let Some(map) = maps.get(&selected_map.0)
-    else { return; };
+  let Some(map) = maps.get(&selected_map.0) else {
+    return;
+  };
 
   for (mut movement, mut transform, mut path, slowed) in &mut enemies {
     let checkpoints = map.route(path.route);

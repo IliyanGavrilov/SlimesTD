@@ -121,27 +121,9 @@ fn spawn_map_selection(
           ..default()
         })
         .with_children(|commands| {
-          spawn_map_card(
-            commands,
-            &assets,
-            &maps,
-            game_data.map.clone(),
-            "Level 1",
-          );
-          spawn_map_card(
-            commands,
-            &assets,
-            &maps,
-            game_data.map2.clone(),
-            "Level 2",
-          );
-          spawn_map_card(
-            commands,
-            &assets,
-            &maps,
-            game_data.map3.clone(),
-            "Level 3",
-          );
+          spawn_map_card(commands, &assets, &maps, game_data.map.clone(), "Level 1");
+          spawn_map_card(commands, &assets, &maps, game_data.map2.clone(), "Level 2");
+          spawn_map_card(commands, &assets, &maps, game_data.map3.clone(), "Level 3");
         });
 
       commands

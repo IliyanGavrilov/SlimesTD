@@ -37,16 +37,16 @@ pub struct TowerTypeStats {
 impl TowerType {
   pub fn description(&self) -> &'static str {
     match self {
-      TowerType::Nature      => "Poisons enemies over time",
-      TowerType::Fire        => "Splash damage to nearby enemies",
-      TowerType::Ice         => "Rapid-fire, slows enemies it hits",
-      TowerType::Dark        => "Knocks back; sees invisible enemies",
-      TowerType::Mage        => "Hits hard and briefly stuns",
-      TowerType::Archmage    => "Chains lightning between enemies",
+      TowerType::Nature => "Poisons enemies over time",
+      TowerType::Fire => "Splash damage to nearby enemies",
+      TowerType::Ice => "Rapid-fire, slows enemies it hits",
+      TowerType::Dark => "Knocks back; sees invisible enemies",
+      TowerType::Mage => "Hits hard and briefly stuns",
+      TowerType::Archmage => "Chains lightning between enemies",
       TowerType::FarmPassive => "Earns gold passively over time",
-      TowerType::FarmKill    => "Gold for any kill on the map",
-      TowerType::FarmWave    => "Big bonus gold each wave cleared",
-      TowerType::FarmSelfKill=> "Shoots; earns gold per own kill",
+      TowerType::FarmKill => "Gold for any kill on the map",
+      TowerType::FarmWave => "Big bonus gold each wave cleared",
+      TowerType::FarmSelfKill => "Shoots; earns gold per own kill",
     }
   }
 
@@ -61,8 +61,12 @@ impl TowerType {
         timer: Timer::from_seconds(15.0, TimerMode::Repeating),
       })),
       TowerType::FarmKill => Some(FarmTower::new(FarmBehavior::Kill { income_per_kill: 5 })),
-      TowerType::FarmWave => Some(FarmTower::new(FarmBehavior::Wave { income_per_wave: 75 })),
-      TowerType::FarmSelfKill => Some(FarmTower::new(FarmBehavior::SelfKill { income_per_kill: 3 })),
+      TowerType::FarmWave => Some(FarmTower::new(FarmBehavior::Wave {
+        income_per_wave: 75,
+      })),
+      TowerType::FarmSelfKill => Some(FarmTower::new(FarmBehavior::SelfKill {
+        income_per_kill: 3,
+      })),
       _ => None,
     }
   }
@@ -70,8 +74,8 @@ impl TowerType {
   pub fn sprite_scale(&self) -> f32 {
     match self {
       TowerType::FarmSelfKill => 1.5,
-      TowerType::FarmWave     => 0.75,
-      _                       => 1.0,
+      TowerType::FarmWave => 0.75,
+      _ => 1.0,
     }
   }
 
@@ -87,15 +91,15 @@ impl TowerType {
       TowerType::Dark => assets.wizard_dark.clone(),
       TowerType::Mage => assets.wizard_mage.clone(),
       TowerType::Archmage => assets.wizard_archmage.clone(),
-      TowerType::FarmPassive | TowerType::FarmKill | TowerType::FarmWave | TowerType::FarmSelfKill => {
-        assets.wizard_nature.clone()
-      }
+      TowerType::FarmPassive
+      | TowerType::FarmKill
+      | TowerType::FarmWave
+      | TowerType::FarmSelfKill => assets.wizard_nature.clone(),
     };
 
     SpriteBundle {
       texture,
-      transform: Transform::from_translation(position)
-        .with_scale(Vec3::splat(self.sprite_scale())),
+      transform: Transform::from_translation(position).with_scale(Vec3::splat(self.sprite_scale())),
       ..default()
     }
   }
@@ -138,3 +142,7 @@ impl TowerType {
     }
   }
 }
+
+#[cfg(test)]
+#[path = "tower_type/tower_type_tests.rs"]
+mod tests;

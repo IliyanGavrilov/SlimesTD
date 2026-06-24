@@ -113,8 +113,9 @@ fn update_tower_ui(
     ),
   >,
 ) {
-  let Some(upgrades) = upgrades.get(&game_data.tower_upgrades)
-    else { return; };
+  let Some(upgrades) = upgrades.get(&game_data.tower_upgrades) else {
+    return;
+  };
 
   for parent in child_q.iter_mut() {
     let (tower, tower_type, farm_tower) = parent_q.get_mut(parent.get()).unwrap();
@@ -128,7 +129,11 @@ fn update_tower_ui(
       let stats_text = if let Some(farm) = farm_tower {
         match &farm.behavior {
           FarmBehavior::Passive { income, timer } => {
-            format!(" Income: ${}/tick\n Interval: {:.0}s", income, timer.duration().as_secs_f32())
+            format!(
+              " Income: ${}/tick\n Interval: {:.0}s",
+              income,
+              timer.duration().as_secs_f32()
+            )
           }
           FarmBehavior::Kill { income_per_kill } => {
             format!(" Income: ${}/kill\n Per: enemy kill", income_per_kill)
@@ -185,8 +190,7 @@ fn update_tower_ui(
           upgrade_cost_text.sections[0].style.clone(),
         );
       } else {
-        *upgrade_cost_text =
-          Text::from_section("MAX", upgrade_cost_text.sections[0].style.clone());
+        *upgrade_cost_text = Text::from_section("MAX", upgrade_cost_text.sections[0].style.clone());
       }
     }
 

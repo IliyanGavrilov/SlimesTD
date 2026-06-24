@@ -1,16 +1,18 @@
 use bevy::prelude::*;
 
 use crate::{
-  EnemyDeathEvent, FloatingTextEvent, GameState, Player, WaveClearedEvent, game_not_paused,
+  game_not_paused, EnemyDeathEvent, FloatingTextEvent, GameState, Player, WaveClearedEvent,
 };
 
 pub struct FarmPlugin;
 
 impl Plugin for FarmPlugin {
   fn build(&self, app: &mut App) {
-    app
-      .register_type::<FarmTower>()
-      .add_system(farm_income.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused));
+    app.register_type::<FarmTower>().add_system(
+      farm_income
+        .in_set(OnUpdate(GameState::Gameplay))
+        .run_if(game_not_paused),
+    );
   }
 }
 
@@ -100,3 +102,7 @@ fn farm_income(
     }
   }
 }
+
+#[cfg(test)]
+#[path = "farm_tower/farm_tests.rs"]
+mod tests;

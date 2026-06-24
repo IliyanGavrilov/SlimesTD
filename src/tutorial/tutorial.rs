@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{persistence, GameAssets, GameState, Player, Tower, TowerButtonState, TowerUpgradeButton};
+use crate::{
+  persistence, GameAssets, GameState, Player, Tower, TowerButtonState, TowerUpgradeButton,
+};
 
 /// Persistence key (`progress.ron`). Persisted so the tutorial only auto-runs on
 /// the first ever launch (recompiling doesn't reset it). Delete the file to
@@ -188,16 +190,17 @@ fn update_tutorial(
 
   // The Skip button bails the whole tutorial; individual action steps are otherwise
   // mandatory (Space only advances informational steps).
-  if skip_button.iter().any(|i| matches!(i, Interaction::Clicked)) {
+  if skip_button
+    .iter()
+    .any(|i| matches!(i, Interaction::Clicked))
+  {
     finish(&mut state, &mut progress, &mut commands, &roots);
     return;
   }
 
   let step = &STEPS[state.step];
   let advance = match step.gate {
-    Gate::Continue => {
-      keys.just_pressed(KeyCode::Space) || mouse.just_pressed(MouseButton::Left)
-    }
+    Gate::Continue => keys.just_pressed(KeyCode::Space) || mouse.just_pressed(MouseButton::Left),
     Gate::PlaceTower => towers.iter().count() >= 1,
     Gate::Upgrade => towers
       .iter()

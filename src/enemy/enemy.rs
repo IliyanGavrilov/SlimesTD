@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::assets::*;
 use crate::enemy::*;
 use crate::movement::*;
-use crate::{FloatingTextEvent, GameDifficulty, GameState, Map, game_not_paused};
+use crate::{game_not_paused, FloatingTextEvent, GameDifficulty, GameState, Map};
 
 pub struct EnemyPlugin;
 
@@ -16,10 +16,26 @@ impl Plugin for EnemyPlugin {
       .register_type::<Invisible>()
       .add_event::<EnemyDeathEvent>()
       .add_system(scale_hp_for_difficulty.in_set(OnUpdate(GameState::Gameplay)))
-      .add_system(despawn_enemy_on_death.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused))
-      .add_system(tick_slowed.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused))
-      .add_system(tick_poison.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused))
-      .add_system(apply_knockback.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused))
+      .add_system(
+        despawn_enemy_on_death
+          .in_set(OnUpdate(GameState::Gameplay))
+          .run_if(game_not_paused),
+      )
+      .add_system(
+        tick_slowed
+          .in_set(OnUpdate(GameState::Gameplay))
+          .run_if(game_not_paused),
+      )
+      .add_system(
+        tick_poison
+          .in_set(OnUpdate(GameState::Gameplay))
+          .run_if(game_not_paused),
+      )
+      .add_system(
+        apply_knockback
+          .in_set(OnUpdate(GameState::Gameplay))
+          .run_if(game_not_paused),
+      )
       .add_system(cleanup_enemies.in_schedule(OnExit(GameState::Gameplay)));
   }
 }
@@ -254,3 +270,7 @@ fn despawn_enemy_on_death(
     }
   }
 }
+
+#[cfg(test)]
+#[path = "enemy/enemy_tests.rs"]
+mod tests;

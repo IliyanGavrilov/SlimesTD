@@ -1,15 +1,17 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{Bullet, GameState, game_not_paused};
+use crate::{game_not_paused, Bullet, GameState};
 
 pub struct MovementPlugin;
 
 impl Plugin for MovementPlugin {
   fn build(&self, app: &mut App) {
-    app
-      .register_type::<Movement>()
-      .add_system(basic_movement.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused));
+    app.register_type::<Movement>().add_system(
+      basic_movement
+        .in_set(OnUpdate(GameState::Gameplay))
+        .run_if(game_not_paused),
+    );
   }
 }
 
@@ -29,6 +31,10 @@ impl Movement {
       distance_travelled: 0.,
     }
   }
+
+  pub fn displacement(&self, delta_seconds: f32) -> Vec3 {
+    self.direction.normalize() * self.speed * delta_seconds
+  }
 }
 
 fn basic_movement(
@@ -36,7 +42,7 @@ fn basic_movement(
   time: Res<Time>,
 ) {
   for (mut movement, mut transform) in &mut entities {
-    let distance = movement.direction.normalize() * movement.speed * time.delta_seconds();
+    let distance = movement.displacement(time.delta_seconds());
     movement.distance_travelled += distance.length();
     transform.translation += distance;
   }

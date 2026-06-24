@@ -3,7 +3,7 @@ use bevy::sprite::Mesh2dHandle;
 
 use crate::assets::*;
 use crate::tower::*;
-use crate::{GameData, GameState, MainCamera, Player, game_not_paused};
+use crate::{game_not_paused, GameData, GameState, MainCamera, Player};
 
 pub struct TowerSelectionPlugin;
 
@@ -105,9 +105,7 @@ fn mouse_click_interaction(
         let distance = Vec3::distance(mouse_click_pos, transform.translation);
         (entity, tower, tower_type, transform, distance)
       })
-      .filter(|(_, _, tower_type, _, distance)| {
-        *distance <= tower_type.placement_radius() + 10.0
-      })
+      .filter(|(_, _, tower_type, _, distance)| *distance <= tower_type.placement_radius() + 10.0)
       .min_by(|a, b| a.4.total_cmp(&b.4));
 
     if let Some((tower_entity, tower, tower_type, transform, _)) = closest {
@@ -126,7 +124,13 @@ fn mouse_click_interaction(
 
 fn tower_ui_interaction(
   mut commands: Commands,
-  mut towers: Query<(Entity, &mut Tower, &TowerType, &Children, Option<&mut FarmTower>)>,
+  mut towers: Query<(
+    Entity,
+    &mut Tower,
+    &TowerType,
+    &Children,
+    Option<&mut FarmTower>,
+  )>,
   clicked_tower: Query<Entity, With<TowerUpgradeUI>>,
   keys: Res<Input<KeyCode>>,
   mut player: Query<&mut Player>,
@@ -159,8 +163,9 @@ fn tower_ui_interaction(
     (Changed<Interaction>, With<Button>),
   >,
 ) {
-  let Some(upgrades) = upgrades.get(&game_data.tower_upgrades)
-    else { return; };
+  let Some(upgrades) = upgrades.get(&game_data.tower_upgrades) else {
+    return;
+  };
 
   if !clicked_tower.is_empty() {
     let mut player = player.single_mut();

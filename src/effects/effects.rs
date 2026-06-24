@@ -3,8 +3,8 @@ use bevy::sprite::MaterialMesh2dBundle;
 use bevy::ui::FocusPolicy;
 
 use crate::{
-  game_not_paused, Enemy, EnemyDeathEvent, GameAssets, GameState, Invisible, KnockedBack, MainCamera,
-  Poisoned, Slowed, SplashEvent, Tower, INVISIBLE_ALPHA,
+  game_not_paused, Enemy, EnemyDeathEvent, GameAssets, GameState, Invisible, KnockedBack,
+  MainCamera, Poisoned, Slowed, SplashEvent, Tower, INVISIBLE_ALPHA,
 };
 
 /// Visual juice: small, asset-free feedback effects (enemy hit flash, ...).
@@ -184,7 +184,12 @@ fn spawn_death_pop(mut commands: Commands, mut deaths: EventReader<EnemyDeathEve
 fn update_death_pop(
   mut commands: Commands,
   time: Res<Time>,
-  mut pops: Query<(Entity, &mut DeathPop, &mut Transform, &mut TextureAtlasSprite)>,
+  mut pops: Query<(
+    Entity,
+    &mut DeathPop,
+    &mut Transform,
+    &mut TextureAtlasSprite,
+  )>,
 ) {
   for (entity, mut pop, mut transform, mut sprite) in &mut pops {
     pop.timer.tick(time.delta());
@@ -340,7 +345,9 @@ fn screen_shake(
   mut damage_events: EventReader<BaseDamagedEvent>,
   mut camera: Query<&mut Transform, With<MainCamera>>,
 ) {
-  let Ok(mut transform) = camera.get_single_mut() else { return; };
+  let Ok(mut transform) = camera.get_single_mut() else {
+    return;
+  };
 
   if damage_events.iter().next().is_some() {
     damage_events.clear();
@@ -351,7 +358,9 @@ fn screen_shake(
     shake.trauma = (shake.trauma + SHAKE_PER_HIT).min(1.0);
   }
 
-  let Some(home) = shake.home else { return; };
+  let Some(home) = shake.home else {
+    return;
+  };
 
   if shake.trauma > 0.0 {
     // Quadratic falloff feels punchier than linear.
@@ -450,7 +459,9 @@ fn update_damage_flash(
   mut damage_events: EventReader<BaseDamagedEvent>,
   mut flash: Query<&mut BackgroundColor, With<DamageFlash>>,
 ) {
-  let Ok(mut color) = flash.get_single_mut() else { return; };
+  let Ok(mut color) = flash.get_single_mut() else {
+    return;
+  };
   if damage_events.iter().next().is_some() {
     damage_events.clear();
     color.0.set_a(FLASH_PEAK_ALPHA);

@@ -31,15 +31,17 @@ impl Plugin for GameAudioPlugin {
       // SFX
       .add_system(sfx_button_click)
       .add_systems(
-        (sfx_shoot, sfx_enemy_death, sfx_enemy_jump, sfx_tower_placed, sfx_wave_start)
+        (
+          sfx_shoot,
+          sfx_enemy_death,
+          sfx_enemy_jump,
+          sfx_tower_placed,
+          sfx_wave_start,
+        )
           .in_set(OnUpdate(GameState::Gameplay)),
       )
-      .add_systems(
-        (stop_music, sfx_game_over).in_schedule(OnEnter(GameState::GameOver)),
-      )
-      .add_systems(
-        (stop_music, sfx_victory).in_schedule(OnEnter(GameState::Victory)),
-      );
+      .add_systems((stop_music, sfx_game_over).in_schedule(OnEnter(GameState::GameOver)))
+      .add_systems((stop_music, sfx_victory).in_schedule(OnEnter(GameState::Victory)));
   }
 }
 
@@ -150,7 +152,10 @@ fn play_menu_music(
   }
   *current = CurrentMusic::Menu;
   music.stop();
-  music.play(audio.menu_music.clone()).looped().fade_in(AudioTween::new(MUSIC_FADE, AudioEasing::Linear));
+  music
+    .play(audio.menu_music.clone())
+    .looped()
+    .fade_in(AudioTween::new(MUSIC_FADE, AudioEasing::Linear));
 }
 
 fn play_gameplay_music(
@@ -163,7 +168,10 @@ fn play_gameplay_music(
   }
   *current = CurrentMusic::Gameplay;
   music.stop();
-  music.play(audio.gameplay_music.clone()).looped().fade_in(AudioTween::new(MUSIC_FADE, AudioEasing::Linear));
+  music
+    .play(audio.gameplay_music.clone())
+    .looped()
+    .fade_in(AudioTween::new(MUSIC_FADE, AudioEasing::Linear));
 }
 
 fn sfx_shoot(
@@ -283,3 +291,7 @@ fn sfx_game_over(audio: Res<GameAudio>, sfx: Res<AudioChannel<SfxChannel>>) {
 fn sfx_victory(audio: Res<GameAudio>, sfx: Res<AudioChannel<SfxChannel>>) {
   sfx.play(audio.victory.clone());
 }
+
+#[cfg(test)]
+#[path = "audio/audio_tests.rs"]
+mod tests;

@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 use crate::enemy::*;
 use crate::movement::*;
 use crate::{
-  ChainBoltEvent, EnemyHitEvent, FarmBehavior, FarmTower, FloatingTextEvent, GameState, KnockedBack,
-  Player, Slowed, Tower, game_not_paused, is_targetable,
+  game_not_paused, is_targetable, ChainBoltEvent, EnemyHitEvent, FarmBehavior, FarmTower,
+  FloatingTextEvent, GameState, KnockedBack, Player, Slowed, Tower,
 };
 
 /// An on-hit combat effect carried by a projectile. Analogous to `FarmBehavior`
@@ -24,7 +24,11 @@ pub enum OnHitEffect {
   Poison { dps: u32, duration: f32 },
   /// Lightning that arcs to up to `jumps` nearby enemies (each within `radius`
   /// of the previous), dealing `damage` to each.
-  Chain { jumps: u32, radius: f32, damage: u32 },
+  Chain {
+    jumps: u32,
+    radius: f32,
+    damage: u32,
+  },
   /// Shove the enemy backwards along its path at `strength` units/sec briefly.
   Knockback { strength: f32 },
 }
@@ -64,8 +68,12 @@ impl Plugin for BulletPlugin {
         (
           despawn_bullets.run_if(game_not_paused),
           bullet_enemy_collision.run_if(game_not_paused),
-          apply_splash.after(bullet_enemy_collision).run_if(game_not_paused),
-          apply_chain.after(bullet_enemy_collision).run_if(game_not_paused),
+          apply_splash
+            .after(bullet_enemy_collision)
+            .run_if(game_not_paused),
+          apply_chain
+            .after(bullet_enemy_collision)
+            .run_if(game_not_paused),
         )
           .in_set(OnUpdate(GameState::Gameplay)),
       )
@@ -194,9 +202,15 @@ fn bullet_enemy_collision(
               });
             }
             OnHitEffect::Poison { dps, duration } if enemy.health > 0 => {
-              commands.entity(enemy_entity).insert(Poisoned::new(dps, duration));
+              commands
+                .entity(enemy_entity)
+                .insert(Poisoned::new(dps, duration));
             }
-            OnHitEffect::Chain { jumps, radius, damage } => {
+            OnHitEffect::Chain {
+              jumps,
+              radius,
+              damage,
+            } => {
               chain_writer.send(ChainEvent {
                 from: enemy_transform.translation,
                 jumps,
@@ -207,7 +221,9 @@ fn bullet_enemy_collision(
               });
             }
             OnHitEffect::Knockback { strength } if enemy.health > 0 => {
-              commands.entity(enemy_entity).insert(KnockedBack::new(strength));
+              commands
+                .entity(enemy_entity)
+                .insert(KnockedBack::new(strength));
             }
             _ => {}
           }
@@ -281,7 +297,9 @@ fn apply_chain(
         }
       }
 
-      let Some((entity, _, position)) = best else { break };
+      let Some((entity, _, position)) = best else {
+        break;
+      };
       if let Ok((_, mut enemy, _, _)) = enemies.get_mut(entity) {
         enemy.health -= chain.damage as i32;
       }

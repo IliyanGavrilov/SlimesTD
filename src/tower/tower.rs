@@ -7,7 +7,7 @@ use crate::assets::*;
 use crate::enemy::*;
 use crate::movement::*;
 use crate::tower::*;
-use crate::{GameState, TerrainType, game_not_paused};
+use crate::{game_not_paused, GameState, TerrainType};
 
 /// Marker placed on farm towers that don't shoot (Passive, Kill, Wave).
 /// `tower_shooting` excludes entities with this component.
@@ -21,7 +21,11 @@ impl Plugin for TowerPlugin {
     app
       .register_type::<Tower>()
       .register_type::<TargetingPriority>()
-      .add_system(tower_shooting.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused))
+      .add_system(
+        tower_shooting
+          .in_set(OnUpdate(GameState::Gameplay))
+          .run_if(game_not_paused),
+      )
       .add_system(cleanup_towers.in_schedule(OnExit(GameState::Gameplay)));
   }
 }
@@ -187,13 +191,16 @@ fn cleanup_towers(mut commands: Commands, towers: Query<Entity, With<Tower>>) {
 fn tower_shooting(
   mut commands: Commands,
   assets: Res<GameAssets>,
-  mut towers: Query<(
-    Entity,
-    &mut Tower,
-    &TowerType,
-    &mut Transform,
-    &GlobalTransform,
-  ), Without<NonShootingTower>>,
+  mut towers: Query<
+    (
+      Entity,
+      &mut Tower,
+      &TowerType,
+      &mut Transform,
+      &GlobalTransform,
+    ),
+    Without<NonShootingTower>,
+  >,
   enemies: Query<(&GlobalTransform, &Enemy, &Movement, Option<&Invisible>)>,
   time: Res<Time>,
 ) {

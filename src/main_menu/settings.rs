@@ -109,12 +109,44 @@ fn spawn_settings_screen(
         ..default()
       });
 
-      spawn_toggle_row(commands, &assets, "VSync", "[V]", vsync_on, VsyncToggleButton);
-      spawn_toggle_row(commands, &assets, "Fullscreen", "[F11]", fullscreen_on, FullscreenToggleButton);
+      spawn_toggle_row(
+        commands,
+        &assets,
+        "VSync",
+        "[V]",
+        vsync_on,
+        VsyncToggleButton,
+      );
+      spawn_toggle_row(
+        commands,
+        &assets,
+        "Fullscreen",
+        "[F11]",
+        fullscreen_on,
+        FullscreenToggleButton,
+      );
 
-      spawn_volume_row(commands, &assets, "Master", VolumeKind::Master, audio_settings.master);
-      spawn_volume_row(commands, &assets, "Music", VolumeKind::Music, audio_settings.music);
-      spawn_volume_row(commands, &assets, "SFX", VolumeKind::Sfx, audio_settings.sfx);
+      spawn_volume_row(
+        commands,
+        &assets,
+        "Master",
+        VolumeKind::Master,
+        audio_settings.master,
+      );
+      spawn_volume_row(
+        commands,
+        &assets,
+        "Music",
+        VolumeKind::Music,
+        audio_settings.music,
+      );
+      spawn_volume_row(
+        commands,
+        &assets,
+        "SFX",
+        VolumeKind::Sfx,
+        audio_settings.sfx,
+      );
 
       commands
         .spawn(ButtonBundle {
@@ -146,7 +178,11 @@ fn spawn_settings_screen(
 }
 
 fn toggle_color(on: bool) -> Color {
-  if on { Color::rgb(0.15, 0.45, 0.15) } else { Color::rgb(0.25, 0.25, 0.25) }
+  if on {
+    Color::rgb(0.15, 0.45, 0.15)
+  } else {
+    Color::rgb(0.25, 0.25, 0.25)
+  }
 }
 
 fn spawn_toggle_row(
@@ -170,40 +206,52 @@ fn spawn_toggle_row(
     })
     .with_children(|commands| {
       // Fixed-width label column
-      commands.spawn(NodeBundle {
-        style: Style {
-          size: Size::new(Val::Px(220.), Val::Percent(100.)),
-          align_items: AlignItems::Center,
+      commands
+        .spawn(NodeBundle {
+          style: Style {
+            size: Size::new(Val::Px(220.), Val::Percent(100.)),
+            align_items: AlignItems::Center,
+            ..default()
+          },
           ..default()
-        },
-        ..default()
-      }).with_children(|commands| {
-        commands.spawn(TextBundle {
-          text: Text::from_section(
-            label,
-            TextStyle { font: assets.font.clone(), font_size: 32., color: Color::WHITE },
-          ),
-          ..default()
+        })
+        .with_children(|commands| {
+          commands.spawn(TextBundle {
+            text: Text::from_section(
+              label,
+              TextStyle {
+                font: assets.font.clone(),
+                font_size: 32.,
+                color: Color::WHITE,
+              },
+            ),
+            ..default()
+          });
         });
-      });
       // Fixed-width key hint column
-      commands.spawn(NodeBundle {
-        style: Style {
-          size: Size::new(Val::Px(140.), Val::Percent(100.)),
-          align_items: AlignItems::Center,
-          justify_content: JustifyContent::Center,
+      commands
+        .spawn(NodeBundle {
+          style: Style {
+            size: Size::new(Val::Px(140.), Val::Percent(100.)),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            ..default()
+          },
           ..default()
-        },
-        ..default()
-      }).with_children(|commands| {
-        commands.spawn(TextBundle {
-          text: Text::from_section(
-            key_hint,
-            TextStyle { font: assets.font.clone(), font_size: 20., color: Color::rgb(0.55, 0.55, 0.55) },
-          ),
-          ..default()
+        })
+        .with_children(|commands| {
+          commands.spawn(TextBundle {
+            text: Text::from_section(
+              key_hint,
+              TextStyle {
+                font: assets.font.clone(),
+                font_size: 20.,
+                color: Color::rgb(0.55, 0.55, 0.55),
+              },
+            ),
+            ..default()
+          });
         });
-      });
       // Toggle button
       commands
         .spawn(ButtonBundle {
@@ -221,7 +269,11 @@ fn spawn_toggle_row(
           commands.spawn(TextBundle {
             text: Text::from_section(
               if is_on { "ON" } else { "OFF" },
-              TextStyle { font: assets.font.clone(), font_size: 22., color: Color::WHITE },
+              TextStyle {
+                font: assets.font.clone(),
+                font_size: 22.,
+                color: Color::WHITE,
+              },
             ),
             ..default()
           });
@@ -262,7 +314,11 @@ pub fn spawn_volume_row(
           commands.spawn(TextBundle {
             text: Text::from_section(
               label,
-              TextStyle { font: assets.font.clone(), font_size: 32., color: Color::WHITE },
+              TextStyle {
+                font: assets.font.clone(),
+                font_size: 32.,
+                color: Color::WHITE,
+              },
             ),
             ..default()
           });
@@ -311,7 +367,11 @@ pub fn spawn_volume_row(
             TextBundle {
               text: Text::from_section(
                 volume_percent(value),
-                TextStyle { font: assets.font.clone(), font_size: 28., color: Color::WHITE },
+                TextStyle {
+                  font: assets.font.clone(),
+                  font_size: 28.,
+                  color: Color::WHITE,
+                },
               ),
               ..default()
             },
@@ -330,8 +390,12 @@ fn volume_slider_drag(
   mut fills: Query<(&mut Style, &VolumeSliderFill)>,
   mut texts: Query<(&mut Text, &VolumeValueText)>,
 ) {
-  let Ok(window) = windows.get_single() else { return; };
-  let Some(cursor) = window.cursor_position() else { return; };
+  let Ok(window) = windows.get_single() else {
+    return;
+  };
+  let Some(cursor) = window.cursor_position() else {
+    return;
+  };
 
   for (interaction, slider, node, transform) in &sliders {
     if !matches!(interaction, Interaction::Clicked) {
@@ -376,11 +440,19 @@ fn vsync_toggle_button_clicked(
     if matches!(interaction, Interaction::Clicked) {
       let mut window = windows.single_mut();
       let now_on = !matches!(window.present_mode, PresentMode::AutoVsync);
-      window.present_mode = if now_on { PresentMode::AutoVsync } else { PresentMode::AutoNoVsync };
+      window.present_mode = if now_on {
+        PresentMode::AutoVsync
+      } else {
+        PresentMode::AutoNoVsync
+      };
       *color = toggle_color(now_on).into();
       for &child in children.iter() {
         if let Ok(mut text) = texts.get_mut(child) {
-          text.sections[0].value = if now_on { "ON".to_string() } else { "OFF".to_string() };
+          text.sections[0].value = if now_on {
+            "ON".to_string()
+          } else {
+            "OFF".to_string()
+          };
         }
       }
     }
@@ -399,11 +471,19 @@ fn fullscreen_toggle_button_clicked(
     if matches!(interaction, Interaction::Clicked) {
       let mut window = windows.single_mut();
       let now_on = matches!(window.mode, WindowMode::Windowed);
-      window.mode = if now_on { WindowMode::BorderlessFullscreen } else { WindowMode::Windowed };
+      window.mode = if now_on {
+        WindowMode::BorderlessFullscreen
+      } else {
+        WindowMode::Windowed
+      };
       *color = toggle_color(now_on).into();
       for &child in children.iter() {
         if let Ok(mut text) = texts.get_mut(child) {
-          text.sections[0].value = if now_on { "ON".to_string() } else { "OFF".to_string() };
+          text.sections[0].value = if now_on {
+            "ON".to_string()
+          } else {
+            "OFF".to_string()
+          };
         }
       }
     }

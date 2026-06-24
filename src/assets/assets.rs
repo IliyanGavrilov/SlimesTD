@@ -2,14 +2,18 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::movement::*;
-use crate::{EnemyJumpEvent, GameState, Slowed, Tile, TowerType, game_not_paused};
+use crate::{game_not_paused, EnemyJumpEvent, GameState, Slowed, Tile, TowerType};
 
 pub struct AssetPlugin;
 
 impl Plugin for AssetPlugin {
   fn build(&self, app: &mut App) {
     app
-      .add_system(animate_enemy_sprite.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused))
+      .add_system(
+        animate_enemy_sprite
+          .in_set(OnUpdate(GameState::Gameplay))
+          .run_if(game_not_paused),
+      )
       // Load assets before the startup stage, so we can use them in the game
       .add_startup_system(load_assets.in_base_set(StartupSet::PreStartup));
   }
@@ -101,9 +105,10 @@ impl GameAssets {
       TowerType::Dark => self.wizard_dark.clone(),
       TowerType::Mage => self.wizard_mage.clone(),
       TowerType::Archmage => self.wizard_archmage.clone(),
-      TowerType::FarmPassive | TowerType::FarmKill | TowerType::FarmWave | TowerType::FarmSelfKill => {
-        self.wizard_nature.clone()
-      }
+      TowerType::FarmPassive
+      | TowerType::FarmKill
+      | TowerType::FarmWave
+      | TowerType::FarmSelfKill => self.wizard_nature.clone(),
     }
   }
 
@@ -115,9 +120,10 @@ impl GameAssets {
       TowerType::Dark => self.wizard_dark_icon.clone(),
       TowerType::Mage => self.wizard_mage_icon.clone(),
       TowerType::Archmage => self.wizard_archmage_icon.clone(),
-      TowerType::FarmPassive | TowerType::FarmKill | TowerType::FarmWave | TowerType::FarmSelfKill => {
-        self.wizard_nature_icon.clone()
-      }
+      TowerType::FarmPassive
+      | TowerType::FarmKill
+      | TowerType::FarmWave
+      | TowerType::FarmSelfKill => self.wizard_nature_icon.clone(),
     }
   }
 
@@ -129,9 +135,10 @@ impl GameAssets {
       TowerType::Dark => self.wizard_dark_button.clone(),
       TowerType::Mage => self.wizard_mage_button.clone(),
       TowerType::Archmage => self.wizard_archmage_button.clone(),
-      TowerType::FarmPassive | TowerType::FarmKill | TowerType::FarmWave | TowerType::FarmSelfKill => {
-        self.wizard_nature_button.clone()
-      }
+      TowerType::FarmPassive
+      | TowerType::FarmKill
+      | TowerType::FarmWave
+      | TowerType::FarmSelfKill => self.wizard_nature_button.clone(),
     }
   }
 
@@ -143,9 +150,10 @@ impl GameAssets {
       TowerType::Dark => self.wizard_dark_button_hover.clone(),
       TowerType::Mage => self.wizard_mage_button_hover.clone(),
       TowerType::Archmage => self.wizard_archmage_button_hover.clone(),
-      TowerType::FarmPassive | TowerType::FarmKill | TowerType::FarmWave | TowerType::FarmSelfKill => {
-        self.wizard_nature_button_hover.clone()
-      }
+      TowerType::FarmPassive
+      | TowerType::FarmKill
+      | TowerType::FarmWave
+      | TowerType::FarmSelfKill => self.wizard_nature_button_hover.clone(),
     }
   }
 
@@ -157,9 +165,10 @@ impl GameAssets {
       TowerType::Dark => self.wizard_dark_button_press.clone(),
       TowerType::Mage => self.wizard_mage_button_press.clone(),
       TowerType::Archmage => self.wizard_archmage_button_press.clone(),
-      TowerType::FarmPassive | TowerType::FarmKill | TowerType::FarmWave | TowerType::FarmSelfKill => {
-        self.wizard_nature_button_press.clone()
-      }
+      TowerType::FarmPassive
+      | TowerType::FarmKill
+      | TowerType::FarmWave
+      | TowerType::FarmSelfKill => self.wizard_nature_button_press.clone(),
     }
   }
 
@@ -171,9 +180,10 @@ impl GameAssets {
       TowerType::Dark => self.wizard_dark_button_lock.clone(),
       TowerType::Mage => self.wizard_mage_button_lock.clone(),
       TowerType::Archmage => self.wizard_archmage_button_lock.clone(),
-      TowerType::FarmPassive | TowerType::FarmKill | TowerType::FarmWave | TowerType::FarmSelfKill => {
-        self.wizard_nature_button_lock.clone()
-      }
+      TowerType::FarmPassive
+      | TowerType::FarmKill
+      | TowerType::FarmWave
+      | TowerType::FarmSelfKill => self.wizard_nature_button_lock.clone(),
     }
   }
 

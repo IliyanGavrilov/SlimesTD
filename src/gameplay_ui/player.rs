@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{EnemyDeathEvent, GameDifficulty, GameState, WaveClearedEvent, game_not_paused};
+use crate::{game_not_paused, EnemyDeathEvent, GameDifficulty, GameState, WaveClearedEvent};
 
 pub struct PlayerPlugin;
 
@@ -31,7 +31,12 @@ fn spawn_player(mut commands: Commands, difficulty: Res<GameDifficulty>) {
     GameDifficulty::Normal => 100,
     GameDifficulty::Test => 5000,
   };
-  commands.spawn((Player { money: starting_money }, Name::new("Player")));
+  commands.spawn((
+    Player {
+      money: starting_money,
+    },
+    Name::new("Player"),
+  ));
 }
 
 fn cleanup_player(mut commands: Commands, players: Query<Entity, With<Player>>) {

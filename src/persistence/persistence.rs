@@ -194,3 +194,7 @@ mod backend {
     }
   }
 }
+
+#[cfg(test)]
+#[path = "persistence/persistence_tests.rs"]
+mod tests;

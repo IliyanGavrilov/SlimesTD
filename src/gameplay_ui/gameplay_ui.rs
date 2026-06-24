@@ -2,8 +2,8 @@ use bevy::{prelude::*, window::*};
 
 use crate::assets::*;
 use crate::gameplay_ui::*;
-use crate::{GameData, GameState, Waves, VsyncToggleButton, FullscreenToggleButton};
-use crate::{AudioSettings, VolumeKind, spawn_volume_row};
+use crate::{spawn_volume_row, AudioSettings, VolumeKind};
+use crate::{FullscreenToggleButton, GameData, GameState, VsyncToggleButton, Waves};
 
 #[derive(Component)]
 pub struct GameplayUIRoot;
@@ -71,8 +71,9 @@ fn update_gameplay_ui(
 ) {
   let player = player.single();
   let base = base.single();
-  let Some(waves) = waves.get(&game_data.enemy_waves)
-    else { return; };
+  let Some(waves) = waves.get(&game_data.enemy_waves) else {
+    return;
+  };
   let mut money = money_ui.single_mut();
   let mut health = health_ui.single_mut();
   let mut round = round_ui.single_mut();
@@ -88,10 +89,7 @@ fn update_gameplay_ui(
   }
 }
 
-fn toggle_in_game_menu_key(
-  input: Res<Input<KeyCode>>,
-  mut menu_open: ResMut<InGameMenuOpen>,
-) {
+fn toggle_in_game_menu_key(input: Res<Input<KeyCode>>, mut menu_open: ResMut<InGameMenuOpen>) {
   if input.just_pressed(KeyCode::Escape) {
     menu_open.0 = !menu_open.0;
   }
@@ -376,12 +374,44 @@ fn spawn_in_game_menu(
         ..default()
       });
 
-      spawn_menu_toggle_row(commands, &assets, "VSync", "[V]", vsync_on, VsyncToggleButton);
-      spawn_menu_toggle_row(commands, &assets, "Fullscreen", "[F11]", fullscreen_on, FullscreenToggleButton);
+      spawn_menu_toggle_row(
+        commands,
+        &assets,
+        "VSync",
+        "[V]",
+        vsync_on,
+        VsyncToggleButton,
+      );
+      spawn_menu_toggle_row(
+        commands,
+        &assets,
+        "Fullscreen",
+        "[F11]",
+        fullscreen_on,
+        FullscreenToggleButton,
+      );
 
-      spawn_volume_row(commands, &assets, "Master", VolumeKind::Master, audio_settings.master);
-      spawn_volume_row(commands, &assets, "Music", VolumeKind::Music, audio_settings.music);
-      spawn_volume_row(commands, &assets, "SFX", VolumeKind::Sfx, audio_settings.sfx);
+      spawn_volume_row(
+        commands,
+        &assets,
+        "Master",
+        VolumeKind::Master,
+        audio_settings.master,
+      );
+      spawn_volume_row(
+        commands,
+        &assets,
+        "Music",
+        VolumeKind::Music,
+        audio_settings.music,
+      );
+      spawn_volume_row(
+        commands,
+        &assets,
+        "SFX",
+        VolumeKind::Sfx,
+        audio_settings.sfx,
+      );
 
       commands
         .spawn(ButtonBundle {
@@ -440,7 +470,11 @@ fn spawn_in_game_menu(
 }
 
 fn toggle_color(on: bool) -> Color {
-  if on { Color::rgb(0.15, 0.45, 0.15) } else { Color::rgb(0.25, 0.25, 0.25) }
+  if on {
+    Color::rgb(0.15, 0.45, 0.15)
+  } else {
+    Color::rgb(0.25, 0.25, 0.25)
+  }
 }
 
 fn spawn_menu_toggle_row(
@@ -463,39 +497,51 @@ fn spawn_menu_toggle_row(
       ..default()
     })
     .with_children(|commands| {
-      commands.spawn(NodeBundle {
-        style: Style {
-          size: Size::new(Val::Px(200.), Val::Percent(100.)),
-          align_items: AlignItems::Center,
+      commands
+        .spawn(NodeBundle {
+          style: Style {
+            size: Size::new(Val::Px(200.), Val::Percent(100.)),
+            align_items: AlignItems::Center,
+            ..default()
+          },
           ..default()
-        },
-        ..default()
-      }).with_children(|commands| {
-        commands.spawn(TextBundle {
-          text: Text::from_section(
-            label,
-            TextStyle { font: assets.font.clone(), font_size: 28., color: Color::WHITE },
-          ),
-          ..default()
+        })
+        .with_children(|commands| {
+          commands.spawn(TextBundle {
+            text: Text::from_section(
+              label,
+              TextStyle {
+                font: assets.font.clone(),
+                font_size: 28.,
+                color: Color::WHITE,
+              },
+            ),
+            ..default()
+          });
         });
-      });
-      commands.spawn(NodeBundle {
-        style: Style {
-          size: Size::new(Val::Px(130.), Val::Percent(100.)),
-          align_items: AlignItems::Center,
-          justify_content: JustifyContent::Center,
+      commands
+        .spawn(NodeBundle {
+          style: Style {
+            size: Size::new(Val::Px(130.), Val::Percent(100.)),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            ..default()
+          },
           ..default()
-        },
-        ..default()
-      }).with_children(|commands| {
-        commands.spawn(TextBundle {
-          text: Text::from_section(
-            key_hint,
-            TextStyle { font: assets.font.clone(), font_size: 18., color: Color::rgb(0.55, 0.55, 0.55) },
-          ),
-          ..default()
+        })
+        .with_children(|commands| {
+          commands.spawn(TextBundle {
+            text: Text::from_section(
+              key_hint,
+              TextStyle {
+                font: assets.font.clone(),
+                font_size: 18.,
+                color: Color::rgb(0.55, 0.55, 0.55),
+              },
+            ),
+            ..default()
+          });
         });
-      });
       commands
         .spawn(ButtonBundle {
           style: Style {
@@ -512,7 +558,11 @@ fn spawn_menu_toggle_row(
           commands.spawn(TextBundle {
             text: Text::from_section(
               if is_on { "ON" } else { "OFF" },
-              TextStyle { font: assets.font.clone(), font_size: 20., color: Color::WHITE },
+              TextStyle {
+                font: assets.font.clone(),
+                font_size: 20.,
+                color: Color::WHITE,
+              },
             ),
             ..default()
           });
