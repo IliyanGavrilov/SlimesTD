@@ -18,6 +18,33 @@
         outline: none;
       }
     </style>
+    <script>
+      // Browsers block the Web Audio API until the user interacts with the page,
+      // so the game's audio context starts suspended and music dies instantly.
+      // Wrap the AudioContext constructor to track every context the game creates,
+      // then resume them all on the first user gesture.
+      (function () {
+        const Native = window.AudioContext || window.webkitAudioContext;
+        if (!Native) return;
+        const contexts = [];
+        function Tracked(...args) {
+          const ctx = new Native(...args);
+          contexts.push(ctx);
+          return ctx;
+        }
+        Tracked.prototype = Native.prototype;
+        window.AudioContext = Tracked;
+        if (window.webkitAudioContext) window.webkitAudioContext = Tracked;
+        const resume = () => {
+          for (const ctx of contexts) {
+            if (ctx.state === "suspended") ctx.resume();
+          }
+        };
+        for (const ev of ["pointerdown", "keydown", "touchstart"]) {
+          window.addEventListener(ev, resume, { passive: true });
+        }
+      })();
+    </script>
   </head>
   <body>
     <script type="module">
