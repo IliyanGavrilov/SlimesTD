@@ -3,8 +3,8 @@ use bevy::sprite::MaterialMesh2dBundle;
 use bevy::ui::FocusPolicy;
 
 use crate::{
-  game_not_paused, Enemy, EnemyDeathEvent, GameAssets, GameState, KnockedBack, MainCamera, Poisoned,
-  Slowed, SplashEvent, Tower,
+  game_not_paused, Enemy, EnemyDeathEvent, GameAssets, GameState, Invisible, KnockedBack, MainCamera,
+  Poisoned, Slowed, SplashEvent, Tower, INVISIBLE_ALPHA,
 };
 
 /// Visual juice: small, asset-free feedback effects (enemy hit flash, ...).
@@ -534,6 +534,7 @@ fn tint_slowed(
   mut enemies: Query<
     (
       &mut TextureAtlasSprite,
+      Option<&Invisible>,
       Option<&Slowed>,
       Option<&Poisoned>,
       Option<&KnockedBack>,
@@ -541,8 +542,8 @@ fn tint_slowed(
     (With<Enemy>, Without<HitFlash>),
   >,
 ) {
-  for (mut sprite, slowed, poisoned, knocked) in &mut enemies {
-    sprite.color = if knocked.is_some() {
+  for (mut sprite, invisible, slowed, poisoned, knocked) in &mut enemies {
+    let mut color = if knocked.is_some() {
       Color::rgb(0.85, 0.4, 1.0)
     } else if poisoned.is_some() {
       Color::rgb(0.4, 1.0, 0.4)
@@ -551,6 +552,11 @@ fn tint_slowed(
     } else {
       Color::WHITE
     };
+    // Keep invisible enemies ghostly even while a status tints them.
+    if invisible.is_some() {
+      color.set_a(INVISIBLE_ALPHA);
+    }
+    sprite.color = color;
   }
 }
 

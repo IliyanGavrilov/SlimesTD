@@ -5,8 +5,8 @@ use crate::*;
 fn test_wave_progression() {
     let mut waves = Waves {
         waves: vec![
-            Wave { enemies: vec![(EnemyType::Green, Duration::from_secs(1))], current: 0 },
-            Wave { enemies: vec![(EnemyType::Red, Duration::from_secs(1))], current: 0 },
+            Wave { enemies: vec![(EnemyType::Green, Duration::from_secs(1), vec![])], current: 0 },
+            Wave { enemies: vec![(EnemyType::Red, Duration::from_secs(1), vec![])], current: 0 },
         ],
         current: 0,
     };
@@ -44,8 +44,8 @@ fn test_spawn_index_calculation() {
 fn test_wave_state_initialization_from_wave() {
     let wave = Wave {
         enemies: vec![
-            (EnemyType::Green, Duration::from_secs(5)),
-            (EnemyType::Red, Duration::from_secs(2)),
+            (EnemyType::Green, Duration::from_secs(5), vec![]),
+            (EnemyType::Red, Duration::from_secs(2), vec![]),
         ],
         current: 0,
     };

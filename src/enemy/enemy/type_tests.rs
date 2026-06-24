@@ -16,10 +16,10 @@ fn test_enemy_direction_calculation() {
     stats_map.insert(EnemyType::Green, EnemyBundle::default());
     let stats = EnemyTypeStats { enemy: stats_map };
 
-    let enemy_at_0 = EnemyType::Green.get_enemy(&map, Path { index: 0 }, &stats);
+    let enemy_at_0 = EnemyType::Green.get_enemy(&map, Path { index: 0, route: 0 }, &stats);
     assert_eq!(enemy_at_0.movement.direction, Vec3::new(10., 0., 0.));
 
-    let enemy_at_1 = EnemyType::Green.get_enemy(&map, Path { index: 1 }, &stats);
+    let enemy_at_1 = EnemyType::Green.get_enemy(&map, Path { index: 1, route: 0 }, &stats);
     assert_eq!(enemy_at_1.movement.direction, Vec3::new(10., 10., 0.));
 }
 
@@ -33,6 +33,6 @@ fn test_get_enemy_out_of_bounds_panic() {
     enemy_map.insert(EnemyType::Green, EnemyBundle::default());
     let stats = EnemyTypeStats { enemy: enemy_map };
 
-    let path = Path { index: 1 };
+    let path = Path { index: 1, route: 0 };
     let _ = EnemyType::Green.get_enemy(&map, path, &stats);
 }

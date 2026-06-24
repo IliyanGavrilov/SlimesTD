@@ -28,7 +28,7 @@ pub struct EnemyTypeStats {
 
 impl EnemyType {
   pub fn get_enemy(&self, map_path: &Map, path: Path, enemy_stats: &EnemyTypeStats) -> EnemyBundle {
-    let direction = map_path.checkpoints[path.index + 1];
+    let direction = map_path.route(path.route)[path.index + 1];
 
     let mut enemy_bundle = enemy_stats.enemy[self].clone();
 

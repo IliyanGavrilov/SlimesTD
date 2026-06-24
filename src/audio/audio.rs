@@ -170,6 +170,7 @@ fn sfx_shoot(
   time: Res<Time>,
   audio: Res<GameAudio>,
   sfx: Res<AudioChannel<SfxChannel>>,
+  settings: Res<AudioSettings>,
   new_bullets: Query<(), Added<Bullet>>,
   mut cooldown: Local<f32>,
 ) {
@@ -179,7 +180,7 @@ fn sfx_shoot(
   if !new_bullets.is_empty() && *cooldown <= 0.0 {
     sfx
       .play(audio.shoot.clone())
-      .with_volume(0.175)
+      .with_volume(scaled_sfx_volume(0.175, &settings))
       .with_playback_rate(random_pitch());
     *cooldown = 0.12;
   }
@@ -188,6 +189,14 @@ fn sfx_shoot(
 /// A small random playback-rate multiplier (~0.9..1.1) to de-monotonize repeated SFX.
 fn random_pitch() -> f64 {
   (0.9 + rand::random::<f64>() * 0.2) as f64
+}
+
+/// Volume for an SFX that sets its own level. `with_volume` overrides the channel
+/// volume in bevy_kira_audio (rather than scaling it), so sounds that need a custom
+/// level must fold the master/SFX settings in here; sounds played at the default
+/// level just use the channel volume set by `apply_volume_settings`.
+fn scaled_sfx_volume(base: f32, settings: &AudioSettings) -> f64 {
+  (base * settings.master * settings.sfx) as f64
 }
 
 fn sfx_enemy_death(
@@ -205,6 +214,7 @@ fn sfx_enemy_jump(
   time: Res<Time>,
   audio: Res<GameAudio>,
   sfx: Res<AudioChannel<SfxChannel>>,
+  settings: Res<AudioSettings>,
   mut jumps: EventReader<EnemyJumpEvent>,
   mut cooldown: Local<f32>,
 ) {
@@ -216,7 +226,7 @@ fn sfx_enemy_jump(
   if any_jumped && *cooldown <= 0. {
     sfx
       .play(audio.enemy_jump.clone())
-      .with_volume(0.3)
+      .with_volume(scaled_sfx_volume(0.3, &settings))
       .with_playback_rate(random_pitch());
     *cooldown = 0.3;
   }

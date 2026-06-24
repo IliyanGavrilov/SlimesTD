@@ -135,6 +135,13 @@ fn spawn_map_selection(
             game_data.map2.clone(),
             "Level 2",
           );
+          spawn_map_card(
+            commands,
+            &assets,
+            &maps,
+            game_data.map3.clone(),
+            "Level 3",
+          );
         });
 
       commands
@@ -323,7 +330,7 @@ fn tile_color(tile: &Tile) -> Color {
   match tile {
     Tile::Grass => Color::rgb(0.35, 0.55, 0.25),
     Tile::Water => Color::rgb(0.25, 0.45, 0.75),
-    Tile::Path(_) => Color::rgb(0.65, 0.55, 0.35),
+    Tile::Path(_) | Tile::Lane(..) => Color::rgb(0.65, 0.55, 0.35),
     Tile::Spawn => Color::rgb(0.2, 0.9, 0.2),
     Tile::End => Color::rgb(0.9, 0.2, 0.2),
     Tile::Empty => Color::rgb(0.1, 0.1, 0.1),

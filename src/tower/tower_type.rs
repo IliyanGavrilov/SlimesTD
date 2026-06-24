@@ -40,7 +40,7 @@ impl TowerType {
       TowerType::Nature      => "Poisons enemies over time",
       TowerType::Fire        => "Splash damage to nearby enemies",
       TowerType::Ice         => "Rapid-fire, slows enemies it hits",
-      TowerType::Dark        => "Pierces and knocks enemies back",
+      TowerType::Dark        => "Knocks back; sees invisible enemies",
       TowerType::Mage        => "Hits hard and briefly stuns",
       TowerType::Archmage    => "Chains lightning between enemies",
       TowerType::FarmPassive => "Earns gold passively over time",

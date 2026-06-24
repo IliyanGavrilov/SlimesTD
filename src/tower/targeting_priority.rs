@@ -43,26 +43,34 @@ impl TargetingPriority {
   }
 }
 
+/// Whether a tower may target an enemy. Invisible enemies are hidden from every
+/// tower except those that can see them (the Dark tower).
+pub fn is_targetable(is_invisible: bool, can_see_invisible: bool) -> bool {
+  can_see_invisible || !is_invisible
+}
+
 pub fn get_enemy_direction(
-  enemies: &Query<(&GlobalTransform, &Enemy, &Movement)>,
+  enemies: &Query<(&GlobalTransform, &Enemy, &Movement, Option<&Invisible>)>,
   bullet_spawn_pos: Vec3,
   tower_range: u32,
   tower_targeting_priority: &TargetingPriority,
+  can_see_invisible: bool,
 ) -> Option<Vec3> {
   let enemy_filtered_query = enemies
     .iter()
-    // Only enemies within range.
-    .filter(|(enemy_transform, ..)| {
-      Vec3::distance(enemy_transform.translation(), bullet_spawn_pos) <= tower_range as f32
+    // Within range and visible to this tower.
+    .filter(|(enemy_transform, _, _, invisible)| {
+      is_targetable(invisible.is_some(), can_see_invisible)
+        && Vec3::distance(enemy_transform.translation(), bullet_spawn_pos) <= tower_range as f32
     });
 
   let enemy = match tower_targeting_priority {
     TargetingPriority::FIRST => enemy_filtered_query
       // Furthest along the path (closest to the base).
-      .max_by_key(|(.., movement)| FloatOrd(movement.distance_travelled)),
+      .max_by_key(|(_, _, movement, _)| FloatOrd(movement.distance_travelled)),
     TargetingPriority::LAST => enemy_filtered_query
       // Least far along the path (nearest the spawn).
-      .min_by_key(|(.., movement)| FloatOrd(movement.distance_travelled)),
+      .min_by_key(|(_, _, movement, _)| FloatOrd(movement.distance_travelled)),
     TargetingPriority::CLOSE => enemy_filtered_query
       // Closest to the tower.
       .min_by_key(|(enemy_transform, ..)| {

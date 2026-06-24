@@ -6,7 +6,7 @@ use crate::enemy::*;
 use crate::movement::*;
 use crate::{
   ChainBoltEvent, EnemyHitEvent, FarmBehavior, FarmTower, FloatingTextEvent, GameState, KnockedBack,
-  Player, Slowed, Tower, game_not_paused,
+  Player, Slowed, Tower, game_not_paused, is_targetable,
 };
 
 /// An on-hit combat effect carried by a projectile. Analogous to `FarmBehavior`
@@ -37,6 +37,8 @@ pub struct ChainEvent {
   pub damage: u32,
   /// The directly-hit enemy, excluded as a chain target.
   pub exclude: Entity,
+  // Whether the firing tower can arc to invisible enemies.
+  pub can_see_invisible: bool,
 }
 
 /// Requests area damage around an impact point (sent by Splash hits).
@@ -46,6 +48,8 @@ pub struct SplashEvent {
   pub damage: u32,
   /// The directly-hit enemy, excluded so it isn't double-damaged.
   pub exclude: Entity,
+  // Whether the firing tower can damage invisible enemies.
+  pub can_see_invisible: bool,
 }
 
 pub struct BulletPlugin;
@@ -186,6 +190,7 @@ fn bullet_enemy_collision(
                 radius,
                 damage,
                 exclude: enemy_entity,
+                can_see_invisible: tower.can_see_invisible,
               });
             }
             OnHitEffect::Poison { dps, duration } if enemy.health > 0 => {
@@ -198,6 +203,7 @@ fn bullet_enemy_collision(
                 radius,
                 damage,
                 exclude: enemy_entity,
+                can_see_invisible: tower.can_see_invisible,
               });
             }
             OnHitEffect::Knockback { strength } if enemy.health > 0 => {
@@ -220,13 +226,16 @@ fn bullet_enemy_collision(
 
 fn apply_splash(
   mut events: EventReader<SplashEvent>,
-  mut enemies: Query<(Entity, &mut Enemy, &Transform)>,
+  mut enemies: Query<(Entity, &mut Enemy, &Transform, Option<&Invisible>)>,
   mut hit_writer: EventWriter<EnemyHitEvent>,
   mut float_writer: EventWriter<FloatingTextEvent>,
 ) {
   for splash in events.iter() {
-    for (entity, mut enemy, transform) in &mut enemies {
-      if entity == splash.exclude || enemy.health <= 0 {
+    for (entity, mut enemy, transform, invisible) in &mut enemies {
+      if entity == splash.exclude
+        || enemy.health <= 0
+        || !is_targetable(invisible.is_some(), splash.can_see_invisible)
+      {
         continue;
       }
       if transform.translation.distance(splash.position) <= splash.radius {
@@ -247,7 +256,7 @@ fn apply_splash(
 
 fn apply_chain(
   mut events: EventReader<ChainEvent>,
-  mut enemies: Query<(Entity, &mut Enemy, &Transform)>,
+  mut enemies: Query<(Entity, &mut Enemy, &Transform, Option<&Invisible>)>,
   mut hit_writer: EventWriter<EnemyHitEvent>,
   mut float_writer: EventWriter<FloatingTextEvent>,
   mut bolt_writer: EventWriter<ChainBoltEvent>,
@@ -259,8 +268,11 @@ fn apply_chain(
     for _ in 0..chain.jumps {
       // Nearest living, unvisited enemy within radius of the previous target.
       let mut best: Option<(Entity, f32, Vec3)> = None;
-      for (entity, enemy, transform) in enemies.iter() {
-        if enemy.health <= 0 || visited.contains(&entity) {
+      for (entity, enemy, transform, invisible) in enemies.iter() {
+        if enemy.health <= 0
+          || visited.contains(&entity)
+          || !is_targetable(invisible.is_some(), chain.can_see_invisible)
+        {
           continue;
         }
         let dist = transform.translation.distance(from);
@@ -270,7 +282,7 @@ fn apply_chain(
       }
 
       let Some((entity, _, position)) = best else { break };
-      if let Ok((_, mut enemy, _)) = enemies.get_mut(entity) {
+      if let Ok((_, mut enemy, _, _)) = enemies.get_mut(entity) {
         enemy.health -= chain.damage as i32;
       }
       bolt_writer.send(ChainBoltEvent { from, to: position });

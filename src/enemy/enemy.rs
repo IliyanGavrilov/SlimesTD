@@ -13,6 +13,7 @@ impl Plugin for EnemyPlugin {
     app
       .register_type::<Enemy>()
       .register_type::<Path>()
+      .register_type::<Invisible>()
       .add_event::<EnemyDeathEvent>()
       .add_system(scale_hp_for_difficulty.in_set(OnUpdate(GameState::Gameplay)))
       .add_system(despawn_enemy_on_death.in_set(OnUpdate(GameState::Gameplay)).run_if(game_not_paused))
@@ -52,7 +53,7 @@ impl Default for EnemyBundle {
       },
       animation_indices: AnimationIndices { first: 0, last: 9 },
       animation_timer: AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
-      path: Path { index: 0 },
+      path: Path { index: 0, route: 0 },
       name: Name::new("GreenEnemy"),
     }
   }
@@ -64,10 +65,25 @@ pub struct Enemy {
   pub health: i32,
 }
 
+/// Attribute that hides an enemy from towers without invisible-sight (only Dark
+/// has it). Composable onto any enemy type, attached per spawn from wave data.
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
+pub struct Invisible;
+
+/// A per-enemy attribute declared in the wave data and turned into a component in
+/// `spawn_enemy`. Attached to the individual spawn, independent of enemy type.
+#[derive(Deserialize, Clone, Copy, PartialEq, Debug)]
+pub enum EnemyTrait {
+  Invisible,
+}
+
 #[derive(Reflect, Component, Default, Clone, Serialize, Debug, Deserialize)]
 #[reflect(Component)]
 pub struct Path {
   pub index: usize,
+  #[serde(default)]
+  pub route: usize,
 }
 
 impl Enemy {
@@ -172,6 +188,9 @@ fn tick_poison(
   }
 }
 
+/// Render alpha for invisible enemies.
+pub const INVISIBLE_ALPHA: f32 = 0.3;
+
 pub fn spawn_enemy(
   commands: &mut Commands,
   map_path: &Map,
@@ -180,10 +199,19 @@ pub fn spawn_enemy(
   position: Vec3,
   path: Path,
   enemy_stats: &EnemyTypeStats,
+  traits: &[EnemyTrait],
 ) {
-  commands
-    .spawn(enemy_type.get_enemy(map_path, path, enemy_stats))
-    .insert(enemy_type.get_sprite_sheet_bundle(assets, position));
+  let mut sprite = enemy_type.get_sprite_sheet_bundle(assets, position);
+  if traits.contains(&EnemyTrait::Invisible) {
+    sprite.sprite.color.set_a(INVISIBLE_ALPHA);
+  }
+  let mut entity = commands.spawn(enemy_type.get_enemy(map_path, path, enemy_stats));
+  entity.insert(sprite);
+  for enemy_trait in traits {
+    match enemy_trait {
+      EnemyTrait::Invisible => entity.insert(Invisible),
+    };
+  }
 }
 
 fn scale_hp_for_difficulty(

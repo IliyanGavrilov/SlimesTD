@@ -181,7 +181,7 @@ impl GameAssets {
     match tile {
       Tile::Grass => self.grass_tile.clone(),
       Tile::Water => self.water_tile.clone(),
-      Tile::Path(_) | Tile::Spawn | Tile::End => self.path_tile.clone(),
+      Tile::Path(_) | Tile::Lane(..) | Tile::Spawn | Tile::End => self.path_tile.clone(),
       _ => self.grass_tile.clone(),
     }
   }

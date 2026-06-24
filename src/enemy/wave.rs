@@ -60,7 +60,7 @@ impl Waves {
 #[derive(Component, Deserialize)]
 #[derive(Default)]
 pub struct Wave {
-  pub enemies: Vec<(EnemyType, Duration)>,
+  pub enemies: Vec<(EnemyType, Duration, Vec<EnemyTrait>)>,
   pub current: usize, // Current enemy
 }
 
@@ -83,6 +83,16 @@ impl From<(&Wave, usize)> for WaveState {
   }
 }
 
+/// Adaptive lane state. The map's second route opens once the player survives to
+/// `SECOND_ROUTE_WAVE`; from then on enemies are split round-robin across lanes.
+#[derive(Resource, Default)]
+pub struct RouteState {
+  pub next_route: usize,
+}
+
+/// 0-based wave index at which the second lane opens (if the map has one).
+const SECOND_ROUTE_WAVE: usize = 2;
+
 fn spawn_waves(
   mut commands: Commands,
   assets: Res<GameAssets>,
@@ -94,6 +104,7 @@ fn spawn_waves(
   enemy_type_assets: Res<Assets<EnemyTypeStats>>,
   time: Res<Time>,
   mut wave_cleared_writer: EventWriter<WaveClearedEvent>,
+  mut route_state: ResMut<RouteState>,
   tutorial: Res<TutorialState>,
 ) {
   // Hold enemies back while the tutorial is running so the player can learn first.
@@ -137,14 +148,25 @@ fn spawn_waves(
   let Some(enemy_stats) = enemy_type_assets.get(&game_data.enemy_type_stats)
     else { return; };
 
+  // Adaptive split: once past the threshold, fan enemies across every lane the
+  // map offers (round-robin); before that, everyone takes the main route.
+  let open_routes = if waves.current >= SECOND_ROUTE_WAVE {
+    map_path.route_count()
+  } else {
+    1
+  };
+  let route = route_state.next_route % open_routes;
+  route_state.next_route = route_state.next_route.wrapping_add(1);
+
   spawn_enemy(
     &mut commands,
     map_path,
     current_wave.enemies[index].0,
     &assets,
-    map_path.checkpoints[0],
-    Path { index: 0 },
+    map_path.route(route)[0],
+    Path { index: 0, route },
     enemy_stats,
+    &current_wave.enemies[index].2,
   );
 
   wave_state.enemy_spawn_timer = Timer::new(current_wave.enemies[index].1, TimerMode::Repeating);
@@ -164,6 +186,7 @@ fn load_waves(mut commands: Commands, game_data: Res<GameData>, mut waves: ResMu
     enemy_spawn_timer: Timer::new(Duration::from_millis(1), TimerMode::Repeating),
     remaining: num_enemies,
   });
+  commands.insert_resource(RouteState::default());
 }
 
 fn check_victory(
@@ -181,6 +204,7 @@ fn cleanup_waves(mut commands: Commands, game_data: Res<GameData>, mut waves: Re
     waves.current = 0;
   }
   commands.remove_resource::<WavesComplete>();
+  commands.remove_resource::<RouteState>();
 }
 
 #[cfg(test)]

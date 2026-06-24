@@ -66,6 +66,8 @@ pub struct Tower {
   #[serde(default)]
   #[reflect(ignore)]
   pub effect: Option<OnHitEffect>,
+  #[serde(default)]
+  pub can_see_invisible: bool,
 }
 
 impl Tower {
@@ -192,7 +194,7 @@ fn tower_shooting(
     &mut Transform,
     &GlobalTransform,
   ), Without<NonShootingTower>>,
-  enemies: Query<(&GlobalTransform, &Enemy, &Movement)>,
+  enemies: Query<(&GlobalTransform, &Enemy, &Movement, Option<&Invisible>)>,
   time: Res<Time>,
 ) {
   for (tower_entity, mut tower, tower_type, mut tower_transform, transform) in &mut towers {
@@ -200,8 +202,13 @@ fn tower_shooting(
     if enemy_in_range(&tower, &tower_transform, &enemies) {
       let bullet_spawn_pos = transform.translation() + tower.bullet_spawn_offset;
 
-      let direction =
-        get_enemy_direction(&enemies, bullet_spawn_pos, tower.range + 10, &tower.target);
+      let direction = get_enemy_direction(
+        &enemies,
+        bullet_spawn_pos,
+        tower.range + 10,
+        &tower.target,
+        tower.can_see_invisible,
+      );
 
       if let Some(direction) = direction {
         // Fire on cooldown, or immediately for the first target after a lull.
@@ -239,11 +246,12 @@ fn tower_shooting(
 fn enemy_in_range(
   tower: &Mut<Tower>,
   tower_transform: &Mut<Transform>,
-  enemies: &Query<(&GlobalTransform, &Enemy, &Movement)>,
+  enemies: &Query<(&GlobalTransform, &Enemy, &Movement, Option<&Invisible>)>,
 ) -> bool {
-  for (enemy_transform, ..) in enemies {
-    if Vec3::distance(tower_transform.translation, enemy_transform.translation())
-      <= (tower.range + 50) as f32
+  for (enemy_transform, _, _, invisible) in enemies {
+    if is_targetable(invisible.is_some(), tower.can_see_invisible)
+      && Vec3::distance(tower_transform.translation, enemy_transform.translation())
+        <= (tower.range + 50) as f32
     {
       return true;
     }

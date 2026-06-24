@@ -10,6 +10,7 @@ mod tests {
             tiles: vec![],
             tile_size,
             checkpoints: vec![],
+            route_paths: vec![],
             initialized: false,
         }
     }
@@ -25,6 +26,7 @@ mod tests {
             tiles,
             tile_size,
             checkpoints: vec![],
+            route_paths: vec![],
             initialized: false,
         }
     }
