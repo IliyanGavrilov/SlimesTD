@@ -1,0 +1,8 @@
+# Cross-compilation config for building the Linux release from another OS via
+# `cross` (Docker). Bevy needs ALSA and udev dev headers to link on Linux, so the
+# build container installs them before compiling.
+#   cross build --release --target x86_64-unknown-linux-gnu
+[target.x86_64-unknown-linux-gnu]
+pre-build = [
+  "apt-get update && apt-get install --assume-yes libasound2-dev libudev-dev pkg-config",
+]

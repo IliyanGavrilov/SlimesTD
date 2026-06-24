@@ -88,7 +88,10 @@ Prevent slimes from reaching your base. You start with a set amount of gold and 
 
 ### Maps
 
-Choose from 2 maps on the map selection screen. Maps differ in path layout and the amount of buildable water tiles.
+Choose from 3 maps on the map selection screen. Maps differ in path layout and the amount of buildable water tiles.
+
+- **Level 1 / Level 2** = single-path maps of increasing complexity.
+- **Level 3** = an **adaptive two-lane map**. Slimes enter down one shared lane, and once the assault escalates (from wave 2) a **second lane opens** and the slimes split between both routes, forcing you to defend two fronts at once. A central water pool sits between the lanes for water-only towers.
 
 ### Tower placement rules
 
@@ -114,24 +117,26 @@ If you try to place somewhere invalid, a red error message appears at the top of
 
 ## Towers
 
-| # | Tower | Price | Role |
+| # | Tower | Price | On-hit effect / role |
 |---|-------|-------|------|
-| 1 | Nature Wizard | $100 | Balanced starter |
-| 2 | Fire Wizard | $125 | High damage, fast projectiles |
-| 3 | Ice Wizard | $100 | Rapid-fire, low per-shot damage |
-| 4 | Dark Wizard | $150 | Pierces through multiple enemies |
-| 5 | Mage Wizard | $175 | Slow but hits extremely hard (water only) |
-| 6 | Archmage | $250 | Best stats across the board |
-| 7 | Farm (Passive) | $125 | Earns $50 every 15 seconds |
-| 8 | Farm (Kill) | $150 | Earns $5 per enemy killed anywhere on map |
-| 9 | Farm (Wave) | $200 | Earns $75 bonus when a wave is cleared |
+| 1 | Nature Wizard | $100 | **Poison** = damage-over-time, balanced starter |
+| 2 | Fire Wizard | $125 | **Splash** = area damage around the impact |
+| 3 | Ice Wizard | $100 | **Slow** = rapid-fire, chills enemies (grass or water) |
+| 4 | Dark Wizard | $150 | **Knockback** + **sees invisible enemies**, pierces 2 |
+| 5 | Mage Wizard | $175 | **Stun** = slow but hits hard (water only) |
+| 6 | Archmage | $250 | **Chain lightning** = arcs between enemies, best all-rounder |
+| 7 | Farm (Passive) | $125 | Earns gold on a timer |
+| 8 | Farm (Kill) | $150 | Earns gold per enemy killed anywhere on map |
+| 9 | Farm (Wave) | $200 | Earns a bonus when a wave is cleared |
 | 0 | Farm (Hunter) | $175 | Shoots enemies; earns gold per personal kill |
+
+On-hit effects are **data-driven** = each tower's `effect` (Poison, Splash, Slow, Stun, Chain, Knockback) is declared in `assets/data/stats.tower_stats.ron`, so retuning or reassigning them is a config edit, not a code change.
 
 Each combat tower has **3 upgrade paths** with **5 levels each** (damage, attack speed, range/pierce). Farms upgrade their income rate.
 
 ### Targeting priorities
 
-Click a placed tower to change its targeting: **First**, **Last**, **Strongest**, **Weakest**, **Closest**. Sell a tower for 1/3 of total gold spent on it.
+Click a placed tower to cycle its targeting: **First**, **Last**, **Closest**, **Farthest**, **Strongest**, **Weakest**, **Random**. Sell a tower for 1/3 of total gold spent on it.
 
 ---
 
@@ -150,6 +155,10 @@ Click a placed tower to change its targeting: **First**, **Last**, **Strongest**
 | Purple | 7 |
 | Red | 8 |
 
+### Enemy traits = invisibility
+
+Slimes can carry **traits** that are independent of their color. The first is **Invisibility**: an invisible slime renders semi-transparent and is **untargetable by every tower except the Dark Wizard** = direct shots, splash, and chain lightning from other towers all pass right through it. Traits are assigned **per spawn in the wave data**, not baked into the enemy type, so the same color can appear visible in one wave and invisible in another (e.g. White slimes are invisible in early waves but visible later). Build a Dark Wizard to counter them.
+
 ---
 
 ## Project structure
@@ -157,11 +166,15 @@ Click a placed tower to change its targeting: **First**, **Last**, **Strongest**
 ```
 src/
   main.rs          = app setup, plugins, asset loading
-  map/             = tilemap, pathfinding, camera
-  tower/           = tower logic, placement, upgrades, UI
-  enemy/           = enemy spawning, movement, waves
+  map/             = tilemap, multi-lane pathfinding, camera
+  tower/           = tower logic, placement, upgrades, projectiles, targeting, UI
+  enemy/           = enemy spawning, movement, waves, traits (invisibility)
+  effects/         = on-hit effects (poison, splash, chain, knockback) + visual feedback
+  audio/           = music + SFX channels, volume settings
   gameplay_ui/     = HUD (gold, health, wave counter)
-  main_menu/       = main menu, map selection, game state
+  main_menu/       = main menu, map selection, settings, game state
+  tutorial/        = first-launch interactive tutorial
+  persistence/     = save/load of settings and progress (RON)
 assets/data/       = RON balance files (edit to tune the game)
 installation/      = pre-built Windows and Linux binaries
 ```
