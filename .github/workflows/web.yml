@@ -70,8 +70,10 @@ jobs:
       # secret is set (Settings → Secrets and variables → Actions).
       - name: Publish to itch.io
         if: ${{ env.BUTLER_API_KEY != '' }}
+        continue-on-error: true # never let an itch hiccup block the Pages deploy
         run: |
-          curl -fsSL -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
+          curl -fsSL --retry 5 --retry-all-errors -o butler.zip \
+            https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
           unzip -q butler.zip
           chmod +x butler
           ./butler push dist iliyangavrilov/slimestd:html5
