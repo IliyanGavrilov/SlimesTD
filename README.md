@@ -1,68 +1,66 @@
 # Slimes TD
 
-A tower defense game where waves of colored slimes march along a path toward your base. Place wizard towers, earn gold, upgrade your defenses, and survive all 10 waves to win.
+[![Release](https://github.com/IliyanGavrilov/SlimesTD/actions/workflows/release.yml/badge.svg)](https://github.com/IliyanGavrilov/SlimesTD/actions/workflows/release.yml)
+[![Web](https://github.com/IliyanGavrilov/SlimesTD/actions/workflows/web.yml/badge.svg)](https://github.com/IliyanGavrilov/SlimesTD/actions/workflows/web.yml)
+![Rust 2024](https://img.shields.io/badge/Rust-2024-orange)
+![Bevy 0.10](https://img.shields.io/badge/Bevy-0.10-232326)
 
----
+**Play: [itch.io](https://iliyangavrilov.itch.io/slimestd)** or **[GitHub Pages](https://iliyangavrilov.github.io/SlimesTD/)** - runs in the browser, nothing to install.
 
-## Play now
+A tower defense game made in Rust with the Bevy engine. Waves of slimes walk along a path toward your base. Place wizard towers, earn gold, upgrade your defenses and **survive all 10 waves** to win.
 
-**▶ In your browser** (nothing to install): **[itch.io](https://iliyangavrilov.itch.io/slimestd)** · **[GitHub Pages](https://iliyangavrilov.github.io/SlimesTD/)**
+My diploma project at TUES (2023), reworked in 2026.
 
-**💾 Desktop downloads:** grab the latest zip for your OS from the [**Releases** page](../../releases) - unzip and run, no installation needed.
+## Desktop builds
 
-| Platform | Download | How to run |
-|----------|----------|------------|
-| Windows | `SlimesTD-Windows.zip` | Run `Slimes TD.exe`. SmartScreen may warn on first launch - click **More info → Run anyway**. |
-| Linux | `SlimesTD-Linux.zip` | Run `./"Slimes TD"` (see system libraries below). |
-| macOS | `SlimesTD-macOS.zip` | Run `Slimes TD`. It's unsigned, so right-click → **Open** the first time to bypass Gatekeeper. |
-| Web bundle | `SlimesTD-Web.zip` | The browser build for **self-hosting** - serve the unzipped folder with any static web server (it won't run from a `file://` double-click). |
-| Browser | - | Play instantly on **[itch.io](https://iliyangavrilov.itch.io/slimestd)** or **[GitHub Pages](https://iliyangavrilov.github.io/SlimesTD/)**. |
+Windows, Linux and macOS builds are on the **[Releases](../../releases)** page. Unzip and run, no installation needed.
 
-All bundles are built automatically by GitHub Actions
-([`release.yml`](.github/workflows/release.yml)) on native runners per OS, so they always
-match the source.
+On Windows, SmartScreen may warn on first launch (More info > Run anyway). On macOS the build is unsigned, so right-click > Open the first time.
 
-### Linux = first run
+## How to play
 
-```bash
-unzip SlimesTD-Linux.zip
-cd "Slimes TD - Linux"
-chmod +x "Slimes TD"   # if the zip didn't preserve it
-./"Slimes TD"
-```
+Pick a tower from the tower bar (or press `0`-`9`), left click on the map to place it and right click to cancel. Click a placed tower to upgrade it, sell it or change its targeting. Each slime that reaches the end costs you health.
 
-Bevy on Linux requires a few system libraries. Install them if the binary fails to launch:
+There are three maps. On the third one a second lane opens from wave 2, so you have to defend two routes at once.
 
-**Ubuntu / Debian:**
-```bash
-sudo apt install libasound2-dev libudev-dev libx11-dev libxcb1-dev pkg-config
-```
+### Towers
 
-**Fedora / RHEL:**
-```bash
-sudo dnf install alsa-lib-devel libudev-devel libX11-devel
-```
+| Tower | Price | Effect |
+|---|---|---|
+| Nature Wizard | $100 | Poison damage over time |
+| Fire Wizard | $125 | Splash damage |
+| Ice Wizard | $100 | Slows enemies, can be placed on water |
+| Dark Wizard | $150 | Knockback, can see invisible slimes |
+| Mage Wizard | $175 | Stuns, water only |
+| Archmage | $250 | Chain lightning |
+| Farms (4 types) | $125 - $200 | Earn gold over time, per kill or per wave |
 
----
+Combat towers have **3 upgrade paths with 5 levels each**. Targeting can be set to first, last, closest, farthest, strongest, weakest or random.
+
+### Enemies
+
+8 slime colors with 1 to 8 health. Some waves have **invisible slimes** that only the Dark Wizard can hit.
 
 ## Building from source
 
-### Prerequisites
+- **[Rust](https://rustup.rs/) 1.85+**
+- On Linux, a few system libraries for Bevy (below)
 
-- [Rust](https://rustup.rs/) (stable toolchain, **1.85+** for the 2024 edition)
-- On Linux: the system libraries listed above
+Then:
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/IliyanGavrilov/SlimesTD.git
 cd SlimesTD
 cargo run
 ```
 
-The first build takes a few minutes (Bevy is large). Subsequent builds are fast thanks to `opt-level = 1` for the dev profile.
+Linux libraries:
 
-### WebAssembly (WASM)
+```bash
+sudo apt install libasound2-dev libudev-dev libx11-dev libxcb1-dev pkg-config
+```
 
-**Quick local run** (auto-opens a browser tab):
+Web build:
 
 ```bash
 rustup target add wasm32-unknown-unknown
@@ -70,157 +68,25 @@ cargo install wasm-server-runner
 cargo run --target wasm32-unknown-unknown
 ```
 
-`.cargo/config.toml` sets `wasm-server-runner` as the runner and selects the
-`getrandom` browser backend (`--cfg getrandom_backend="wasm_js"`) the wasm build needs.
-
-**Deployable web build** (for itch.io / any static host):
-
-```bash
-cargo install wasm-bindgen-cli --version 0.2.108   # must match the crate in Cargo.lock
-cargo build --release --target wasm32-unknown-unknown
-wasm-bindgen --no-typescript --target web \
-  --out-dir dist --out-name slimestd \
-  target/wasm32-unknown-unknown/release/tower_defence_game.wasm
-cp web/index.html dist/ && cp -r assets dist/assets
-```
-
-`dist/` is now a self-contained site. Zip its **contents** (so `index.html` is at the
-zip root) and upload to itch.io as an HTML5 project with "play in browser" ticked.
-
-### Web hosting (CD)
-
-`.github/workflows/web.yml` does this automatically: on every push to `main` it builds
-the wasm bundle, **deploys it to GitHub Pages** (a live, always-current URL), **pushes
-it to itch.io** via [`butler`](https://itch.io/docs/butler/), and uploads a
-`SlimesTD-Web.zip` artifact. Enable Pages once under
-**Settings → Pages → Source: GitHub Actions**; itch publishing needs an itch API key
-stored as the `BUTLER_API_KEY` repo secret (the step runs
-`butler push dist iliyangavrilov/slimestd:html5`).
-
-Tagged releases (`.github/workflows/release.yml`) additionally bundle the web build as
-`SlimesTD-Web.zip` alongside the desktop zips.
-
----
-
-## How to play
-
-### Goal
-
-Prevent slimes from reaching your base. You start with a set amount of gold and base health. Each slime that reaches the end costs you health. Survive all 10 waves to win.
-
-### Controls
-
-| Input                      | Action |
-|----------------------------|--------|
-| Left click on tower button | Pick up tower to place |
-| Left click on map          | Place tower |
-| Right click                | Cancel placement |
-| `0` - `9`                  | Keyboard shortcut for each tower (same order as the button bar) |
-| Left click on placed tower | Open upgrade / sell panel |
-| `G` | Toggle snap mode (aligns to tower axes and tile edges) |
-
-### Maps
-
-Choose from 3 maps on the map selection screen. Maps differ in path layout and the amount of buildable water tiles.
-
-- **Level 1 / Level 2** = single-path maps of increasing complexity.
-- **Level 3** = an **adaptive two-lane map**. Slimes enter down one shared lane, and once the assault escalates (from wave 2) a **second lane opens** and the slimes split between both routes, forcing you to defend two fronts at once. A central water pool sits between the lanes for water-only towers.
-
-### Tower placement rules
-
-- Towers **cannot** be placed on the path, spawn, or end tiles.
-- Each tower type has terrain requirements:
-
-| Tower | Allowed terrain |
-|-------|----------------|
-| Nature Wizard | Grass |
-| Fire Wizard | Grass |
-| Ice Wizard | Grass or Water |
-| Dark Wizard | Grass |
-| Mage Wizard | Water only |
-| Archmage | Grass |
-| Farm (Passive) | Grass |
-| Farm (Kill) | Grass |
-| Farm (Wave) | Grass |
-| Farm (Hunter) | Grass |
-
-If you try to place somewhere invalid, a red error message appears at the top of the screen explaining why.
-
----
-
-## Towers
-
-| # | Tower | Price | On-hit effect / role |
-|---|-------|-------|------|
-| 1 | Nature Wizard | $100 | **Poison** = damage-over-time, balanced starter |
-| 2 | Fire Wizard | $125 | **Splash** = area damage around the impact |
-| 3 | Ice Wizard | $100 | **Slow** = rapid-fire, chills enemies (grass or water) |
-| 4 | Dark Wizard | $150 | **Knockback** + **sees invisible enemies**, pierces 2 |
-| 5 | Mage Wizard | $175 | **Stun** = slow but hits hard (water only) |
-| 6 | Archmage | $250 | **Chain lightning** = arcs between enemies, best all-rounder |
-| 7 | Farm (Passive) | $125 | Earns gold on a timer |
-| 8 | Farm (Kill) | $150 | Earns gold per enemy killed anywhere on map |
-| 9 | Farm (Wave) | $200 | Earns a bonus when a wave is cleared |
-| 0 | Farm (Hunter) | $175 | Shoots enemies; earns gold per personal kill |
-
-On-hit effects are **data-driven** = each tower's `effect` (Poison, Splash, Slow, Stun, Chain, Knockback) is declared in `assets/data/stats.tower_stats.ron`, so retuning or reassigning them is a config edit, not a code change.
-
-Each combat tower has **3 upgrade paths** with **5 levels each** (damage, attack speed, range/pierce). Farms upgrade their income rate.
-
-### Targeting priorities
-
-Click a placed tower to cycle its targeting: **First**, **Last**, **Closest**, **Farthest**, **Strongest**, **Weakest**, **Random**. Sell a tower for 1/3 of total gold spent on it.
-
----
-
-## Enemies
-
-8 slime types, each a different color with increasing health. Waves escalate in difficulty, mixing types and tightening spawn intervals.
-
-| Slime | Health |
-|-------|--------|
-| Green | 1 |
-| Yellow | 2 |
-| Pink | 3 |
-| White | 4 |
-| Blue | 5 |
-| Orange | 6 |
-| Purple | 7 |
-| Red | 8 |
-
-### Enemy traits = invisibility
-
-Slimes can carry **traits** that are independent of their color. The first is **Invisibility**: an invisible slime renders semi-transparent and is **untargetable by every tower except the Dark Wizard** = direct shots, splash, and chain lightning from other towers all pass right through it. Traits are assigned **per spawn in the wave data**, not baked into the enemy type, so the same color can appear visible in one wave and invisible in another (e.g. White slimes are invisible in early waves but visible later). Build a Dark Wizard to counter them.
-
----
-
 ## Project structure
 
 ```
 src/
-  main.rs          = app setup, plugins, asset loading
-  map/             = tilemap, multi-lane pathfinding, camera
-  tower/           = tower logic, placement, upgrades, projectiles, targeting, UI
-  enemy/           = enemy spawning, movement, waves, traits (invisibility)
-  effects/         = on-hit effects (poison, splash, chain, knockback) + visual feedback
-  audio/           = music + SFX channels, volume settings
-  gameplay_ui/     = HUD (gold, health, wave counter)
-  main_menu/       = main menu, map selection, settings, game state
-  tutorial/        = first-launch interactive tutorial
-  persistence/     = save/load of settings and progress (RON)
-assets/data/       = RON balance files (edit to tune the game)
-.github/workflows/ = CI/CD: desktop + web release bundles, GitHub Pages + itch.io deploy
+  map/          tilemap, pathfinding
+  tower/        placement, upgrades, projectiles, targeting
+  enemy/        enemies and waves
+  effects/      poison, splash, chain lightning, knockback
+  audio/        music and sound effects
+  main_menu/    menus, map selection, settings
+  tutorial/     first launch tutorial
+  persistence/  saving settings and progress
+assets/data/    tower stats, enemy stats, waves and upgrades (RON files)
 ```
 
-Balance lives in `assets/data/` RON files = tweak stats, waves, and upgrade paths without recompiling.
+Tower stats, waves and upgrades are loaded from the RON files in `assets/data/`, so **balancing the game doesn't require recompiling**.
 
----
+GitHub Actions builds the desktop releases and deploys the web version to GitHub Pages and itch.io on every push to `main`.
 
 ## Tech
 
-- **Engine:** [Bevy 0.10.1](https://bevy.org/)
-- **Language:** [Rust 2024](https://rust-lang.org/)
-- **Serialization:** RON (Rusty Object Notation) via `bevy_common_assets`
-- **Asset loading:** `bevy_asset_loader`
-- **WASM runner:** `wasm-server-runner`
-- **Inspector:** `bevy-inspector-egui` (always on, press nothing = it's the floating panel)
+Rust, Bevy 0.10, bevy_ecs_tilemap, bevy_kira_audio, bevy_asset_loader, RON, WebAssembly
